@@ -1,6 +1,6 @@
 {
-  "name": "TritonNote",
-  "description": "Client for TritonNote",
+  "name": "BacchusDiary",
+  "description": "Client for BacchusDiary",
   "devDependencies": {
     "karma": "^0.13.15",
     "karma-chrome-launcher": "^0.2.1",
