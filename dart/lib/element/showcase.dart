@@ -7,7 +7,6 @@ import 'package:angular/angular.dart';
 import 'package:logging/logging.dart';
 
 import 'package:core_elements/core_animated_pages.dart';
-import 'package:core_elements/core_animation.dart';
 
 import 'package:bacchus_diary/dialog/photo_way.dart';
 import 'package:bacchus_diary/model/report.dart';
@@ -57,14 +56,16 @@ class ShowcaseElement extends ShadowRootAware {
     _logger.finest(() => "Opening Showcase");
   }
 
-  slide(proc(List<Element> sections, int index, GetterSetter<int> current, GetterSetter<int> other)) {
+  currentIndex(proc(GetterSetter<int> current, GetterSetter<int> other)) =>
+      slide((sections, pageNo, current, other) => proc(current, other));
+  slide(proc(List<Element> sections, int pageNo, GetterSetter<int> current, GetterSetter<int> other)) {
     if (_pages == null) return null;
 
-    final index = _pages.selected;
+    final pageNo = _pages.selected;
     final sections = _pages.querySelectorAll('section');
 
     GetterSetter<int> current, other;
-    if (sections[index].id == "pageA") {
+    if (sections[pageNo].id == "pageA") {
       current = _indexA;
       other = _indexB;
     } else {
@@ -72,19 +73,19 @@ class ShowcaseElement extends ShadowRootAware {
       other = _indexA;
     }
 
-    return proc(sections, index, current, other);
+    return proc(sections, pageNo, current, other);
   }
 
   bool get isLeftEnabled =>
-      slide((sections, index, current, other) => (current.value != null || other.value != null) && current.value != 0);
+      currentIndex((current, other) => (current.value != null || other.value != null) && current.value != 0);
 
-  bool get isRightEnabled => slide((sections, index, current, other) => current.value != null);
+  bool get isRightEnabled => currentIndex((current, other) => current.value != null);
 
   slideLeft() async {
-    slide((sections, index, current, other) {
+    slide((sections, pageNo, current, other) {
       other.value = (current.value ?? list.length) - 1;
 
-      if (index == 0) {
+      if (pageNo == 0) {
         final pre = sections[1];
         pre.remove();
         _pages.insertBefore(pre, sections[0]);
@@ -94,11 +95,11 @@ class ShowcaseElement extends ShadowRootAware {
   }
 
   slideRight() async {
-    slide((sections, index, current, other) {
+    slide((sections, pageNo, current, other) {
       final nextIndex = current.value + 1;
       other.value = (list.length <= nextIndex) ? null : nextIndex;
 
-      if (index == 1) {
+      if (pageNo == 1) {
         final next = sections[0];
         next.remove();
         _pages.append(next);
