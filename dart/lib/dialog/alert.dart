@@ -1,4 +1,4 @@
-library triton_note.dialog.alert;
+library bacchus_diary.dialog.alert;
 
 import 'dart:html';
 
@@ -6,12 +6,12 @@ import 'package:angular/angular.dart';
 import 'package:logging/logging.dart';
 import 'package:paper_elements/paper_dialog.dart';
 
-import 'package:triton_note/util/getter_setter.dart';
-import 'package:triton_note/util/main_frame.dart';
+import 'package:bacchus_diary/util/getter_setter.dart';
+import 'package:bacchus_diary/util/main_frame.dart';
 
 final _logger = new Logger('AlertDialog');
 
-@Component(selector: 'alert-dialog', templateUrl: 'packages/triton_note/dialog/alert.html', useShadowDom: true)
+@Component(selector: 'alert-dialog', templateUrl: 'packages/bacchus_diary/dialog/alert.html', useShadowDom: true)
 class AlertDialog extends AbstractDialog implements ShadowRootAware {
   @NgOneWayOneTime('setter') set setter(Setter<AlertDialog> v) => v?.value = this; // Optional
 

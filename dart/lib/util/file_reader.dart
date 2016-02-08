@@ -1,4 +1,4 @@
-library triton_note.util.file_reader;
+library bacchus_diary.util.file_reader;
 
 import 'dart:async';
 import 'dart:html';

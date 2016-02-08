@@ -1,4 +1,4 @@
-library triton_note.dialog.distributions_filter;
+library bacchus_diary.dialog.distributions_filter;
 
 import 'dart:html';
 
@@ -6,15 +6,15 @@ import 'package:angular/angular.dart';
 import 'package:logging/logging.dart';
 import 'package:paper_elements/paper_dialog.dart';
 
-import 'package:triton_note/util/distributions_filters.dart';
-import 'package:triton_note/util/getter_setter.dart';
-import 'package:triton_note/util/main_frame.dart';
+import 'package:bacchus_diary/util/distributions_filters.dart';
+import 'package:bacchus_diary/util/getter_setter.dart';
+import 'package:bacchus_diary/util/main_frame.dart';
 
 final _logger = new Logger('DistributionsFilterDialog');
 
 @Component(
     selector: 'distributions-filter-dialog',
-    templateUrl: 'packages/triton_note/dialog/distributions_filter.html',
+    templateUrl: 'packages/bacchus_diary/dialog/distributions_filter.html',
     useShadowDom: true)
 class DistributionsFilterDialog extends AbstractDialog implements ShadowRootAware {
   @NgOneWayOneTime('setter') set setter(Setter<DistributionsFilterDialog> v) => v?.value = this; // Optional

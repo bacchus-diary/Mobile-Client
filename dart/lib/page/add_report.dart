@@ -1,4 +1,4 @@
-library triton_note.page.reports_add;
+library bacchus_diary.page.reports_add;
 
 import 'dart:async';
 import 'dart:html';
@@ -10,38 +10,38 @@ import 'package:core_elements/core_animation.dart';
 import 'package:core_elements/core_dropdown.dart';
 import 'package:paper_elements/paper_toast.dart';
 
-import 'package:triton_note/element/expandable_gmap.dart';
-import 'package:triton_note/dialog/alert.dart';
-import 'package:triton_note/dialog/edit_fish.dart';
-import 'package:triton_note/dialog/edit_timestamp.dart';
-import 'package:triton_note/dialog/edit_tide.dart';
-import 'package:triton_note/dialog/edit_weather.dart';
-import 'package:triton_note/dialog/geolocation.dart';
-import 'package:triton_note/dialog/photo_way.dart';
-import 'package:triton_note/model/report.dart';
-import 'package:triton_note/model/location.dart';
-import 'package:triton_note/service/facebook.dart';
-import 'package:triton_note/service/natural_conditions.dart';
-import 'package:triton_note/service/photo_shop.dart';
-import 'package:triton_note/service/preferences.dart';
-import 'package:triton_note/service/reports.dart';
-import 'package:triton_note/service/inference.dart';
-import 'package:triton_note/service/geolocation.dart' as Geo;
-import 'package:triton_note/service/googlemaps_browser.dart';
-import 'package:triton_note/service/aws/s3file.dart';
-import 'package:triton_note/util/blinker.dart';
-import 'package:triton_note/util/cordova.dart';
-import 'package:triton_note/util/enums.dart';
-import 'package:triton_note/util/fabric.dart';
-import 'package:triton_note/util/main_frame.dart';
-import 'package:triton_note/util/getter_setter.dart';
+import 'package:bacchus_diary/element/expandable_gmap.dart';
+import 'package:bacchus_diary/dialog/alert.dart';
+import 'package:bacchus_diary/dialog/edit_fish.dart';
+import 'package:bacchus_diary/dialog/edit_timestamp.dart';
+import 'package:bacchus_diary/dialog/edit_tide.dart';
+import 'package:bacchus_diary/dialog/edit_weather.dart';
+import 'package:bacchus_diary/dialog/geolocation.dart';
+import 'package:bacchus_diary/dialog/photo_way.dart';
+import 'package:bacchus_diary/model/report.dart';
+import 'package:bacchus_diary/model/location.dart';
+import 'package:bacchus_diary/service/facebook.dart';
+import 'package:bacchus_diary/service/natural_conditions.dart';
+import 'package:bacchus_diary/service/photo_shop.dart';
+import 'package:bacchus_diary/service/preferences.dart';
+import 'package:bacchus_diary/service/reports.dart';
+import 'package:bacchus_diary/service/inference.dart';
+import 'package:bacchus_diary/service/geolocation.dart' as Geo;
+import 'package:bacchus_diary/service/googlemaps_browser.dart';
+import 'package:bacchus_diary/service/aws/s3file.dart';
+import 'package:bacchus_diary/util/blinker.dart';
+import 'package:bacchus_diary/util/cordova.dart';
+import 'package:bacchus_diary/util/enums.dart';
+import 'package:bacchus_diary/util/fabric.dart';
+import 'package:bacchus_diary/util/main_frame.dart';
+import 'package:bacchus_diary/util/getter_setter.dart';
 
 final Logger _logger = new Logger('AddReportPage');
 
 @Component(
     selector: 'add-report',
-    templateUrl: 'packages/triton_note/page/add_report.html',
-    cssUrl: 'packages/triton_note/page/add_report.css',
+    templateUrl: 'packages/bacchus_diary/page/add_report.html',
+    cssUrl: 'packages/bacchus_diary/page/add_report.css',
     useShadowDom: true)
 class AddReportPage extends SubPage implements ScopeAware {
   Report report;

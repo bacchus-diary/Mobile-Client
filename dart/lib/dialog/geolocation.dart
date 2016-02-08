@@ -1,4 +1,4 @@
-library triton_note.dialog.geolocation;
+library bacchus_diary.dialog.geolocation;
 
 import 'dart:html';
 
@@ -6,15 +6,15 @@ import 'package:angular/angular.dart';
 import 'package:logging/logging.dart';
 import 'package:paper_elements/paper_dialog.dart';
 
-import 'package:triton_note/service/geolocation.dart';
-import 'package:triton_note/util/cordova.dart';
-import 'package:triton_note/util/getter_setter.dart';
-import 'package:triton_note/util/main_frame.dart';
+import 'package:bacchus_diary/service/geolocation.dart';
+import 'package:bacchus_diary/util/cordova.dart';
+import 'package:bacchus_diary/util/getter_setter.dart';
+import 'package:bacchus_diary/util/main_frame.dart';
 
 final _logger = new Logger('GeolocationDialog');
 
 @Component(
-    selector: 'geolocation-dialog', templateUrl: 'packages/triton_note/dialog/geolocation.html', useShadowDom: true)
+    selector: 'geolocation-dialog', templateUrl: 'packages/bacchus_diary/dialog/geolocation.html', useShadowDom: true)
 class GeolocationDialog extends AbstractDialog implements ShadowRootAware {
   @NgOneWayOneTime('setter') set setter(Setter<GeolocationDialog> v) => v?.value = this; // Optional
   @NgAttr('message') String message;

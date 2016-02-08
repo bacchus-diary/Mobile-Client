@@ -1,10 +1,10 @@
-library triton_note.service.geolocation;
+library bacchus_diary.service.geolocation;
 
 import 'dart:async';
 import 'dart:js';
 
 import 'package:logging/logging.dart';
-import 'package:triton_note/model/location.dart';
+import 'package:bacchus_diary/model/location.dart';
 
 final Logger _logger = new Logger('Geolocation');
 

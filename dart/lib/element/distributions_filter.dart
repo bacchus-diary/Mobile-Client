@@ -1,4 +1,4 @@
-library triton_note.element.distributions_filter;
+library bacchus_diary.element.distributions_filter;
 
 import 'dart:html';
 
@@ -7,23 +7,23 @@ import 'package:logging/logging.dart';
 import 'package:paper_elements/paper_checkbox.dart';
 import 'package:paper_elements/paper_toggle_button.dart';
 
-import 'package:triton_note/model/location.dart';
-import 'package:triton_note/model/value_unit.dart';
-import 'package:triton_note/dialog/edit_timestamp.dart';
-import 'package:triton_note/dialog/edit_weather.dart';
-import 'package:triton_note/dialog/edit_tide.dart';
-import 'package:triton_note/service/preferences.dart';
-import 'package:triton_note/util/distributions_filters.dart';
-import 'package:triton_note/util/getter_setter.dart';
-import 'package:triton_note/util/enums.dart';
-import 'package:triton_note/util/main_frame.dart';
+import 'package:bacchus_diary/model/location.dart';
+import 'package:bacchus_diary/model/value_unit.dart';
+import 'package:bacchus_diary/dialog/edit_timestamp.dart';
+import 'package:bacchus_diary/dialog/edit_weather.dart';
+import 'package:bacchus_diary/dialog/edit_tide.dart';
+import 'package:bacchus_diary/service/preferences.dart';
+import 'package:bacchus_diary/util/distributions_filters.dart';
+import 'package:bacchus_diary/util/getter_setter.dart';
+import 'package:bacchus_diary/util/enums.dart';
+import 'package:bacchus_diary/util/main_frame.dart';
 
 final _logger = new Logger('DistributionsFilterElement');
 
 @Component(
     selector: 'distributions-filter',
-    templateUrl: 'packages/triton_note/element/distributions_filter.html',
-    cssUrl: 'packages/triton_note/element/distributions_filter.css',
+    templateUrl: 'packages/bacchus_diary/element/distributions_filter.html',
+    cssUrl: 'packages/bacchus_diary/element/distributions_filter.css',
     useShadowDom: true)
 class DistributionsFilterElement extends ShadowRootAware with DistributionsFilter {
   @NgOneWayOneTime('setter') set setter(Setter<DistributionsFilterElement> v) => v?.value = this; // Optional

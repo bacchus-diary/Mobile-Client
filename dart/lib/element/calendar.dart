@@ -1,4 +1,4 @@
-library triton_note.element.calendar;
+library bacchus_diary.element.calendar;
 
 import 'dart:html';
 
@@ -8,14 +8,14 @@ import 'package:logging/logging.dart';
 import 'package:core_elements/core_animated_pages.dart';
 import 'package:core_elements/core_animation.dart';
 
-import 'package:triton_note/util/getter_setter.dart';
+import 'package:bacchus_diary/util/getter_setter.dart';
 
 final _logger = new Logger('CalendarElement');
 
 @Component(
     selector: 'calendar',
-    templateUrl: 'packages/triton_note/element/calendar.html',
-    cssUrl: 'packages/triton_note/element/calendar.css',
+    templateUrl: 'packages/bacchus_diary/element/calendar.html',
+    cssUrl: 'packages/bacchus_diary/element/calendar.css',
     useShadowDom: true)
 class CalendarElement extends ShadowRootAware {
   static const REFRESH = 'REFRESH';

@@ -1,16 +1,16 @@
-library triton_note.element.num_input;
+library bacchus_diary.element.num_input;
 
 import 'package:logging/logging.dart';
 import 'package:angular/angular.dart';
 
-import 'package:triton_note/util/getter_setter.dart';
+import 'package:bacchus_diary/util/getter_setter.dart';
 
 final _logger = new Logger('NumInputElement');
 
 @Component(
     selector: 'num-input',
-    templateUrl: 'packages/triton_note/element/num_input.html',
-    cssUrl: 'packages/triton_note/element/num_input.css',
+    templateUrl: 'packages/bacchus_diary/element/num_input.html',
+    cssUrl: 'packages/bacchus_diary/element/num_input.css',
     useShadowDom: true)
 class NumInputElement {
   @NgOneWayOneTime('setter') set setter(Setter<NumInputElement> v) => v?.value = this; // Optional

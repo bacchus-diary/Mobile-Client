@@ -1,4 +1,4 @@
-library triton_note.withjs;
+library bacchus_diary.withjs;
 
 import 'dart:js';
 

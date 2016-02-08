@@ -1,12 +1,12 @@
-library triton_note.model.location;
+library bacchus_diary.model.location;
 
 import 'dart:math';
 
 import 'package:logging/logging.dart';
 
-import 'package:triton_note/model/value_unit.dart';
-import 'package:triton_note/util/enums.dart';
-import 'package:triton_note/model/_json_support.dart';
+import 'package:bacchus_diary/model/value_unit.dart';
+import 'package:bacchus_diary/util/enums.dart';
+import 'package:bacchus_diary/model/_json_support.dart';
 
 final Logger _logger = new Logger('Location');
 

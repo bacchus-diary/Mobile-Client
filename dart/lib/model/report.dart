@@ -1,12 +1,12 @@
-library triton_note.model.report;
+library bacchus_diary.model.report;
 
 import 'dart:convert';
 
-import 'package:triton_note/model/_json_support.dart';
-import 'package:triton_note/model/value_unit.dart';
-import 'package:triton_note/model/photo.dart';
-import 'package:triton_note/model/location.dart';
-import 'package:triton_note/service/aws/dynamodb.dart';
+import 'package:bacchus_diary/model/_json_support.dart';
+import 'package:bacchus_diary/model/value_unit.dart';
+import 'package:bacchus_diary/model/photo.dart';
+import 'package:bacchus_diary/model/location.dart';
+import 'package:bacchus_diary/service/aws/dynamodb.dart';
 
 abstract class Report implements DBRecord<Report> {
   String comment;

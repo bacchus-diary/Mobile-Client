@@ -1,4 +1,4 @@
-library triton_note.util.dialog;
+library bacchus_diary.util.dialog;
 
 import 'dart:async';
 import 'dart:html';

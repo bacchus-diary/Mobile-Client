@@ -1,14 +1,14 @@
-library triton_note.service.reports;
+library bacchus_diary.service.reports;
 
 import 'dart:async';
 
 import 'package:logging/logging.dart';
 
-import 'package:triton_note/model/report.dart';
-import 'package:triton_note/model/photo.dart';
-import 'package:triton_note/service/aws/cognito.dart';
-import 'package:triton_note/service/aws/dynamodb.dart';
-import 'package:triton_note/util/pager.dart';
+import 'package:bacchus_diary/model/report.dart';
+import 'package:bacchus_diary/model/photo.dart';
+import 'package:bacchus_diary/service/aws/cognito.dart';
+import 'package:bacchus_diary/service/aws/dynamodb.dart';
+import 'package:bacchus_diary/util/pager.dart';
 
 final _logger = new Logger('Reports');
 

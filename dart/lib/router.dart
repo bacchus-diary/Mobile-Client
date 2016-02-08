@@ -1,9 +1,9 @@
-library triton_note.routing;
+library bacchus_diary.routing;
 
 import 'dart:html';
 import 'package:angular/angular.dart';
 
-void getTritonNoteRouteInitializer(Router router, RouteViewFactory views) {
+void getRouteInitializer(Router router, RouteViewFactory views) {
   views.configure({
     'acceptance': ngRoute(path: '/acceptance', viewHtml: '<acceptance></acceptance>'),
     'reports-list': ngRoute(path: '/reports', viewHtml: '<reports-list></reports-list>'),

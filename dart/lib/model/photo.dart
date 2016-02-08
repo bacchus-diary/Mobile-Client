@@ -1,12 +1,12 @@
-library triton_note.model.photo;
+library bacchus_diary.model.photo;
 
 import 'dart:async';
 
 import 'package:logging/logging.dart';
 
-import 'package:triton_note/service/aws/cognito.dart';
-import 'package:triton_note/service/aws/s3file.dart';
-import 'package:triton_note/settings.dart';
+import 'package:bacchus_diary/service/aws/cognito.dart';
+import 'package:bacchus_diary/service/aws/s3file.dart';
+import 'package:bacchus_diary/settings.dart';
 
 final _logger = new Logger('Photo');
 

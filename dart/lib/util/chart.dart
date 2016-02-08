@@ -1,4 +1,4 @@
-library triton_note.util.chart;
+library bacchus_diary.util.chart;
 
 import 'dart:html';
 

@@ -1,4 +1,4 @@
-library triton_note.dialog.edit_weather;
+library bacchus_diary.dialog.edit_weather;
 
 import 'dart:async';
 import 'dart:html';
@@ -7,17 +7,17 @@ import 'package:angular/angular.dart';
 import 'package:logging/logging.dart';
 import 'package:paper_elements/paper_dialog.dart';
 
-import 'package:triton_note/model/location.dart';
-import 'package:triton_note/model/value_unit.dart';
-import 'package:triton_note/service/preferences.dart';
-import 'package:triton_note/util/getter_setter.dart';
-import 'package:triton_note/util/enums.dart';
-import 'package:triton_note/util/main_frame.dart';
+import 'package:bacchus_diary/model/location.dart';
+import 'package:bacchus_diary/model/value_unit.dart';
+import 'package:bacchus_diary/service/preferences.dart';
+import 'package:bacchus_diary/util/getter_setter.dart';
+import 'package:bacchus_diary/util/enums.dart';
+import 'package:bacchus_diary/util/main_frame.dart';
 
 final _logger = new Logger('EditWeatherDialog');
 
 @Component(
-    selector: 'edit-weather-dialog', templateUrl: 'packages/triton_note/dialog/edit_weather.html', useShadowDom: true)
+    selector: 'edit-weather-dialog', templateUrl: 'packages/bacchus_diary/dialog/edit_weather.html', useShadowDom: true)
 class EditWeatherDialog extends AbstractDialog implements ShadowRootAware {
   @NgOneWayOneTime('setter') set setter(Setter<EditWeatherDialog> v) => v?.value = this; // Optional
   @NgOneWay('value') Weather value;

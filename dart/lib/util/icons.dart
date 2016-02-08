@@ -1,4 +1,4 @@
-library triton_note.util.icons;
+library bacchus_diary.util.icons;
 
 const ICON_DIR = 'img/icons';
 

@@ -1,4 +1,4 @@
-library triton_note.page.report_detail;
+library bacchus_diary.page.report_detail;
 
 import 'dart:async';
 import 'dart:html';
@@ -11,25 +11,25 @@ import 'package:paper_elements/paper_icon_button.dart';
 import 'package:paper_elements/paper_autogrow_textarea.dart';
 import 'package:paper_elements/paper_toast.dart';
 
-import 'package:triton_note/element/expandable_gmap.dart';
-import 'package:triton_note/dialog/confirm.dart';
-import 'package:triton_note/dialog/edit_fish.dart';
-import 'package:triton_note/dialog/edit_timestamp.dart';
-import 'package:triton_note/dialog/edit_tide.dart';
-import 'package:triton_note/dialog/edit_weather.dart';
-import 'package:triton_note/model/report.dart';
-import 'package:triton_note/model/location.dart' as Loc;
-import 'package:triton_note/model/value_unit.dart';
-import 'package:triton_note/service/preferences.dart';
-import 'package:triton_note/service/reports.dart';
-import 'package:triton_note/service/facebook.dart';
-import 'package:triton_note/service/natural_conditions.dart';
-import 'package:triton_note/service/googlemaps_browser.dart';
-import 'package:triton_note/util/blinker.dart';
-import 'package:triton_note/util/enums.dart';
-import 'package:triton_note/util/fabric.dart';
-import 'package:triton_note/util/getter_setter.dart';
-import 'package:triton_note/util/main_frame.dart';
+import 'package:bacchus_diary/element/expandable_gmap.dart';
+import 'package:bacchus_diary/dialog/confirm.dart';
+import 'package:bacchus_diary/dialog/edit_fish.dart';
+import 'package:bacchus_diary/dialog/edit_timestamp.dart';
+import 'package:bacchus_diary/dialog/edit_tide.dart';
+import 'package:bacchus_diary/dialog/edit_weather.dart';
+import 'package:bacchus_diary/model/report.dart';
+import 'package:bacchus_diary/model/location.dart' as Loc;
+import 'package:bacchus_diary/model/value_unit.dart';
+import 'package:bacchus_diary/service/preferences.dart';
+import 'package:bacchus_diary/service/reports.dart';
+import 'package:bacchus_diary/service/facebook.dart';
+import 'package:bacchus_diary/service/natural_conditions.dart';
+import 'package:bacchus_diary/service/googlemaps_browser.dart';
+import 'package:bacchus_diary/util/blinker.dart';
+import 'package:bacchus_diary/util/enums.dart';
+import 'package:bacchus_diary/util/fabric.dart';
+import 'package:bacchus_diary/util/getter_setter.dart';
+import 'package:bacchus_diary/util/main_frame.dart';
 
 final Logger _logger = new Logger('ReportDetailPage');
 
@@ -53,8 +53,8 @@ typedef void OnChanged(newValue);
 
 @Component(
     selector: 'report-detail',
-    templateUrl: 'packages/triton_note/page/report_detail.html',
-    cssUrl: 'packages/triton_note/page/report_detail.css',
+    templateUrl: 'packages/bacchus_diary/page/report_detail.html',
+    cssUrl: 'packages/bacchus_diary/page/report_detail.css',
     useShadowDom: true)
 class ReportDetailPage extends SubPage {
   final Future<Report> _report;

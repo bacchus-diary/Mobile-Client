@@ -1,12 +1,12 @@
-library triton_note.model.value_unit;
+library bacchus_diary.model.value_unit;
 
 import 'dart:async';
 import 'dart:math';
 
 import 'package:logging/logging.dart';
 
-import 'package:triton_note/util/enums.dart';
-import 'package:triton_note/util/getter_setter.dart';
+import 'package:bacchus_diary/util/enums.dart';
+import 'package:bacchus_diary/util/getter_setter.dart';
 
 final _logger = new Logger('ValueUnit');
 

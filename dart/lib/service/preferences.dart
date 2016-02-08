@@ -1,13 +1,13 @@
-library triton_note.service.preferences;
+library bacchus_diary.service.preferences;
 
 import 'dart:async';
 
 import 'package:logging/logging.dart';
 
-import 'package:triton_note/model/value_unit.dart';
-import 'package:triton_note/service/aws/cognito.dart';
-import 'package:triton_note/util/enums.dart';
-import 'package:triton_note/util/fabric.dart';
+import 'package:bacchus_diary/model/value_unit.dart';
+import 'package:bacchus_diary/service/aws/cognito.dart';
+import 'package:bacchus_diary/util/enums.dart';
+import 'package:bacchus_diary/util/fabric.dart';
 
 final _logger = new Logger('UserPreferences');
 

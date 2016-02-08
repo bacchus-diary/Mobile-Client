@@ -1,4 +1,4 @@
-library triton_note.util.blinker;
+library bacchus_diary.util.blinker;
 
 import 'dart:async';
 import 'dart:html';
@@ -6,7 +6,7 @@ import 'dart:html';
 import 'package:logging/logging.dart';
 import 'package:core_elements/core_animation.dart';
 
-import 'package:triton_note/util/getter_setter.dart';
+import 'package:bacchus_diary/util/getter_setter.dart';
 
 final _logger = new Logger('ReportDetailPage');
 

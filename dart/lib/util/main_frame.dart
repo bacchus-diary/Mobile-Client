@@ -1,4 +1,4 @@
-library triton_note.util.main_frame;
+library bacchus_diary.util.main_frame;
 
 import 'dart:async';
 import 'dart:html';
@@ -8,7 +8,7 @@ import 'package:logging/logging.dart';
 import 'package:paper_elements/paper_dialog.dart';
 import 'package:core_elements/core_drawer_panel.dart';
 
-import 'package:triton_note/util/cordova.dart';
+import 'package:bacchus_diary/util/cordova.dart';
 
 final Logger _logger = new Logger('MainFrame');
 

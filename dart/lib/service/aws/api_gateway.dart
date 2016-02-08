@@ -1,4 +1,4 @@
-library triton_note.service.aws.lambda;
+library bacchus_diary.service.aws.lambda;
 
 import 'dart:async';
 import 'dart:convert';
@@ -6,7 +6,7 @@ import 'dart:html';
 
 import 'package:logging/logging.dart';
 
-import 'package:triton_note/settings.dart';
+import 'package:bacchus_diary/settings.dart';
 
 final _logger = new Logger('ApiGateway');
 

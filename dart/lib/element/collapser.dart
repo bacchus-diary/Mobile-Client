@@ -1,4 +1,4 @@
-library triton_note.element.collapser;
+library bacchus_diary.element.collapser;
 
 import 'dart:html';
 
@@ -7,14 +7,14 @@ import 'package:logging/logging.dart';
 import 'package:core_elements/core_collapse.dart';
 import 'package:core_elements/core_animation.dart';
 
-import 'package:triton_note/util/getter_setter.dart';
+import 'package:bacchus_diary/util/getter_setter.dart';
 
 final _logger = new Logger('CollapserElement');
 
 @Component(
     selector: 'collapser',
-    templateUrl: 'packages/triton_note/element/collapser.html',
-    cssUrl: 'packages/triton_note/element/collapser.css',
+    templateUrl: 'packages/bacchus_diary/element/collapser.html',
+    cssUrl: 'packages/bacchus_diary/element/collapser.css',
     useShadowDom: true)
 class CollapserElement extends ShadowRootAware {
   @NgOneWayOneTime('setter') set setter(Setter<CollapserElement> v) => v?.value = this; // Optional

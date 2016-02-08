@@ -1,4 +1,4 @@
-library triton_note.service.aws.cognito;
+library bacchus_diary.service.aws.cognito;
 
 import 'dart:async';
 import 'dart:convert';
@@ -8,8 +8,8 @@ import 'dart:js';
 import 'package:logging/logging.dart';
 import 'package:yaml/yaml.dart';
 
-import 'package:triton_note/util/fabric.dart';
-import 'package:triton_note/service/facebook.dart';
+import 'package:bacchus_diary/util/fabric.dart';
+import 'package:bacchus_diary/service/facebook.dart';
 
 final _logger = new Logger('Cognito');
 

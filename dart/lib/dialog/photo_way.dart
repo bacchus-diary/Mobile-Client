@@ -1,4 +1,4 @@
-library triton_note.dialog.photo_way;
+library bacchus_diary.dialog.photo_way;
 
 import 'dart:html';
 
@@ -6,12 +6,12 @@ import 'package:angular/angular.dart';
 import 'package:logging/logging.dart';
 import 'package:paper_elements/paper_dialog.dart';
 
-import 'package:triton_note/util/getter_setter.dart';
-import 'package:triton_note/util/main_frame.dart';
+import 'package:bacchus_diary/util/getter_setter.dart';
+import 'package:bacchus_diary/util/main_frame.dart';
 
 final _logger = new Logger('PhotoWayDialog');
 
-@Component(selector: 'photo-way-dialog', templateUrl: 'packages/triton_note/dialog/photo_way.html', useShadowDom: true)
+@Component(selector: 'photo-way-dialog', templateUrl: 'packages/bacchus_diary/dialog/photo_way.html', useShadowDom: true)
 class PhotoWayDialog extends AbstractDialog implements ShadowRootAware {
   @NgOneWayOneTime('setter') Setter<PhotoWayDialog> setter;
 

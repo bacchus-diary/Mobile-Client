@@ -1,4 +1,4 @@
-library triton_note.service.photo_shop;
+library bacchus_diary.service.photo_shop;
 
 import 'dart:async';
 import 'dart:convert';
@@ -8,10 +8,10 @@ import 'dart:typed_data';
 
 import 'package:logging/logging.dart';
 
-import 'package:triton_note/model/location.dart';
-import 'package:triton_note/util/cordova.dart';
-import 'package:triton_note/util/dialog.dart' as Dialog;
-import 'package:triton_note/util/file_reader.dart';
+import 'package:bacchus_diary/model/location.dart';
+import 'package:bacchus_diary/util/cordova.dart';
+import 'package:bacchus_diary/util/dialog.dart' as Dialog;
+import 'package:bacchus_diary/util/file_reader.dart';
 
 final _logger = new Logger('PhotoShop');
 

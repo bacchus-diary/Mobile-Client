@@ -1,4 +1,4 @@
-library triton_note.service.googlemaps;
+library bacchus_diary.service.googlemaps;
 
 import 'dart:async';
 import 'dart:html';
@@ -6,11 +6,11 @@ import 'dart:js';
 
 import 'package:logging/logging.dart';
 
-import 'package:triton_note/model/location.dart';
-import 'package:triton_note/service/geolocation.dart';
-import 'package:triton_note/util/geometry.dart';
-import 'package:triton_note/util/icons.dart';
-import 'package:triton_note/settings.dart';
+import 'package:bacchus_diary/model/location.dart';
+import 'package:bacchus_diary/service/geolocation.dart';
+import 'package:bacchus_diary/util/geometry.dart';
+import 'package:bacchus_diary/util/icons.dart';
+import 'package:bacchus_diary/settings.dart';
 
 final _logger = new Logger('GoogleMaps');
 
@@ -20,7 +20,7 @@ Future<Null> _append() async {
   if (_onAppended == null) {
     _onAppended = new Completer();
 
-    final initializer = 'triton_note_initialize_googlemaps';
+    final initializer = 'bacchus_diary_initialize_googlemaps';
     context[initializer] = () {
       _logger.info("Google Maps API is initialized.");
       _onAppended.complete();

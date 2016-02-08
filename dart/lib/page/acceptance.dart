@@ -1,4 +1,4 @@
-library triton_note.page.acceptance;
+library bacchus_diary.page.acceptance;
 
 import 'dart:convert';
 import 'dart:html';
@@ -7,7 +7,7 @@ import 'dart:js';
 import 'package:angular/angular.dart';
 import 'package:logging/logging.dart';
 
-import 'package:triton_note/util/cordova.dart';
+import 'package:bacchus_diary/util/cordova.dart';
 
 final Logger _logger = new Logger('AcceptancePage');
 
@@ -17,8 +17,8 @@ String _stringify(JsObject obj) => context['JSON'].callMethod('stringify', [obj]
 
 @Component(
     selector: 'acceptance',
-    templateUrl: 'packages/triton_note/page/acceptance.html',
-    cssUrl: 'packages/triton_note/page/acceptance.css',
+    templateUrl: 'packages/bacchus_diary/page/acceptance.html',
+    cssUrl: 'packages/bacchus_diary/page/acceptance.css',
     useShadowDom: true)
 class AcceptancePage implements ShadowRootAware {
   final Router _router;

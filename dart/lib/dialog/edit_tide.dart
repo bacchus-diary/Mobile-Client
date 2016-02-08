@@ -1,4 +1,4 @@
-library triton_note.dialog.edit_tide;
+library bacchus_diary.dialog.edit_tide;
 
 import 'dart:html';
 
@@ -6,14 +6,14 @@ import 'package:angular/angular.dart';
 import 'package:logging/logging.dart';
 import 'package:paper_elements/paper_dialog.dart';
 
-import 'package:triton_note/model/location.dart';
-import 'package:triton_note/util/getter_setter.dart';
-import 'package:triton_note/util/enums.dart';
-import 'package:triton_note/util/main_frame.dart';
+import 'package:bacchus_diary/model/location.dart';
+import 'package:bacchus_diary/util/getter_setter.dart';
+import 'package:bacchus_diary/util/enums.dart';
+import 'package:bacchus_diary/util/main_frame.dart';
 
 final _logger = new Logger('EditTideDialog');
 
-@Component(selector: 'edit-tide-dialog', templateUrl: 'packages/triton_note/dialog/edit_tide.html', useShadowDom: true)
+@Component(selector: 'edit-tide-dialog', templateUrl: 'packages/bacchus_diary/dialog/edit_tide.html', useShadowDom: true)
 class EditTideDialog extends AbstractDialog implements ShadowRootAware {
   static const List<Tide> tideList = const [Tide.High, Tide.Flood, Tide.Ebb, Tide.Low];
 
