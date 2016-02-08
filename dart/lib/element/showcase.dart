@@ -75,14 +75,13 @@ class ShowcaseElement extends ShadowRootAware {
     return proc(sections, index, current, other);
   }
 
-  bool get isLeftDisabled =>
-      slide((sections, index, current, other) => (current.value == null && other.value == null) || current.value == 0);
+  bool get isLeftEnabled =>
+      slide((sections, index, current, other) => (current.value != null || other.value != null) && current.value != 0);
 
-  bool get isRightDisabled => slide((sections, index, current, other) => current.value == null);
+  bool get isRightEnabled => slide((sections, index, current, other) => current.value != null);
 
   slideLeft() async {
     slide((sections, index, current, other) {
-      if ((current.value == null && other.value == null) || current.value == 0) return;
       other.value = (current.value ?? list.length) - 1;
 
       if (index == 0) {
@@ -96,7 +95,6 @@ class ShowcaseElement extends ShadowRootAware {
 
   slideRight() async {
     slide((sections, index, current, other) {
-      if (current.value == null) return;
       final nextIndex = current.value + 1;
       other.value = (list.length <= nextIndex) ? null : nextIndex;
 
