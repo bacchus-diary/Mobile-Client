@@ -16,6 +16,12 @@ end
 
 before_all do
   into_mode
+  
+  def icon(key = nil)
+    name = ['icon'].push(key).select { |x| x != nil }.join('-')
+    File.join('..', 'resources', "#{name}.png")
+  end
+  File.rename(icon(ENV["FASTLANE_PLATFORM_NAME"]), icon())
 
   dart
   cordova(plugins: [
