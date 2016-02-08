@@ -108,6 +108,15 @@ class ShowcaseElement extends ShadowRootAware {
     });
   }
 
+  delete(int deletingIndex) async {
+    currentIndex((current, other) {
+      if (list.length - 1 == deletingIndex) {
+        current.value = null;
+      }
+      list.removeAt(deletingIndex);
+    });
+  }
+
   add() async {
     final dialog = await photoWayDialog.future;
     dialog.onClosed(() {
