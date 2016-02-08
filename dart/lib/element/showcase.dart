@@ -1,5 +1,6 @@
 library bacchus_diary.element.showcase;
 
+import 'dart:async';
 import 'dart:html';
 
 import 'package:angular/angular.dart';
@@ -8,6 +9,11 @@ import 'package:logging/logging.dart';
 import 'package:core_elements/core_animated_pages.dart';
 import 'package:core_elements/core_animation.dart';
 
+import 'package:bacchus_diary/dialog/photo_way.dart';
+import 'package:bacchus_diary/model/report.dart';
+import 'package:bacchus_diary/service/aws/s3file.dart';
+import 'package:bacchus_diary/service/photo_shop.dart';
+import 'package:bacchus_diary/util/fabric.dart';
 import 'package:bacchus_diary/util/getter_setter.dart';
 
 final _logger = new Logger('ShowcaseElement');
@@ -18,172 +24,123 @@ final _logger = new Logger('ShowcaseElement');
     cssUrl: 'packages/bacchus_diary/element/showcase.css',
     useShadowDom: true)
 class ShowcaseElement extends ShadowRootAware {
-  static const REFRESH = 'REFRESH';
-
-  static const maxPages = 10;
-  static const weekNames = const ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sut'];
-  static const day1 = const Duration(days: 1);
-  static const day31 = const Duration(days: 31);
-
   @NgOneWayOneTime('setter') set setter(Setter<ShowcaseElement> v) => v?.value = this; // Optional
-  @NgTwoWay('value') DateTime value;
-  @NgAttr('start-of-week') String startOfWeekAttr;
+  @NgOneWay('list') List<Leaf> list;
+  @NgOneWay('reportId') String reportId;
 
-  _refresh() {
-    startOfWeek = startOfWeekAttr == null ? 0 : int.parse(startOfWeekAttr);
-    weekNamesList = new List.generate(7, (i) => weekNames[(startOfWeek + i) % 7]).toList();
-    if (value != null) {
-      value = new DateTime(value.year, value.month, value.day);
-      _logger.finest(() => "Setting current value: ${value}");
-      pageA_currentFirst = new DateTime(value.year, value.month);
+  final FuturedValue<PhotoWayDialog> photoWayDialog = new FuturedValue();
+
+  final GetterSetter<int> _indexA = new PipeValue();
+  final GetterSetter<int> _indexB = new PipeValue();
+  int get indexA => _indexA.value;
+  int get indexB => _indexB.value;
+
+  CoreAnimatedPages _pages;
+
+  int get height => width;
+  int _width;
+  int get width {
+    if (_width == null) {
+      final e = _root?.querySelector('section');
+      if (e != null && 0 < e.clientWidth) {
+        _width = e.clientWidth;
+      }
     }
+    return _width;
   }
 
+  ShadowRoot _root;
   @override
-  void onShadowRoot(ShadowRoot shadowRoot) {
-    _pages = shadowRoot.querySelector('core-animated-pages') as CoreAnimatedPages..selected = 0;
-    _logger.finest(() => "Opening Calendar");
-    shadowRoot.host.on[REFRESH].listen((event) {
-      _pageA_currentFirst = null;
+  void onShadowRoot(ShadowRoot sr) {
+    _root = sr;
+    _pages = _root.querySelector('core-animated-pages') as CoreAnimatedPages..selected = 0;
+    _logger.finest(() => "Opening Showcase");
+  }
+
+  slide(proc(List<Element> sections, int index, GetterSetter<int> current, GetterSetter<int> other)) {
+    if (_pages == null) return null;
+
+    final index = _pages.selected;
+    final sections = _pages.querySelectorAll('section');
+
+    GetterSetter<int> current, other;
+    if (sections[index].id == "pageA") {
+      current = _indexA;
+      other = _indexB;
+    } else {
+      current = _indexB;
+      other = _indexA;
+    }
+
+    return proc(sections, index, current, other);
+  }
+
+  bool get isLeftDisabled =>
+      slide((sections, index, current, other) => (current.value == null && other.value == null) || current.value == 0);
+
+  bool get isRightDisabled => slide((sections, index, current, other) => current.value == null);
+
+  slideLeft() async {
+    slide((sections, index, current, other) {
+      if ((current.value == null && other.value == null) || current.value == 0) return;
+      other.value = (current.value ?? list.length) - 1;
+
+      if (index == 0) {
+        final pre = sections[1];
+        pre.remove();
+        _pages.insertBefore(pre, sections[0]);
+      }
+      _pages.selected = 0;
     });
   }
 
-  int startOfWeek;
-  List<String> weekNamesList;
-  CoreAnimatedPages _pages;
-  DateTime _pageA_currentFirst, _pageB_currentFirst;
-  List<List<DateTime>> pageA_weeks, pageB_weeks;
-  DateTime today;
+  slideRight() async {
+    slide((sections, index, current, other) {
+      if (current.value == null) return;
+      final nextIndex = current.value + 1;
+      other.value = (list.length <= nextIndex) ? null : nextIndex;
 
-  DateTime get pageA_currentFirst {
-    if (_pageA_currentFirst == null) {
-      _refresh();
-    }
-    return _pageA_currentFirst;
-  }
-
-  set pageA_currentFirst(DateTime v) {
-    pageA_weeks = weeks(v);
-    _pageA_currentFirst = v;
-  }
-
-  DateTime get pageB_currentFirst => _pageB_currentFirst;
-  set pageB_currentFirst(DateTime v) {
-    pageB_weeks = weeks(v);
-    _pageB_currentFirst = v;
-  }
-
-  List<List<DateTime>> weeks(DateTime currentFirst) {
-    _logger.info("Creating calender: ${currentFirst}");
-    today = makeToday();
-
-    final last = atFirst(currentFirst.add(day31));
-    var day = new DateTime(currentFirst.year, currentFirst.month, 1);
-    day = day.subtract(new Duration(days: (day.weekday - startOfWeek + 7) % 7));
-    _logger.finer("Start from: ${day} to ${last}");
-
-    final table = [];
-    while (day.isBefore(last)) {
-      _logger.finest("week at ${day}");
-      final row = [];
-      for (var i = 0; i < 7; i++) {
-        final list = [day.month == currentFirst.month ? "inside" : "outside"];
-        if (day == value) list.add('selected');
-        if (day == today) list.add('today');
-
-        row.add(day);
-        day = day.add(day1);
-      }
-      table.add(row);
-    }
-    return table;
-  }
-
-  DateTime atFirst(DateTime v) => new DateTime(v.year, v.month);
-  DateTime makeToday() {
-    final now = new DateTime.now();
-    return new DateTime(now.year, now.month, now.day);
-  }
-
-  selectDay(int year, int month, int day) {
-    final selected = new DateTime(year, month, day);
-    _logger.fine("Selected: ${selected}");
-    value = selected;
-  }
-
-  goToday() async {
-    final cur = atFirst(new DateTime.now());
-    _logger.fine("Today's month: ${cur}");
-
-    final all = _pages.querySelectorAll('section');
-    final index = _pages.selected;
-
-    final displayedDate = all[index].id == "pageA" ? pageA_currentFirst : pageB_currentFirst;
-    if (displayedDate == cur) {
-      _logger.fine(() => "Today is already displayed");
-      return;
-    }
-
-    if (all[index].id == "pageA") {
-      pageB_currentFirst = cur;
-    } else {
-      pageA_currentFirst = cur;
-    }
-    final nextIndex = cur.isAfter(displayedDate) ? 1 : 0;
-    final next = all[(index + 1) % 2];
-    if (index == nextIndex) {
-      next.remove();
-      if (nextIndex == 0) {
-        _pages.insertBefore(next, all.first);
-      } else {
+      if (index == 1) {
+        final next = sections[0];
+        next.remove();
         _pages.append(next);
       }
-    }
-    _pages.selected = nextIndex;
-    new CoreAnimation()
-      ..target = next
-      ..delay = 300
-      ..duration = 300
-      ..fill = "both"
-      ..keyframes = [
-        {'opacity': 0},
-        {'opacity': 1}
-      ]
-      ..play();
-    _logger.fine("Animation of page of today is started");
+      _pages.selected = 1;
+    });
   }
 
-  previousMonth() async {
-    final index = _pages.selected;
-    final all = _pages.querySelectorAll('section');
-
-    if (all[index].id == "pageA") {
-      pageB_currentFirst = atFirst(pageA_currentFirst.subtract(day1));
-    } else {
-      pageA_currentFirst = atFirst(pageB_currentFirst.subtract(day1));
-    }
-    if (index == 0) {
-      final pre = all[1];
-      pre.remove();
-      _pages.insertBefore(pre, all[0]);
-    }
-    _pages.selected = 0;
+  add() async {
+    final dialog = await photoWayDialog.future;
+    dialog.onClosed(() {
+      _pickPhoto(dialog.take);
+    });
+    dialog.open();
   }
 
-  nextMonth() async {
-    final index = _pages.selected;
-    final all = _pages.querySelectorAll('section');
+  /**
+   * Picking photo and upload
+   */
+  _pickPhoto(bool take) async {
+    if (take == null) return;
 
-    if (all[index].id == "pageA") {
-      pageB_currentFirst = atFirst(pageA_currentFirst.add(day31));
-    } else {
-      pageA_currentFirst = atFirst(pageB_currentFirst.add(day31));
+    try {
+      final shop = new PhotoShop(take);
+      Future.wait([shop.timestamp, shop.geoinfo]).catchError((ex) => _logger.warning(() => "Error: ${ex}"));
+
+      final leaf = new Leaf.fromMap(reportId, {});
+
+      leaf.photo.reduced.mainview.url = await shop.photoUrl;
+
+      final path = await leaf.photo.original.storagePath;
+      await S3File.putObject(path, await shop.photo);
+      FabricAnswers.eventCustom(name: 'UploadPhoto', attributes: {'type': 'NEW_LEAF'});
+
+      list.add(leaf);
+      slide((sections, index, current, other) {
+        current.value = list.length - 1;
+      });
+    } catch (ex) {
+      _logger.warning(() => "Failed to pick photo: ${ex}");
     }
-    if (index == 1) {
-      final next = all[0];
-      next.remove();
-      _pages.append(next);
-    }
-    _pages.selected = 1;
   }
 }

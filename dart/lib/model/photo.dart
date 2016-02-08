@@ -28,9 +28,9 @@ class Photo {
   final Image original;
   final ReducedImages reduced;
 
-  Photo(String id)
-      : original = new Image(id, ReducedImages.PATH_ORIGINAL),
-        reduced = new ReducedImages(id);
+  Photo(String reportId, String id)
+      : original = new Image(reportId, id, ReducedImages.PATH_ORIGINAL),
+        reduced = new ReducedImages(reportId, id);
 }
 
 class ReducedImages {
@@ -43,9 +43,9 @@ class ReducedImages {
   final Image mainview;
   final Image thumbnail;
 
-  ReducedImages(String id)
-      : mainview = new Image(id, PATH_MAINVIEW),
-        thumbnail = new Image(id, PATH_THUMBNAIL);
+  ReducedImages(String reportId, String id)
+      : mainview = new Image(reportId, id, PATH_MAINVIEW),
+        thumbnail = new Image(reportId, id, PATH_THUMBNAIL);
 }
 
 class Image {
@@ -54,12 +54,13 @@ class Image {
 
   final _IntervalKeeper _refresher = new _IntervalKeeper(_refreshInterval);
   final String _reportId;
+  final String _name;
   final String relativePath;
   String _url;
 
-  Image(this._reportId, this.relativePath);
+  Image(this._reportId, this._name, this.relativePath);
 
-  Future<String> get storagePath async => "photo/${relativePath}/${await cognitoId}/${_reportId}/photo_file.jpg";
+  Future<String> get storagePath async => "photo/${relativePath}/${await cognitoId}/${_reportId}/${_name}.jpg";
 
   Future<String> makeUrl() async => S3File.url(await storagePath);
 
@@ -85,7 +86,8 @@ class Image {
       });
 
   _refreshUrl() {
-    if (_url == null) _refresher.go(() async {
+    if (_url == null)
+      _refresher.go(() async {
       try {
         url = await makeUrl();
       } catch (ex) {

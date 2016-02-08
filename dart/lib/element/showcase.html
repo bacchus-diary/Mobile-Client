@@ -1,79 +1,60 @@
 <div class="root">
-	<div class="view">
-		<p>{{ value | date:'longDate' }}</p>
-	</div>
 	<div class="control">
 		<div class="back">
-			<paper-button ng-click="previousMonth()">
+			<paper-button ng-click="slideLeft()" ng-if="!isLeftDisabled">
 				<core-icon icon="arrow-back"></core-icon>
 			</paper-button>
 		</div>
-		<div class="today">
-			<paper-button ng-click="goToday()">
-				<core-icon icon="today"></core-icon>
-				today
+		<div class="add">
+			<paper-button ng-click="add()">
+				<core-icon icon="add"></core-icon>
 			</paper-button>
 		</div>
 		<div class="forward">
-			<paper-button ng-click="nextMonth()">
+			<paper-button ng-click="slideRight()" ng-if="!isRightDisabled">
 				<core-icon icon="arrow-forward"></core-icon>
 			</paper-button>
 		</div>
 	</div>
-	<div class="calendar">
+	<div class="slider">
+        <photo-way-dialog setter="photoWayDialog"></photo-way-dialog>
 		<core-animated-pages transitions="slide-from-right">
 			<section id="pageA">
-				<div>
-					<div>
-						<p>{{pageA_currentFirst | date:'MMM, yyyy'}}</p>
-					</div>
-					<table>
-						<tr>
-							<th ng-repeat="name in weekNamesList">
-								<p>{{name}}</p>
-							</th>
-						</tr>
-						<tr ng-repeat="week in pageA_weeks">
-							<td ng-repeat="day in week"
-									ng-click="selectDay(day.year, day.month, day.day)"
-									ng-class="{
-										'inside': day.month == pageA_currentFirst.month,
-										'outside': day.month != pageA_currentFirst.month,
-										'today': day == today,
-										'selected': day == value
-									}">
-								<p>{{day.day}}</p>
-							</td>
-						</tr>
-					</table>
-				</div>
+                <div ng-if="indexA == null && height != null" class="addnew" style="height: {{height}}px">
+                    <p>ADD PHOTO</p>
+                    <paper-fab icon="add" class="red" ng-click="add()"></paper-fab>
+                </div>
+                <div ng-if="indexA != null">
+                    <div class="photo">
+                        <fit-image ng-if="width != null" width="width" height="height" shrink="true" url="list[indexA].photo.reduced.mainview.url"></fit-image>
+                    </div>
+                    <div class="desc">
+                        <paper-input-decorator label="NO TEXT">
+                            <paper-autogrow-textarea>
+                                <textarea ng-model="list[indexA].description"></textarea>
+                            </paper-autogrow-textarea>
+                        </paper-input-decorator>
+                    </div>
+                </div>
 			</section>
-			<section id="pageB">
-				<div>
-					<div>
-						<p>{{pageB_currentFirst | date:'MMM, yyyy'}}</p>
-					</div>
-					<table>
-						<tr>
-							<th ng-repeat="name in weekNamesList">
-								<p>{{name}}</p>
-							</th>
-						</tr>
-						<tr ng-repeat="week in pageB_weeks">
-							<td ng-repeat="day in week"
-									ng-click="selectDay(day.year, day.month, day.day)"
-									ng-class="{
-										'inside': day.month == pageB_currentFirst.month,
-										'outside': day.month != pageB_currentFirst.month,
-										'today': day == today,
-										'selected': day == value
-									}">
-								<p>{{day.day}}</p>
-							</td>
-						</tr>
-					</table>
-				</div>
-			</section>
+            <section id="pageB">
+                <div ng-if="indexB == null && height != null" class="addnew" style="height: {{height}}px">
+                    <p>ADD PHOTO</p>
+                    <paper-fab icon="add" class="red" ng-click="add()"></paper-fab>
+                </div>
+                <div ng-if="indexB != null">
+                    <div class="photo">
+                        <fit-image ng-if="width != null" width="width" height="height" shrink="true" url="list[indexB].photo.reduced.mainview.url"></fit-image>
+                    </div>
+                    <div class="desc">
+                        <paper-input-decorator label="NO TEXT">
+                            <paper-autogrow-textarea>
+                                <textarea ng-model="list[indexB].description"></textarea>
+                            </paper-autogrow-textarea>
+                        </paper-input-decorator>
+                    </div>
+                </div>
+            </section>
 		</core-animated-pages>
 	</div>
 </div>
