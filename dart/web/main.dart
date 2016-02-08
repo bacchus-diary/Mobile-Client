@@ -26,6 +26,7 @@ import 'package:bacchus_diary/element/collapser.dart';
 import 'package:bacchus_diary/element/expandable_gmap.dart';
 import 'package:bacchus_diary/element/expandable_text.dart';
 import 'package:bacchus_diary/element/num_input.dart';
+import 'package:bacchus_diary/element/showcase.dart';
 import 'package:bacchus_diary/element/infinite_scroll.dart';
 import 'package:bacchus_diary/page/acceptance.dart';
 import 'package:bacchus_diary/page/add_report.dart';
@@ -113,6 +114,7 @@ class AppModule extends Module {
     bind(ExpandableGMapElement);
     bind(ExpandableTextElement);
     bind(NumInputElement);
+    bind(ShowcaseElement);
     bind(InfiniteScrollElement);
 
     bind(AcceptancePage);
