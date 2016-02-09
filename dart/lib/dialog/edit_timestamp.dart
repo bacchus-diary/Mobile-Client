@@ -1,4 +1,4 @@
-library triton_note.dialog.edit_timestamp;
+library bacchus_diary.dialog.edit_timestamp;
 
 import 'dart:html';
 
@@ -6,15 +6,15 @@ import 'package:angular/angular.dart';
 import 'package:logging/logging.dart';
 import 'package:paper_elements/paper_dialog.dart';
 
-import 'package:triton_note/element/calendar.dart';
-import 'package:triton_note/util/getter_setter.dart';
-import 'package:triton_note/util/main_frame.dart';
+import 'package:bacchus_diary/element/calendar.dart';
+import 'package:bacchus_diary/util/getter_setter.dart';
+import 'package:bacchus_diary/util/main_frame.dart';
 
 final _logger = new Logger('EditTimestampDialog');
 
 @Component(
     selector: 'edit-timestamp-dialog',
-    templateUrl: 'packages/triton_note/dialog/edit_timestamp.html',
+    templateUrl: 'packages/bacchus_diary/dialog/edit_timestamp.html',
     useShadowDom: true)
 class EditTimestampDialog extends AbstractDialog implements ShadowRootAware {
   @NgOneWayOneTime('setter') set setter(Setter<EditTimestampDialog> v) => v?.value = this; // Optional

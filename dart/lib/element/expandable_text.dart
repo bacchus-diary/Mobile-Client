@@ -1,4 +1,4 @@
-library triton_note.element.expandable_text;
+library bacchus_diary.element.expandable_text;
 
 import 'dart:async';
 import 'dart:html';
@@ -7,15 +7,15 @@ import 'package:angular/angular.dart';
 import 'package:logging/logging.dart';
 import 'package:core_elements/core_animation.dart';
 
-import 'package:triton_note/util/getter_setter.dart';
-import 'package:triton_note/util/main_frame.dart';
+import 'package:bacchus_diary/util/getter_setter.dart';
+import 'package:bacchus_diary/util/main_frame.dart';
 
 final _logger = new Logger('ExpandableTextElement');
 
 @Component(
     selector: 'expandable-text',
-    templateUrl: 'packages/triton_note/element/expandable_text.html',
-    cssUrl: 'packages/triton_note/element/expandable_text.css',
+    templateUrl: 'packages/bacchus_diary/element/expandable_text.html',
+    cssUrl: 'packages/bacchus_diary/element/expandable_text.css',
     useShadowDom: true)
 class ExpandableTextElement extends ShadowRootAware {
   @NgOneWayOneTime('setter') set setter(Setter<ExpandableTextElement> v) => v?.value = this; // Optional

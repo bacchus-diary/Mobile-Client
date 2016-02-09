@@ -1,12 +1,12 @@
-library triton_note.service.natural_conditions;
+library bacchus_diary.service.natural_conditions;
 
 import 'dart:async';
 
 import 'package:logging/logging.dart';
 
-import 'package:triton_note/model/location.dart';
-import 'package:triton_note/settings.dart';
-import 'package:triton_note/service/aws/api_gateway.dart';
+import 'package:bacchus_diary/model/location.dart';
+import 'package:bacchus_diary/settings.dart';
+import 'package:bacchus_diary/service/aws/api_gateway.dart';
 
 final _logger = new Logger('NaturalConditions');
 

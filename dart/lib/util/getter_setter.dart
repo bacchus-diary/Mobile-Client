@@ -1,4 +1,4 @@
-library triton_note.util.getter_setter;
+library bacchus_diary.util.getter_setter;
 
 import 'dart:async';
 

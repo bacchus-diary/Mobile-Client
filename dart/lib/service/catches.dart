@@ -1,18 +1,18 @@
-library triton_note.service.catches;
+library bacchus_diary.service.catches;
 
 import 'dart:async';
 
 import 'package:logging/logging.dart';
 
-import 'package:triton_note/model/report.dart';
-import 'package:triton_note/model/location.dart';
-import 'package:triton_note/service/aws/cognito.dart';
-import 'package:triton_note/service/aws/dynamodb.dart';
-import 'package:triton_note/service/googlemaps_browser.dart';
-import 'package:triton_note/service/reports.dart';
-import 'package:triton_note/util/distributions_filters.dart';
-import 'package:triton_note/util/enums.dart';
-import 'package:triton_note/util/pager.dart';
+import 'package:bacchus_diary/model/report.dart';
+import 'package:bacchus_diary/model/location.dart';
+import 'package:bacchus_diary/service/aws/cognito.dart';
+import 'package:bacchus_diary/service/aws/dynamodb.dart';
+import 'package:bacchus_diary/service/googlemaps_browser.dart';
+import 'package:bacchus_diary/service/reports.dart';
+import 'package:bacchus_diary/util/distributions_filters.dart';
+import 'package:bacchus_diary/util/enums.dart';
+import 'package:bacchus_diary/util/pager.dart';
 
 final _logger = new Logger('Catches');
 

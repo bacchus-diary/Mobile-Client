@@ -1,4 +1,4 @@
-library triton_note.util.geometry;
+library bacchus_diary.util.geometry;
 
 import 'dart:html';
 

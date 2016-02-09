@@ -1,0 +1,93 @@
+@import "../../web/styles/common";
+
+div.slider {
+  width: 100%;
+  core-animated-pages {
+    width: 100%;
+    
+    section {
+      margin-top: 0;
+      margin-left: 4px;
+      margin-right: 4px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      
+      .leaf-view {
+        position: relative;
+        
+        .leaf {
+          .photo {
+            @include display-flex();
+            @include align-items(center);
+            @include justify-content(center);
+          }
+        }
+        
+        .addnew {
+          width: 100%;
+          @include display-flex();
+          @include flex-direction(column);
+          @include align-items(center);
+          @include justify-content(center);
+          
+          @include font-extra-bold(30px);
+          color: #777;
+          background-color: #eee;
+        }
+        
+        .gesture {
+          position: absolute;
+          top: 0;
+          width: 100%;
+        }
+        
+        .loading {
+          position: absolute;
+          top: 0;
+          width: 100%;
+          @include display-flex();
+          @include align-items(center);
+          @include justify-content(center);
+        }
+        
+        .control {
+          position: absolute;
+          top: 0;
+          width: 100%;
+          @include display-flex();
+          @include align-items(center);
+          @include justify-content(center);
+          
+          paper-fab {
+            background-color: #ddd;
+            opacity: 0.5;
+            /deep/ #icon {
+              color: black;
+            }
+          }
+          
+          .delete {
+            position: absolute;
+            top: 0;
+            right: 0;
+            
+            paper-fab {
+              background-color: #aaa;
+              /deep/ #icon {
+                color: red;
+              }
+            }
+          }
+          .back {
+            position: absolute;
+            left: 0;
+          }
+          .forward {
+            position: absolute;
+            right: 0;
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,14 +1,14 @@
-library triton_note.service.infer_spotname;
+library bacchus_diary.service.infer_spotname;
 
 import 'dart:async';
 import 'dart:math';
 
 import 'package:logging/logging.dart';
 
-import 'package:triton_note/model/location.dart';
-import 'package:triton_note/model/report.dart';
-import 'package:triton_note/service/aws/dynamodb.dart';
-import 'package:triton_note/service/reports.dart';
+import 'package:bacchus_diary/model/location.dart';
+import 'package:bacchus_diary/model/report.dart';
+import 'package:bacchus_diary/service/aws/dynamodb.dart';
+import 'package:bacchus_diary/service/reports.dart';
 
 final Logger _logger = new Logger('Inference');
 

@@ -1,4 +1,4 @@
-library triton_note.page.distributions;
+library bacchus_diary.page.distributions;
 
 import 'dart:async';
 import 'dart:html';
@@ -10,27 +10,27 @@ import 'package:core_elements/core_animated_pages.dart';
 import 'package:core_elements/core_header_panel.dart';
 import 'package:paper_elements/paper_tabs.dart';
 
-import 'package:triton_note/dialog/distributions_filter.dart';
-import 'package:triton_note/element/expandable_gmap.dart';
-import 'package:triton_note/model/location.dart';
-import 'package:triton_note/service/geolocation.dart' as Geo;
-import 'package:triton_note/service/googlemaps_browser.dart';
-import 'package:triton_note/service/catches.dart';
-import 'package:triton_note/util/distributions_filters.dart';
-import 'package:triton_note/util/icons.dart';
-import 'package:triton_note/util/enums.dart';
-import 'package:triton_note/util/chart.dart' as chart;
-import 'package:triton_note/util/fabric.dart';
-import 'package:triton_note/util/main_frame.dart';
-import 'package:triton_note/util/getter_setter.dart';
-import 'package:triton_note/util/pager.dart';
+import 'package:bacchus_diary/dialog/distributions_filter.dart';
+import 'package:bacchus_diary/element/expandable_gmap.dart';
+import 'package:bacchus_diary/model/location.dart';
+import 'package:bacchus_diary/service/geolocation.dart' as Geo;
+import 'package:bacchus_diary/service/googlemaps_browser.dart';
+import 'package:bacchus_diary/service/catches.dart';
+import 'package:bacchus_diary/util/distributions_filters.dart';
+import 'package:bacchus_diary/util/icons.dart';
+import 'package:bacchus_diary/util/enums.dart';
+import 'package:bacchus_diary/util/chart.dart' as chart;
+import 'package:bacchus_diary/util/fabric.dart';
+import 'package:bacchus_diary/util/main_frame.dart';
+import 'package:bacchus_diary/util/getter_setter.dart';
+import 'package:bacchus_diary/util/pager.dart';
 
 final _logger = new Logger('DistributionsPage');
 
 @Component(
     selector: 'distributions',
-    templateUrl: 'packages/triton_note/page/distributions.html',
-    cssUrl: 'packages/triton_note/page/distributions.css',
+    templateUrl: 'packages/bacchus_diary/page/distributions.html',
+    cssUrl: 'packages/bacchus_diary/page/distributions.css',
     useShadowDom: true)
 class DistributionsPage extends MainPage {
   DistributionsPage(Router router) : super(router);

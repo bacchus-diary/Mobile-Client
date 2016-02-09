@@ -1,8 +1,8 @@
-library triton_note.util.distributions_filters;
+library bacchus_diary.util.distributions_filters;
 
 import 'package:logging/logging.dart';
 
-import 'package:triton_note/model/location.dart';
+import 'package:bacchus_diary/model/location.dart';
 
 final _logger = new Logger('DistributionsFilters');
 

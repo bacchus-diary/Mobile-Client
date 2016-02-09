@@ -1,4 +1,4 @@
-library triton_note.page.preferences;
+library bacchus_diary.page.preferences;
 
 import 'dart:async';
 import 'dart:html';
@@ -7,19 +7,19 @@ import 'package:angular/angular.dart';
 import 'package:logging/logging.dart';
 import 'package:paper_elements/paper_toggle_button.dart';
 
-import 'package:triton_note/model/value_unit.dart';
-import 'package:triton_note/service/aws/cognito.dart';
-import 'package:triton_note/service/facebook.dart';
-import 'package:triton_note/service/preferences.dart';
-import 'package:triton_note/util/fabric.dart';
-import 'package:triton_note/util/main_frame.dart';
+import 'package:bacchus_diary/model/value_unit.dart';
+import 'package:bacchus_diary/service/aws/cognito.dart';
+import 'package:bacchus_diary/service/facebook.dart';
+import 'package:bacchus_diary/service/preferences.dart';
+import 'package:bacchus_diary/util/fabric.dart';
+import 'package:bacchus_diary/util/main_frame.dart';
 
 final _logger = new Logger('PreferencesPage');
 
 @Component(
     selector: 'preferences',
-    templateUrl: 'packages/triton_note/page/preferences.html',
-    cssUrl: 'packages/triton_note/page/preferences.css',
+    templateUrl: 'packages/bacchus_diary/page/preferences.html',
+    cssUrl: 'packages/bacchus_diary/page/preferences.css',
     useShadowDom: true)
 class PreferencesPage extends MainPage {
   static const submitDuration = const Duration(seconds: 20);

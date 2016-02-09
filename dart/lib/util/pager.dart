@@ -1,4 +1,4 @@
-library triton_note.util.pager;
+library bacchus_diary.util.pager;
 
 import 'dart:async';
 

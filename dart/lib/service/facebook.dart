@@ -1,4 +1,4 @@
-library triton_note.service.facebook;
+library bacchus_diary.service.facebook;
 
 import 'dart:async';
 import 'dart:convert';
@@ -7,12 +7,12 @@ import 'dart:js';
 
 import 'package:logging/logging.dart';
 
-import 'package:triton_note/formatter/fish_formatter.dart';
-import 'package:triton_note/settings.dart';
-import 'package:triton_note/service/aws/cognito.dart';
-import 'package:triton_note/model/report.dart';
-import 'package:triton_note/util/cordova.dart';
-import 'package:triton_note/util/fabric.dart';
+import 'package:bacchus_diary/formatter/fish_formatter.dart';
+import 'package:bacchus_diary/settings.dart';
+import 'package:bacchus_diary/service/aws/cognito.dart';
+import 'package:bacchus_diary/model/report.dart';
+import 'package:bacchus_diary/util/cordova.dart';
+import 'package:bacchus_diary/util/fabric.dart';
 
 class FBConnect {
   static final Logger _logger = new Logger('FBConnect');
@@ -89,7 +89,7 @@ class FBPublish {
     final fb = await _FBSettings.load();
 
     og(String name, [Map info = const {}]) {
-      final url = "https://api.fathens.org/triton-note/open_graph/${name}";
+      final url = "https://api.fathens.org/bacchus-diary/open_graph/${name}";
       final data = {
         'url': url,
         'region': settings.awsRegion,

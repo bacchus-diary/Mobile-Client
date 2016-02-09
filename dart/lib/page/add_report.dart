@@ -1,4 +1,4 @@
-library triton_note.page.reports_add;
+library bacchus_diary.page.reports_add;
 
 import 'dart:async';
 import 'dart:html';
@@ -10,244 +10,48 @@ import 'package:core_elements/core_animation.dart';
 import 'package:core_elements/core_dropdown.dart';
 import 'package:paper_elements/paper_toast.dart';
 
-import 'package:triton_note/element/expandable_gmap.dart';
-import 'package:triton_note/dialog/alert.dart';
-import 'package:triton_note/dialog/edit_fish.dart';
-import 'package:triton_note/dialog/edit_timestamp.dart';
-import 'package:triton_note/dialog/edit_tide.dart';
-import 'package:triton_note/dialog/edit_weather.dart';
-import 'package:triton_note/dialog/geolocation.dart';
-import 'package:triton_note/dialog/photo_way.dart';
-import 'package:triton_note/model/report.dart';
-import 'package:triton_note/model/location.dart';
-import 'package:triton_note/service/facebook.dart';
-import 'package:triton_note/service/natural_conditions.dart';
-import 'package:triton_note/service/photo_shop.dart';
-import 'package:triton_note/service/preferences.dart';
-import 'package:triton_note/service/reports.dart';
-import 'package:triton_note/service/inference.dart';
-import 'package:triton_note/service/geolocation.dart' as Geo;
-import 'package:triton_note/service/googlemaps_browser.dart';
-import 'package:triton_note/service/aws/s3file.dart';
-import 'package:triton_note/util/blinker.dart';
-import 'package:triton_note/util/cordova.dart';
-import 'package:triton_note/util/enums.dart';
-import 'package:triton_note/util/fabric.dart';
-import 'package:triton_note/util/main_frame.dart';
-import 'package:triton_note/util/getter_setter.dart';
+import 'package:bacchus_diary/element/expandable_gmap.dart';
+import 'package:bacchus_diary/element/showcase.dart';
+import 'package:bacchus_diary/dialog/alert.dart';
+import 'package:bacchus_diary/dialog/photo_way.dart';
+import 'package:bacchus_diary/model/report.dart';
+import 'package:bacchus_diary/model/location.dart';
+import 'package:bacchus_diary/service/facebook.dart';
+import 'package:bacchus_diary/service/preferences.dart';
+import 'package:bacchus_diary/service/reports.dart';
+import 'package:bacchus_diary/service/googlemaps_browser.dart';
+import 'package:bacchus_diary/service/aws/s3file.dart';
+import 'package:bacchus_diary/util/blinker.dart';
+import 'package:bacchus_diary/util/enums.dart';
+import 'package:bacchus_diary/util/fabric.dart';
+import 'package:bacchus_diary/util/main_frame.dart';
+import 'package:bacchus_diary/util/getter_setter.dart';
 
 final Logger _logger = new Logger('AddReportPage');
 
 @Component(
     selector: 'add-report',
-    templateUrl: 'packages/triton_note/page/add_report.html',
-    cssUrl: 'packages/triton_note/page/add_report.css',
+    templateUrl: 'packages/bacchus_diary/page/add_report.html',
+    cssUrl: 'packages/bacchus_diary/page/add_report.css',
     useShadowDom: true)
-class AddReportPage extends SubPage implements ScopeAware {
+class AddReportPage extends SubPage {
   Report report;
 
-  final FuturedValue<PhotoWayDialog> photoWayDialog = new FuturedValue();
-  final Getter<EditTimestampDialog> dateOclock = new PipeValue();
-  final Getter<EditFishDialog> fishDialog = new PipeValue();
+  final FuturedValue<ShowcaseElement> showcase = new FuturedValue();
   final Getter<AlertDialog> alertDialog = new PipeValue();
-  final Getter<GeolocationDialog> geolocationDialog = new PipeValue();
-
-  Getter<Element> toolbar;
-  _GMap gmap;
-  _Conditions conditions;
-
-  Scope _scope;
-  void set scope(Scope v) {
-    _scope = v;
-  }
-
-  // Status
-  final Completer<Null> _onUploaded = new Completer();
-  final Completer<Null> _onGetConditions = new Completer();
-  Future get _onSubmitable => Future.wait([_onUploaded.future, _onGetConditions.future]);
-
-  bool isReady = false;
-  bool get isLoading => report?.photo?.reduced?.mainview?.url == null;
 
   @override
   void onShadowRoot(ShadowRoot sr) {
     super.onShadowRoot(sr);
     FabricAnswers.eventContentView(contentName: "AddReportPage");
 
-    toolbar = new CachedValue(() => root.querySelector('core-header-panel[main] core-toolbar'));
-
-    photoWayDialog.future.then((dialog) {
-      dialog.onClossing(() {
-        final take = dialog.take;
-        if (take != null)
-          _choosePhoto(take);
-        else
-          back();
-      });
-      dialog.open();
+    report = new Report.fromMap({
+      'location': {},
+      'condition': {'moon': {}, 'weather': {}}
     });
-
-    gmap = new _GMap(
-        root,
-        new GetterSetter(() => report.location.name, (v) => report.location.name = v),
-        new GetterSetter(() => report.location.geoinfo, (pos) {
-          _logger.finest(() => "Setting geoinfo: ${report?.location?.geoinfo} -> ${pos}");
-          if (report?.location != null && report.location.geoinfo != pos) {
-            report.location.geoinfo = pos;
-            renewLocation();
-          }
-        }));
-    conditions = new _Conditions(root, new Getter(() => report.condition));
   }
 
-  DateTime get dateAt => report?.dateAt;
-  set dateAt(DateTime v) {
-    _logger.finest(() => "Setting dateAt: ${report?.dateAt} -> ${v}");
-    if (report?.dateAt != v) {
-      report?.dateAt = v;
-      renewDate();
-    }
-  }
-
-  Future<GeoInfo> _getGeoInfo() async {
-    final result = new Completer();
-    final dialog = geolocationDialog.value;
-    loop() async {
-      try {
-        result.complete(await Geo.getHere());
-      } catch (ex) {
-        if (isAndroid && !(await Geo.isEnabled)) {
-          dialog.open();
-        } else {
-          result.complete(Geo.defaultLocation);
-        }
-      }
-    }
-    dialog.onClosed(loop);
-    loop();
-    return result.future;
-  }
-
-  /**
-   * Choosing photo and get conditions and inference.
-   */
-  _choosePhoto(bool take) async {
-    try {
-      _onSubmitable.then((_) => _submitable());
-
-      final shop = new PhotoShop(take);
-
-      report = new Report.fromMap({
-        'location': {},
-        'condition': {'moon': {}, 'weather': {}}
-      });
-      report.photo.reduced.mainview.url = await shop.photoUrl;
-
-      _upload(await shop.photo);
-
-      isReady = true;
-
-      try {
-        report.dateAt = await shop.timestamp;
-      } catch (ex) {
-        _logger.info("No Timestamp in Exif: ${ex}");
-      }
-
-      try {
-        report.location.geoinfo = await shop.geoinfo;
-      } catch (ex) {
-        _logger.info("No GeoInfo in Exif: ${ex}");
-        report.location.geoinfo = await _getGeoInfo();
-      }
-      renewConditions();
-
-      try {
-        final fishes = null;
-        if (fishes != null && fishes.length > 0) {
-          report.fishes.addAll(fishes);
-        }
-      } catch (ex) {
-        _logger.info("Failed to infer fishes: ${ex}");
-      }
-    } catch (ex) {
-      _logger.warning(() => "Failed to choose photo: ${ex}");
-      back();
-    }
-  }
-
-  _upload(Blob photo) async {
-    final path = await report.photo.original.storagePath;
-    await S3File.putObject(path, photo);
-    _onUploaded.complete();
-    FabricAnswers.eventCustom(name: 'UploadPhoto', attributes: {'type': 'NEW_REPORT'});
-  }
-
-  /**
-   * Refresh conditions, on changing location or timestamp.
-   */
-  renewDate() => renewConditions(false, true);
-  renewLocation() => renewConditions(true, false);
-  renewConditions([bool isLocationChanged = true, bool isDateChanged = true]) async {
-    _logger.info(() => "Renewing conditions: location=${isLocationChanged}, date=${isDateChanged}");
-
-    bool canLocation() => isLocationChanged && report.location.geoinfo != null;
-    bool canDate() => isDateChanged && report.dateAt != null;
-    bool canBoth() => (isLocationChanged || isDateChanged) && report.location.geoinfo != null && report.dateAt != null;
-
-    Future<Null> renewSpotName() async {
-      if (canLocation()) {
-        try {
-          final spotName = await Inference.spotName(report.location.geoinfo);
-          if (spotName != null && spotName.length > 0) {
-            report.location.name = spotName;
-          }
-        } catch (ex) {
-          _logger.warning("Failed to infer spot name: ${ex}");
-        }
-      }
-    }
-    Future<Null> renewWeather() async {
-      if (canBoth()) {
-        try {
-          final weather = (await NaturalConditions.weather(report.location.geoinfo, report.dateAt)) ??
-              new Weather.fromMap({'nominal': 'Clear', 'iconUrl': Weather.nominalMap['Clear'], 'temperature': 20});
-          _logger.fine("Get weather: ${weather}");
-          if (weather.temperature != null) {
-            weather.temperature = weather.temperature.convertTo((await UserPreferences.current).measures.temperature);
-          }
-          report.condition.weather = weather;
-        } catch (ex) {
-          _logger.warning("Failed to get weather: ${ex}");
-        }
-      }
-    }
-    Future<Null> renewMoonTide() async {
-      if (canDate()) {
-        try {
-          report.condition.moon = await NaturalConditions.moon(report.dateAt);
-        } catch (ex) {
-          _logger.warning("Failed to get moon phase: ${ex}");
-        }
-      }
-      if (canBoth() && report.condition.moon?.earthLongitude != null) {
-        try {
-          report.condition.tide =
-              await Inference.tideState(report.location.geoinfo, report.condition.moon.earthLongitude);
-        } catch (ex) {
-          _logger.warning("Failed to infer tide state: ${ex}");
-        }
-      }
-    }
-
-    await Future.wait([renewSpotName(), renewMoonTide(), renewWeather()]);
-    if (!_onGetConditions.isCompleted) _onGetConditions.complete();
-
-    try {
-      _scope.apply();
-    } catch (ex) {
-      _logger.finest(() => "${ex}");
-    }
-  }
+  List<Leaf> get leaves => report.leaves;
 
   //********************************
   // Photo View Size

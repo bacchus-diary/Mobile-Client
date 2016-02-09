@@ -1,4 +1,4 @@
-library triton_note.element.expandable_gmap;
+library bacchus_diary.element.expandable_gmap;
 
 import 'dart:async';
 import 'dart:html';
@@ -8,11 +8,11 @@ import 'package:angular/angular.dart';
 import 'package:logging/logging.dart';
 import 'package:core_elements/core_animation.dart';
 
-import 'package:triton_note/model/location.dart';
-import 'package:triton_note/util/getter_setter.dart';
-import 'package:triton_note/util/icons.dart';
-import 'package:triton_note/util/main_frame.dart';
-import 'package:triton_note/service/googlemaps_browser.dart';
+import 'package:bacchus_diary/model/location.dart';
+import 'package:bacchus_diary/util/getter_setter.dart';
+import 'package:bacchus_diary/util/icons.dart';
+import 'package:bacchus_diary/util/main_frame.dart';
+import 'package:bacchus_diary/service/googlemaps_browser.dart';
 
 final _logger = new Logger('ExpandableGMapElement');
 
@@ -20,8 +20,8 @@ typedef _OnEvent(GoogleMap gmap);
 
 @Component(
     selector: 'expandable-gmap',
-    templateUrl: 'packages/triton_note/element/expandable_gmap.html',
-    cssUrl: 'packages/triton_note/element/expandable_gmap.css',
+    templateUrl: 'packages/bacchus_diary/element/expandable_gmap.html',
+    cssUrl: 'packages/bacchus_diary/element/expandable_gmap.css',
     useShadowDom: true)
 class ExpandableGMapElement extends Backable implements ShadowRootAware, DetachAware {
   static const animationDur = const Duration(milliseconds: 300);

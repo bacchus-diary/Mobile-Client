@@ -1,4 +1,4 @@
-library triton_note.element.infinite_scroll;
+library bacchus_diary.element.infinite_scroll;
 
 import 'dart:async';
 import 'dart:html';
@@ -6,15 +6,15 @@ import 'dart:html';
 import 'package:angular/angular.dart';
 import 'package:logging/logging.dart';
 
-import 'package:triton_note/util/getter_setter.dart';
-import 'package:triton_note/util/pager.dart';
+import 'package:bacchus_diary/util/getter_setter.dart';
+import 'package:bacchus_diary/util/pager.dart';
 
 final _logger = new Logger('InfiniteScrollElement');
 
 @Component(
     selector: 'infinite-scroll',
-    templateUrl: 'packages/triton_note/element/infinite_scroll.html',
-    cssUrl: 'packages/triton_note/element/infinite_scroll.css',
+    templateUrl: 'packages/bacchus_diary/element/infinite_scroll.html',
+    cssUrl: 'packages/bacchus_diary/element/infinite_scroll.css',
     useShadowDom: true)
 class InfiniteScrollElement extends ShadowRootAware {
   static const moreDur = const Duration(milliseconds: 800);

@@ -1,4 +1,4 @@
-library triton_note.service.aws.dynamodb;
+library bacchus_diary.service.aws.dynamodb;
 
 import 'dart:async';
 import 'dart:convert';
@@ -7,9 +7,9 @@ import 'dart:math';
 
 import 'package:logging/logging.dart';
 
-import 'package:triton_note/service/aws/cognito.dart';
-import 'package:triton_note/settings.dart';
-import 'package:triton_note/util/pager.dart';
+import 'package:bacchus_diary/service/aws/cognito.dart';
+import 'package:bacchus_diary/settings.dart';
+import 'package:bacchus_diary/util/pager.dart';
 
 final _logger = new Logger('DynamoDB');
 

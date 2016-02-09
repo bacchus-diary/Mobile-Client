@@ -26,21 +26,9 @@
     	</core-toolbar>
     	
     	<div>
-            <geolocation-dialog setter="geolocationDialog" message="Location infomation is necessary. Please turn location setting on."></geolocation-dialog>
-            
-    		<div ng-if="!isReady" class="page-loading">
-                <div>
-                    <paper-spinner active></paper-spinner>
+	   		<div id="input" ng-if="report != null">
+                <div id="rating">
                 </div>
-    			<photo-way-dialog setter="photoWayDialog"></photo-way-dialog>
-    		</div>
-	   		<div id="input" ng-if="isReady">
-		    	<div id="date">
-		    		<div class="buttons">
-		        		<paper-button ng-click="dateOclock.value.open()">{{ report.dateAt | date:"EEE, MMM d, yyyy, 'about' h a" }}</paper-button>
-		        	</div>
-		        	<edit-timestamp-dialog value="dateAt" setter="dateOclock"></edit-timestamp-dialog>
-	        	</div>
 		    	<div id="comment">
 		    		<paper-input-decorator label="Write something to note">
 						<paper-autogrow-textarea>
@@ -49,84 +37,7 @@
 					</paper-input-decorator>
 				</div>
 			    <div id="photo">
-                    <div ng-if="isLoading">
-                        <paper-spinner active class="gray"></paper-spinner>
-                    </div>
-                    <div ng-if="!isLoading">
-    			        <fit-image url="report.photo.reduced.mainview.url" width="photoWidth" height="photoHeight" shrink="true"></fit-image>
-                    </div> 
-			    </div>
-			    <div id="catches">
-                    <div class="content">
-    			    	<div class="control">
-    			    		<div class="title">
-    			    			<p>Catches</p>
-    			    		</div>
-    			    		<div class="fish-name">
-    			    			<paper-input-decorator label="Fish name">
-    			    				<input ng-model="addingFishName">
-    			    			</paper-input-decorator>
-    			    		</div>
-    			    		<div class="add-button">
-    				    		<paper-fab mini icon="add" ng-click="addFish()"></paper-fab>
-    			    		</div>
-    			    	</div>
-    			    	<div class="list">
-    			    		<div class="item" ng-repeat="fish in report.fishes">
-    		    				<p>{{fish | fishFilter }}</p>
-    		    				<paper-ripple fit ng-click="editFish($index)"></paper-ripple>
-    			    		</div>
-    			    	</div>
-                        <edit-fish-dialog setter="fishDialog"></edit-fish-dialog>
-                    </div>
-			    </div>
-			    <div id="location">
-			    	<div>
-			    		<paper-input-decorator label="Spot Name" floatingLabel>
-			    			<input ng-model="gmap.spotName.value">
-			    		</paper-input-decorator>
-			    	</div>
-			    	
-			    	<expandable-gmap setter="gmap.gmapElement" center="gmap.geoinfo" set-gmap="gmap.setGMap" get-scroller="gmap.getScroller" get-base="gmap.getBase" get-toolbar="toolbar"></expandable-gmap>
-			    </div>
-			    <div id="condition">
-			    	<div class="weather">
-			    		<div class="spinning" ng-if="conditions.weatherImage == null">
-			    			<p>Weather</p>
-			    			<paper-spinner active class="red"></paper-spinner>
-			    		</div>
-			    		<div relative class="stable" ng-if="conditions.weatherImage != null">
-				    		<p>{{conditions.weatherName}}</p>
-				    		<div class="row">
-					    		<img ng-src="{{conditions.weatherImage}}">
-					    		<p>{{conditions.value.weather.temperature | temperatureFilter }}</p>
-				    		</div>
-			    			<paper-ripple fit ng-click="conditions.dialogWeather()"></paper-ripple>
-			    		</div>
-                        <edit-weather-dialog value="conditions.value.weather" setter="conditions.weatherDialog"></edit-weather-dialog>
-			    	</div>
-			    	<div class="tide">
-			    		<div class="spinning" ng-if="conditions.tideImage == null">
-			    			<p>Tide</p>
-			    			<paper-spinner active class="blue"></paper-spinner>
-			    		</div>
-			    		<div relative class="stable" ng-if="conditions.tideImage != null">
-				    		<p>{{conditions.tideName}}</p>
-			    			<img ng-src="{{conditions.tideImage}}">
-			    			<paper-ripple fit ng-click="conditions.dialogTide()"></paper-ripple>
-			    		</div>
-                        <edit-tide-dialog value="conditions.value.tide" setter="conditions.tideDialog"></edit-tide-dialog>
-			    	</div>
-			    	<div class="moon">
-			    		<div class="spinning" ng-if="conditions.moonImage == null">
-			    			<p>Moon</p>
-			    			<paper-spinner active class="green"></paper-spinner>
-			    		</div>
-			    		<div class="stable" ng-if="conditions.moonImage != null">
-				    		<p>Phase: {{conditions.value.moon.age.round()}}</p>
-				    		<img ng-src="{{conditions.moonImage}}">
-				    	</div>
-			    	</div>
+                    <showcase setter="showcase" list="leaves" reportId="report.id"></showcase>
 			    </div>
     		</div>
     	</div>

@@ -2,10 +2,10 @@ library tiroton_note.formatter.fish;
 
 import 'package:angular/angular.dart';
 
-import 'package:triton_note/model/report.dart';
-import 'package:triton_note/model/value_unit.dart';
-import 'package:triton_note/service/preferences.dart';
-import 'package:triton_note/util/enums.dart';
+import 'package:bacchus_diary/model/report.dart';
+import 'package:bacchus_diary/model/value_unit.dart';
+import 'package:bacchus_diary/service/preferences.dart';
+import 'package:bacchus_diary/util/enums.dart';
 
 @Formatter(name: 'fishFilter')
 class FishFormatter {

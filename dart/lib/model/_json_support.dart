@@ -1,4 +1,4 @@
-library triton_note.model.json_support;
+library bacchus_diary.model.json_support;
 
 import 'dart:async';
 import 'dart:convert';
@@ -6,8 +6,8 @@ export 'dart:convert';
 
 import 'package:logging/logging.dart';
 
-import 'package:triton_note/model/value_unit.dart';
-import 'package:triton_note/util/getter_setter.dart';
+import 'package:bacchus_diary/model/value_unit.dart';
+import 'package:bacchus_diary/util/getter_setter.dart';
 
 final _logger = new Logger('CachedProp');
 

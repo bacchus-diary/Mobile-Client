@@ -1,17 +1,20 @@
-library triton_note.dialog.photo_way;
+library bacchus_diary.dialog.photo_way;
 
+import 'dart:async';
 import 'dart:html';
 
 import 'package:angular/angular.dart';
 import 'package:logging/logging.dart';
 import 'package:paper_elements/paper_dialog.dart';
 
-import 'package:triton_note/util/getter_setter.dart';
-import 'package:triton_note/util/main_frame.dart';
+import 'package:bacchus_diary/util/cordova.dart';
+import 'package:bacchus_diary/util/getter_setter.dart';
+import 'package:bacchus_diary/util/main_frame.dart';
 
 final _logger = new Logger('PhotoWayDialog');
 
-@Component(selector: 'photo-way-dialog', templateUrl: 'packages/triton_note/dialog/photo_way.html', useShadowDom: true)
+@Component(
+    selector: 'photo-way-dialog', templateUrl: 'packages/bacchus_diary/dialog/photo_way.html', useShadowDom: true)
 class PhotoWayDialog extends AbstractDialog implements ShadowRootAware {
   @NgOneWayOneTime('setter') Setter<PhotoWayDialog> setter;
 
@@ -19,7 +22,9 @@ class PhotoWayDialog extends AbstractDialog implements ShadowRootAware {
   CachedValue<PaperDialog> _dialog;
   PaperDialog get realDialog => _dialog.value;
 
-  String message;
+  bool get isBrawser => !isCordova;
+
+  File file = null;
   bool take = null;
 
   void onShadowRoot(ShadowRoot sr) {
@@ -29,7 +34,27 @@ class PhotoWayDialog extends AbstractDialog implements ShadowRootAware {
   }
 
   done(bool v) {
-    take = v;
+    if (v != null) {
+      take = v;
+    } else {
+      final fileInput = realDialog.querySelector("#fileInput") as InputElement;
+      final files = fileInput.files;
+      if (files.isNotEmpty) {
+        file = files.first;
+      }
+    }
     close();
+  }
+
+  Future<File> chooseFile() {
+    final result = new Completer<File>();
+    try {
+      final fileChooser = document.querySelector("div#options #fileChooser") as PaperDialog;
+      _logger.fine("Toggle dialog: ${fileChooser}");
+      fileChooser.toggle();
+    } catch (ex) {
+      result.completeError(ex);
+    }
+    return result.future;
   }
 }

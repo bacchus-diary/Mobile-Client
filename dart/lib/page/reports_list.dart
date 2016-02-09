@@ -1,4 +1,4 @@
-library triton_note.page.reports_list;
+library bacchus_diary.page.reports_list;
 
 import 'dart:async';
 import 'dart:html';
@@ -7,19 +7,19 @@ import 'package:angular/angular.dart';
 import 'package:logging/logging.dart';
 import 'package:core_elements/core_animation.dart';
 
-import 'package:triton_note/model/report.dart';
-import 'package:triton_note/service/reports.dart';
-import 'package:triton_note/util/cordova.dart';
-import 'package:triton_note/util/fabric.dart';
-import 'package:triton_note/util/main_frame.dart';
-import 'package:triton_note/util/pager.dart';
+import 'package:bacchus_diary/model/report.dart';
+import 'package:bacchus_diary/service/reports.dart';
+import 'package:bacchus_diary/util/cordova.dart';
+import 'package:bacchus_diary/util/fabric.dart';
+import 'package:bacchus_diary/util/main_frame.dart';
+import 'package:bacchus_diary/util/pager.dart';
 
 final _logger = new Logger('ReportsListPage');
 
 @Component(
     selector: 'reports-list',
-    templateUrl: 'packages/triton_note/page/reports_list.html',
-    cssUrl: 'packages/triton_note/page/reports_list.css',
+    templateUrl: 'packages/bacchus_diary/page/reports_list.html',
+    cssUrl: 'packages/bacchus_diary/page/reports_list.css',
     useShadowDom: true)
 class ReportsListPage extends MainPage {
   final pageSize = 20;
