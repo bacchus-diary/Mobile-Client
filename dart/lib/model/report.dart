@@ -3,17 +3,14 @@ library bacchus_diary.model.report;
 import 'dart:convert';
 
 import 'package:bacchus_diary/model/_json_support.dart';
-import 'package:bacchus_diary/model/value_unit.dart';
 import 'package:bacchus_diary/model/photo.dart';
-import 'package:bacchus_diary/model/location.dart';
 import 'package:bacchus_diary/service/aws/dynamodb.dart';
 
 abstract class Report implements DBRecord<Report> {
+  int rating;
   String comment;
   DateTime dateAt;
   Published published;
-  Location location;
-  Condition condition;
   final List<Leaf> leaves;
 
   factory Report.fromMap(Map data) => new _ReportImpl(data, DynamoDB.createRandomKey(), new DateTime.now(), []);
@@ -24,15 +21,11 @@ abstract class Report implements DBRecord<Report> {
 class _ReportImpl implements Report {
   final Map _data;
   final CachedProp<Published> _published;
-  final CachedProp<Location> _location;
-  final CachedProp<Condition> _condition;
 
   _ReportImpl(Map data, String id, this.dateAt, this.leaves)
       : _data = data,
         this.id = id,
-        _published = new CachedProp<Published>.forMap(data, 'published', (map) => new Published.fromMap(map)),
-        _location = new CachedProp<Location>.forMap(data, 'location', (map) => new Location.fromMap(map)),
-        _condition = new CachedProp<Condition>.forMap(data, 'condition', (map) => new Condition.fromMap(map));
+        _published = new CachedProp<Published>.forMap(data, 'published', (map) => new Published.fromMap(map));
 
   String get _mapString => JSON.encode(_data);
   Map toMap() => JSON.decode(_mapString);
@@ -40,17 +33,14 @@ class _ReportImpl implements Report {
   final String id;
   DateTime dateAt;
 
+  int get rating => _data['rating'];
+  set rating(int v) => _data['rating'] = v;
+
   String get comment => _data['comment'];
   set comment(String v) => _data['comment'] = v;
 
   Published get published => _published.value;
   set published(Published v) => _published.value = v;
-
-  Location get location => _location.value;
-  set location(Location v) => _location.value = v;
-
-  Condition get condition => _condition.value;
-  set condition(Condition v) => _condition.value = v;
 
   final List<Leaf> leaves;
 
@@ -65,7 +55,7 @@ class _ReportImpl implements Report {
     }
   }
 
-  Report clone() => new _ReportImpl(toMap(), id, dateAt, fishes.map((o) => o.clone()).toList());
+  Report clone() => new _ReportImpl(toMap(), id, dateAt, leaves.map((o) => o.clone()).toList());
 }
 
 abstract class Published implements JsonSupport {
