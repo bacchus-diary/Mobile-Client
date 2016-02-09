@@ -116,17 +116,7 @@ class AddReportPage extends SubPage {
     if (!isSubmitting) {
       if (!_isSubmitted && report != null) {
         FabricAnswers.eventCustom(name: 'AddReportPage.CancelReport');
-        delete(path) async {
-          try {
-            await S3File.delete(path);
-          } catch (ex) {
-            _logger.warning(() => "Failed to delete on S3(${path}): ${ex}");
-          }
-        }
-        report.photo.original.storagePath.then(delete);
-        new Future.delayed(new Duration(minutes: 1), () {
-          report.photo.reduced..mainview.storagePath.then(delete)..thumbnail.storagePath.then(delete);
-        });
+        report.leaves.forEach((x) => x.photo.delete());
       }
       super.back();
     }
