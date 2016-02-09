@@ -39,16 +39,22 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
 
   CoreAnimatedPages _pages;
 
-  int get height => width;
   int _width;
   int get width {
     if (_width == null) {
-      final e = _root?.querySelector('section');
+      final e = _pages?.querySelector('section');
       if (e != null && 0 < e.clientWidth) {
         _width = e.clientWidth;
       }
     }
     return _width;
+  }
+
+  int get slideButtonHeightA => _slideButtonHeight('pageA');
+  int get slideButtonHeightB => _slideButtonHeight('pageB');
+  int _slideButtonHeight(String sectionId) {
+    final height = _pages?.querySelector("section#${sectionId}")?.querySelector('.leaf .photo')?.clientHeight ?? width;
+    return (height / 3).round();
   }
 
   ShadowRoot _root;
@@ -139,7 +145,7 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
         ..target = sections[pageNo]
         ..keyframes = [
           {'opacity': 1, 'transform': "none"},
-          {'opacity': 0, 'transform': "translateY(${height}px)"}
+          {'opacity': 0, 'transform': "translateY(${width}px)"}
         ]
         ..duration = 200
         ..easing = 'ease-in'
