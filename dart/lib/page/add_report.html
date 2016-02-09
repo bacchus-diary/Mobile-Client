@@ -8,7 +8,7 @@
       		
     		<div id="submit">
                 <div class="action">
-        			<paper-fab mini icon="done" class="green" ng-click="dropdownSubmit.open()" ng-if="!isSubmitting"></paper-fab>
+        			<paper-fab mini icon="done" class="green" ng-click="dropdownSubmit.open()" ng-if="isSubmittable && !isSubmitting"></paper-fab>
                     <paper-spinner active ng-if="isSubmitting"></paper-spinner>
                 </div>
                 
@@ -28,6 +28,13 @@
     	<div>
 	   		<div id="input" ng-if="report != null">
                 <div id="rating">
+                    <div class="star" ng-repeat="grade in [1, 2, 3, 4, 5]">
+                        <paper-icon-button icon="grade"
+                                ng-click="report.rating = grade"
+                                ng-class="{ 'checked': grade <= report.rating }"
+                                style="width: {{starSize}}px; height: {{starSize}}px;">
+                        </paper-icon-button>
+                    </div>
                 </div>
 		    	<div id="comment">
 		    		<paper-input-decorator label="Write something to note">
@@ -37,7 +44,7 @@
 					</paper-input-decorator>
 				</div>
 			    <div id="photo">
-                    <showcase setter="showcase" list="leaves" reportId="report.id"></showcase>
+                    <showcase setter="showcase" list="report.leaves" reportId="report.id"></showcase>
 			    </div>
     		</div>
     	</div>

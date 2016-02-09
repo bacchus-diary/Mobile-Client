@@ -188,7 +188,7 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
 
       final currentIndex = current.value;
       slideRight((current, other) {
-        list.removeAt(currentIndex);
+        list.removeAt(currentIndex).photo.delete();
         if (other.value != null) {
           other.value = other.value - 1;
         }
