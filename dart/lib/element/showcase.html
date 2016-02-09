@@ -2,7 +2,7 @@
     <photo-way-dialog setter="photoWayDialog"></photo-way-dialog>
 	<core-animated-pages transitions="slide-from-right">
 		<section id="pageA">
-            <div ng-if="width != null">
+            <div class="leaf-view" ng-if="width != null">
                 <div class="addnew" ng-if="leafA == null" style="height: {{width}}px">
                     <p>ADD PHOTO</p>
                     <paper-fab icon="add" class="red" ng-click="add()"></paper-fab>
@@ -19,6 +19,9 @@
                         </paper-input-decorator>
                     </div>
                 </div>
+                <div class="loading" ng-if="isPhotoLoading" style="width: {{width}}px; height: {{width}}px">
+                    <paper-spinner active></paper-spinner>
+                </div>
                 <div class="control">
                     <div class="delete">
                         <paper-fab mini icon="close" ng-click="delete()" ng-if="leafA != null"></paper-fab>
@@ -33,7 +36,7 @@
             </div>
 		</section>
         <section id="pageB">
-            <div ng-if="width != null">
+            <div class="leaf-view" ng-if="width != null">
                 <div class="addnew" ng-if="leafB == null" style="height: {{width}}px">
                     <p>ADD PHOTO</p>
                     <paper-fab icon="add" class="red" ng-click="add()"></paper-fab>
@@ -49,6 +52,9 @@
                             </paper-autogrow-textarea>
                         </paper-input-decorator>
                     </div>
+                </div>
+                <div class="loading" ng-if="isPhotoLoading" style="width: {{width}}px; height: {{width}}px">
+                    <paper-spinner active></paper-spinner>
                 </div>
                 <div class="control">
                     <div class="delete">

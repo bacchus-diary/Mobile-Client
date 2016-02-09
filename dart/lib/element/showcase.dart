@@ -25,7 +25,7 @@ typedef _AfterSlide();
     templateUrl: 'packages/bacchus_diary/element/showcase.html',
     cssUrl: 'packages/bacchus_diary/element/showcase.css',
     useShadowDom: true)
-class ShowcaseElement implements ShadowRootAware {
+class ShowcaseElement implements ShadowRootAware, ScopeAware {
   @NgOneWayOneTime('setter') set setter(Setter<ShowcaseElement> v) => v?.value = this; // Optional
   @NgOneWay('list') List<Leaf> list;
   @NgOneWay('reportId') String reportId;
@@ -50,12 +50,21 @@ class ShowcaseElement implements ShadowRootAware {
     return _width;
   }
 
-  int get slideButtonHeightA => _slideButtonHeight('pageA');
-  int get slideButtonHeightB => _slideButtonHeight('pageB');
-  int _slideButtonHeight(String sectionId) {
-    final height = _pages?.querySelector("section#${sectionId}")?.querySelector('.leaf .photo')?.clientHeight ?? width;
-    return (height / 3).round();
+  int get slideButtonHeightA => _slideButtonHeight('A');
+  int get slideButtonHeightB => _slideButtonHeight('B');
+  int _slideButtonHeight(String key) {
+    final height = _pages?.querySelector("section#page${key}")?.querySelector('.leaf .photo')?.clientHeight ?? width;
+    return ((height < (width / 10) ? width : height) / 3).round();
   }
+
+  bool _isAdding = false;
+  bool get isPhotoLoading =>
+      _isAdding ||
+      _slide((sections, pageNo, current, other) {
+        if (current.value == null) return false;
+        final height = sections[pageNo].querySelector('.leaf .photo')?.clientHeight ?? 0;
+        return height == 0;
+      });
 
   ShadowRoot _root;
   void onShadowRoot(ShadowRoot sr) {
@@ -64,6 +73,19 @@ class ShowcaseElement implements ShadowRootAware {
       ..selected = 0
       ..addEventListener('core-animated-pages-transition-end', (event) => _afterSlide());
     _logger.finest(() => "Opening Showcase");
+  }
+
+  Scope _scope;
+  void set scope(Scope scope) {
+    _scope = scope;
+  }
+
+  _scopeApply() {
+    try {
+      _scope.apply();
+    } catch (ex) {
+      _logger.warning(() => "${ex}");
+    }
   }
 
   _AfterSlide _afterSlide;
@@ -142,17 +164,21 @@ class ShowcaseElement implements ShadowRootAware {
         if (other.value != null) {
           other.value = other.value - 1;
         }
+        _scopeApply();
       });
     });
   }
 
   add() async {
+    _isAdding = true;
     final dialog = await photoWayDialog.future;
     dialog.onClosed(() async {
       if (dialog.take != null) {
         _pickPhoto(await PhotoShop.photo(dialog.take));
       } else if (dialog.file != null) {
         _pickPhoto(dialog.file);
+      } else {
+        _isAdding = false;
       }
     });
     dialog.open();
@@ -170,6 +196,7 @@ class ShowcaseElement implements ShadowRootAware {
       list.add(leaf);
       _slide((sections, index, current, other) {
         current.value = list.length - 1;
+        _isAdding = false;
       });
 
       final path = await leaf.photo.original.storagePath;
@@ -177,6 +204,8 @@ class ShowcaseElement implements ShadowRootAware {
       FabricAnswers.eventCustom(name: 'UploadPhoto', attributes: {'type': 'NEW_LEAF'});
     } catch (ex) {
       _logger.warning(() => "Failed to pick photo: ${ex}");
+    } finally {
+      _isAdding = false;
     }
   }
 }

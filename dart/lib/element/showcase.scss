@@ -12,57 +12,69 @@ div.slider {
       margin-bottom: 8px;
       font-size: 12px;
       
-      .addnew {
-        width: 100%;
-        @include display-flex();
-        @include flex-direction(column);
-        @include align-items(center);
-        @include justify-content(center);
-        
-        @include font-extra-bold(30px);
-        color: #777;
-        background-color: #eee;
-      }
-      
-      .leaf {
-        .photo {
-          @include display-flex();
-          @include justify-content(center);
-        }
-      }
-      
-      .control {
-        position: absolute;
-        top: 0;
-        width: 100%;
-        
-        paper-fab {
-          background-color: #ddd;
-          opacity: 0.5;
-          /deep/ #icon {
-            color: black;
-          }
-        }
-        
-        .delete {
+      .leaf-view {
+        position: relative;
+        .loading {
           position: absolute;
           top: 0;
-          right: 0;
+          @include display-flex();
+          @include align-items(center);
+          @include justify-content(center);
+        }
+      
+        .addnew {
+          width: 100%;
+          @include display-flex();
+          @include flex-direction(column);
+          @include align-items(center);
+          @include justify-content(center);
           
-          paper-fab {
-            background-color: #aaa;
-            /deep/ #icon {
-              color: red;
-            }
+          @include font-extra-bold(30px);
+          color: #777;
+          background-color: #eee;
+        }
+        
+        .leaf {
+          .photo {
+            @include display-flex();
+            @include align-items(center);
+            @include justify-content(center);
           }
         }
-        .back {
+        
+        .control {
           position: absolute;
-          left: 0;
-        }
-        .forward {
-          position: absolute;
-          right: 0;
+          top: 0;
+          width: 100%;
+          
+          paper-fab {
+            background-color: #ddd;
+            opacity: 0.5;
+            /deep/ #icon {
+              color: black;
+            }
+          }
+          
+          .delete {
+            position: absolute;
+            top: 0;
+            right: 0;
+            
+            paper-fab {
+              background-color: #aaa;
+              /deep/ #icon {
+                color: red;
+              }
+            }
+          }
+          .back {
+            position: absolute;
+            left: 0;
+          }
+          .forward {
+            position: absolute;
+            right: 0;
+          }
         }
       }
     }
