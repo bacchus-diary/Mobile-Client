@@ -53,7 +53,7 @@ class AddReportPage extends SubPage {
     }
   }
 
-  bool get isSubmittable => report?.leaves?.isNotEmpty ?? false;
+  bool get isSubmittable => report?.rating != null && (report?.leaves?.isNotEmpty ?? false);
   bool _isSubmitted = false;
   bool isSubmitting = false;
   DivElement get divSubmit => root.querySelector('core-toolbar div#submit');
