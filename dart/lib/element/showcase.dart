@@ -1,6 +1,5 @@
 library bacchus_diary.element.showcase;
 
-import 'dart:async';
 import 'dart:html';
 
 import 'package:angular/angular.dart';
@@ -8,6 +7,7 @@ import 'package:logging/logging.dart';
 
 import 'package:core_elements/core_animated_pages.dart';
 import 'package:core_elements/core_animation.dart';
+import 'package:rikulo_ui/gesture.dart';
 
 import 'package:bacchus_diary/dialog/photo_way.dart';
 import 'package:bacchus_diary/model/report.dart';
@@ -50,11 +50,11 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
     return _width;
   }
 
-  int get slideButtonHeightA => _slideButtonHeight('A');
-  int get slideButtonHeightB => _slideButtonHeight('B');
-  int _slideButtonHeight(String key) {
+  int get heightA => _height('A');
+  int get heightB => _height('B');
+  int _height(String key) {
     final height = _pages?.querySelector("section#page${key}")?.querySelector('.leaf .photo')?.clientHeight ?? width;
-    return ((height < (width / 10) ? width : height) / 3).round();
+    return height < (width / 10) ? width : height;
   }
 
   bool _isAdding = false;
@@ -65,6 +65,33 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
         final height = sections[pageNo].querySelector('.leaf .photo')?.clientHeight ?? 0;
         return height == 0;
       });
+
+  bool _isGestureSetup = false;
+  _setupGesture() async {
+    if (_isGestureSetup) return;
+
+    ['A', 'B'].forEach((key) {
+      final owner = _pages.querySelector("section#page${key} .leaf-view .gesture");
+      _logger.fine(() => "Setting gester on ${owner}");
+      new SwipeGesture(owner, (SwipeGestureState state) {
+        _logger.info(() => "Swiped: ${state}");
+        state.gesture.disable();
+        try {
+          final int hdiff = state.transition.x;
+          if (state.transition.y > 50) {
+            delete();
+          } else if (hdiff < -50 && isRightEnabled) {
+            slideRight();
+          } else if (hdiff > 50 && isLeftEnabled) {
+            slideLeft();
+          }
+        } finally {
+          state.gesture.enable();
+        }
+      });
+    });
+    _isGestureSetup = true;
+  }
 
   ShadowRoot _root;
   void onShadowRoot(ShadowRoot sr) {
@@ -122,7 +149,7 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
 
   bool get isRightEnabled => _slide((sections, pageNo, current, other) => current.value != null);
 
-  slideLeft([post]) async {
+  slideLeft([post]) {
     _slide((sections, pageNo, current, other) {
       other.value = (current.value ?? list.length) - 1;
 
@@ -134,7 +161,7 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
     }, 0, post);
   }
 
-  slideRight([post]) async {
+  slideRight([post]) {
     _slide((sections, pageNo, current, other) {
       final nextIndex = current.value + 1;
       other.value = (list.length <= nextIndex) ? null : nextIndex;
@@ -147,8 +174,10 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
     }, 1, post);
   }
 
-  delete() async {
-    _slide((sections, pageNo, current, other) async {
+  delete() {
+    _slide((sections, pageNo, current, other) {
+      if (current.value == null) return null;
+
       new CoreAnimation()
         ..target = sections[pageNo]
         ..keyframes = [
@@ -170,6 +199,8 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
   }
 
   add() async {
+    _setupGesture();
+
     _isAdding = true;
     final dialog = await photoWayDialog.future;
     dialog.onClosed(() async {

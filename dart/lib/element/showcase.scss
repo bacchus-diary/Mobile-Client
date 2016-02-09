@@ -14,14 +14,15 @@ div.slider {
       
       .leaf-view {
         position: relative;
-        .loading {
-          position: absolute;
-          top: 0;
-          @include display-flex();
-          @include align-items(center);
-          @include justify-content(center);
+        
+        .leaf {
+          .photo {
+            @include display-flex();
+            @include align-items(center);
+            @include justify-content(center);
+          }
         }
-      
+        
         .addnew {
           width: 100%;
           @include display-flex();
@@ -34,18 +35,28 @@ div.slider {
           background-color: #eee;
         }
         
-        .leaf {
-          .photo {
-            @include display-flex();
-            @include align-items(center);
-            @include justify-content(center);
-          }
+        .gesture {
+          position: absolute;
+          top: 0;
+          width: 100%;
+        }
+        
+        .loading {
+          position: absolute;
+          top: 0;
+          width: 100%;
+          @include display-flex();
+          @include align-items(center);
+          @include justify-content(center);
         }
         
         .control {
           position: absolute;
           top: 0;
           width: 100%;
+          @include display-flex();
+          @include align-items(center);
+          @include justify-content(center);
           
           paper-fab {
             background-color: #ddd;
