@@ -7,6 +7,7 @@ import 'package:angular/angular.dart';
 import 'package:logging/logging.dart';
 
 import 'package:core_elements/core_animated_pages.dart';
+import 'package:core_elements/core_animation.dart';
 
 import 'package:bacchus_diary/dialog/photo_way.dart';
 import 'package:bacchus_diary/model/report.dart';
@@ -17,12 +18,14 @@ import 'package:bacchus_diary/util/getter_setter.dart';
 
 final _logger = new Logger('ShowcaseElement');
 
+typedef _AfterSlide();
+
 @Component(
     selector: 'showcase',
     templateUrl: 'packages/bacchus_diary/element/showcase.html',
     cssUrl: 'packages/bacchus_diary/element/showcase.css',
     useShadowDom: true)
-class ShowcaseElement extends ShadowRootAware {
+class ShowcaseElement implements ShadowRootAware, ScopeAware {
   @NgOneWayOneTime('setter') set setter(Setter<ShowcaseElement> v) => v?.value = this; // Optional
   @NgOneWay('list') List<Leaf> list;
   @NgOneWay('reportId') String reportId;
@@ -31,8 +34,8 @@ class ShowcaseElement extends ShadowRootAware {
 
   final GetterSetter<int> _indexA = new PipeValue();
   final GetterSetter<int> _indexB = new PipeValue();
-  int get indexA => _indexA.value;
-  int get indexB => _indexB.value;
+  Leaf get leafA => _indexA.value == null ? null : list[_indexA.value];
+  Leaf get leafB => _indexB.value == null ? null : list[_indexB.value];
 
   CoreAnimatedPages _pages;
 
@@ -49,16 +52,31 @@ class ShowcaseElement extends ShadowRootAware {
   }
 
   ShadowRoot _root;
-  @override
   void onShadowRoot(ShadowRoot sr) {
     _root = sr;
-    _pages = _root.querySelector('core-animated-pages') as CoreAnimatedPages..selected = 0;
+    _pages = _root.querySelector('core-animated-pages') as CoreAnimatedPages
+      ..selected = 0
+      ..addEventListener('core-animated-pages-transition-end', (event) => _afterSlide());
     _logger.finest(() => "Opening Showcase");
   }
 
-  currentIndex(proc(GetterSetter<int> current, GetterSetter<int> other)) =>
-      slide((sections, pageNo, current, other) => proc(current, other));
-  slide(proc(List<Element> sections, int pageNo, GetterSetter<int> current, GetterSetter<int> other)) {
+  Scope _scope;
+  void set scope(Scope scope) {
+    _scope = scope;
+  }
+
+  _scopeApply() {
+    try {
+      _scope.apply();
+    } catch (ex) {
+      _logger.warning(() => "${ex}");
+    }
+  }
+
+  _AfterSlide _afterSlide;
+
+  _slide(proc(List<Element> sections, int pageNo, GetterSetter<int> current, GetterSetter<int> other),
+      [int nextSelected = null, post]) {
     if (_pages == null) return null;
 
     final pageNo = _pages.selected;
@@ -73,16 +91,25 @@ class ShowcaseElement extends ShadowRootAware {
       other = _indexA;
     }
 
-    return proc(sections, pageNo, current, other);
+    final result = proc(sections, pageNo, current, other);
+    if (nextSelected != null) {
+      _afterSlide = () {
+        if (post != null) post(current, other);
+        current.value = null;
+        _scopeApply();
+      };
+      _pages.selected = nextSelected;
+    }
+    return result;
   }
 
   bool get isLeftEnabled =>
-      currentIndex((current, other) => (current.value != null || other.value != null) && current.value != 0);
+      _slide((sections, pageNo, current, other) => list.isNotEmpty && (current.value == null || current.value > 0));
 
-  bool get isRightEnabled => currentIndex((current, other) => current.value != null);
+  bool get isRightEnabled => _slide((sections, pageNo, current, other) => current.value != null);
 
-  slideLeft() async {
-    slide((sections, pageNo, current, other) {
+  slideLeft([post]) async {
+    _slide((sections, pageNo, current, other) {
       other.value = (current.value ?? list.length) - 1;
 
       if (pageNo == 0) {
@@ -90,12 +117,11 @@ class ShowcaseElement extends ShadowRootAware {
         pre.remove();
         _pages.insertBefore(pre, sections[0]);
       }
-      _pages.selected = 0;
-    });
+    }, 0, post);
   }
 
-  slideRight() async {
-    slide((sections, pageNo, current, other) {
+  slideRight([post]) async {
+    _slide((sections, pageNo, current, other) {
       final nextIndex = current.value + 1;
       other.value = (list.length <= nextIndex) ? null : nextIndex;
 
@@ -104,16 +130,27 @@ class ShowcaseElement extends ShadowRootAware {
         next.remove();
         _pages.append(next);
       }
-      _pages.selected = 1;
-    });
+    }, 1, post);
   }
 
-  delete(int deletingIndex) async {
-    currentIndex((current, other) {
-      if (list.length - 1 == deletingIndex) {
-        current.value = null;
-      }
-      list.removeAt(deletingIndex);
+  delete() async {
+    _slide((sections, pageNo, current, other) async {
+      new CoreAnimation()
+        ..target = sections[pageNo]
+        ..keyframes = [
+          {'opacity': 1, 'transform': "none"},
+          {'opacity': 0, 'transform': "translateY(${height}px)"}
+        ]
+        ..duration = 200
+        ..easing = 'ease-in'
+        ..play();
+
+      slideRight((current, other) {
+        list.removeAt(current.value);
+        if (other.value != null) {
+          other.value = other.value - 1;
+        }
+      });
     });
   }
 
@@ -138,15 +175,15 @@ class ShowcaseElement extends ShadowRootAware {
       final leaf = new Leaf.fromMap(reportId, {});
 
       leaf.photo.reduced.mainview.url = await shop.photoUrl;
+      list.add(leaf);
+      _slide((sections, index, current, other) {
+        current.value = list.length - 1;
+        new Future.delayed(const Duration(milliseconds: 300), _scopeApply);
+      });
 
       final path = await leaf.photo.original.storagePath;
       await S3File.putObject(path, await shop.photo);
       FabricAnswers.eventCustom(name: 'UploadPhoto', attributes: {'type': 'NEW_LEAF'});
-
-      list.add(leaf);
-      slide((sections, index, current, other) {
-        current.value = list.length - 1;
-      });
     } catch (ex) {
       _logger.warning(() => "Failed to pick photo: ${ex}");
     }

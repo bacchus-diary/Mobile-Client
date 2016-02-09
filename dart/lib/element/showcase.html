@@ -2,60 +2,64 @@
     <photo-way-dialog setter="photoWayDialog"></photo-way-dialog>
 	<core-animated-pages transitions="slide-from-right">
 		<section id="pageA">
-            <div class="addnew" ng-if="indexA == null && height != null" style="height: {{height}}px">
-                <p>ADD PHOTO</p>
-                <paper-fab icon="add" class="red" ng-click="add()"></paper-fab>
-            </div>
-            <div class="leaf" ng-if="indexA != null">
-                <div class="photo">
-                    <fit-image ng-if="width != null" width="width" height="height" shrink="true" url="list[indexA].photo.reduced.mainview.url"></fit-image>
+            <div ng-if="width != null">
+                <div class="addnew" ng-if="leafA == null" style="height: {{height}}px">
+                    <p>ADD PHOTO</p>
+                    <paper-fab icon="add" class="red" ng-click="add()"></paper-fab>
                 </div>
-                <div class="desc">
-                    <paper-input-decorator label="NO TEXT">
-                        <paper-autogrow-textarea>
-                            <textarea ng-model="list[indexA].description"></textarea>
-                        </paper-autogrow-textarea>
-                    </paper-input-decorator>
+                <div class="leaf" ng-if="leafA != null">
+                    <div class="photo">
+                        <fit-image width="width" height="height" shrink="true" url="leafA.photo.reduced.mainview.url"></fit-image>
+                    </div>
+                    <div class="desc">
+                        <paper-input-decorator label="NO TEXT">
+                            <paper-autogrow-textarea>
+                                <textarea ng-model="leafA.description"></textarea>
+                            </paper-autogrow-textarea>
+                        </paper-input-decorator>
+                    </div>
                 </div>
-            </div>
-            <div class="control">
-                <div class="delete">
-                    <paper-fab mini icon="close" ng-click="delete(indexA)" ng-if="indexA != null"></paper-fab>
-                </div>
-                <div class="back">
-                    <paper-fab mini icon="arrow-back" ng-click="slideLeft()" ng-if="isLeftEnabled"></paper-fab>
-                </div>
-                <div class="forward">
-                    <paper-fab mini icon="arrow-forward" ng-click="slideRight()" ng-if="isRightEnabled"></paper-fab>
+                <div class="control">
+                    <div class="delete">
+                        <paper-fab mini icon="close" ng-click="delete()" ng-if="leafA != null"></paper-fab>
+                    </div>
+                    <div class="back" style="top: {{height / 3}}px">
+                        <paper-fab mini icon="arrow-back" ng-click="slideLeft()" ng-if="isLeftEnabled"></paper-fab>
+                    </div>
+                    <div class="forward" style="top: {{height / 3}}px">
+                        <paper-fab mini icon="arrow-forward" ng-click="slideRight()" ng-if="isRightEnabled"></paper-fab>
+                    </div>
                 </div>
             </div>
 		</section>
         <section id="pageB">
-            <div class="addnew" ng-if="indexB == null && height != null" style="height: {{height}}px">
-                <p>ADD PHOTO</p>
-                <paper-fab icon="add" class="red" ng-click="add()"></paper-fab>
-            </div>
-            <div class="leaf" ng-if="indexB != null">
-                <div class="photo">
-                    <fit-image ng-if="width != null" width="width" height="height" shrink="true" url="list[indexB].photo.reduced.mainview.url"></fit-image>
+            <div ng-if="width != null">
+                <div class="addnew" ng-if="leafB == null" style="height: {{height}}px">
+                    <p>ADD PHOTO</p>
+                    <paper-fab icon="add" class="red" ng-click="add()"></paper-fab>
                 </div>
-                <div class="desc">
-                    <paper-input-decorator label="NO TEXT">
-                        <paper-autogrow-textarea>
-                            <textarea ng-model="list[indexB].description"></textarea>
-                        </paper-autogrow-textarea>
-                    </paper-input-decorator>
+                <div class="leaf" ng-if="leafB != null">
+                    <div class="photo">
+                        <fit-image width="width" height="height" shrink="true" url="leafB.photo.reduced.mainview.url"></fit-image>
+                    </div>
+                    <div class="desc">
+                        <paper-input-decorator label="NO TEXT">
+                            <paper-autogrow-textarea>
+                                <textarea ng-model="leafB.description"></textarea>
+                            </paper-autogrow-textarea>
+                        </paper-input-decorator>
+                    </div>
                 </div>
-            </div>
-            <div class="control">
-                <div class="delete">
-                    <paper-fab mini icon="close" ng-click="delete(indexB)" ng-if="indexB != null"></paper-fab>
-                </div>
-                <div class="back">
-                    <paper-fab mini icon="arrow-back" ng-click="slideLeft()" ng-if="isLeftEnabled"></paper-fab>
-                </div>
-                <div class="forward">
-                    <paper-fab mini icon="arrow-forward" ng-click="slideRight()" ng-if="isRightEnabled"></paper-fab>
+                <div class="control">
+                    <div class="delete">
+                        <paper-fab mini icon="close" ng-click="delete()" ng-if="leafB != null"></paper-fab>
+                    </div>
+                    <div class="back" style="top: {{height / 3}}px">
+                        <paper-fab mini icon="arrow-back" ng-click="slideLeft()" ng-if="isLeftEnabled"></paper-fab>
+                    </div>
+                    <div class="forward" style="top: {{height / 3}}px">
+                        <paper-fab mini icon="arrow-forward" ng-click="slideRight()" ng-if="isRightEnabled"></paper-fab>
+                    </div>
                 </div>
             </div>
         </section>
