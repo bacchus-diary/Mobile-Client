@@ -136,8 +136,8 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
     final result = proc(sections, pageNo, current, other);
     if (nextSelected != null) {
       _afterSlide = () {
-        if (post != null) post(current, other);
         current.value = null;
+        if (post != null) post(current, other);
       };
       _pages.selected = nextSelected;
     }
@@ -188,8 +188,9 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
         ..easing = 'ease-in'
         ..play();
 
+      final currentIndex = current.value;
       slideRight((current, other) {
-        list.removeAt(current.value);
+        list.removeAt(currentIndex);
         if (other.value != null) {
           other.value = other.value - 1;
         }
