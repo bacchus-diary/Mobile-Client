@@ -78,9 +78,7 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
         state.gesture.disable();
         try {
           final int hdiff = state.transition.x;
-          if (state.transition.y > 50) {
-            delete();
-          } else if (hdiff < -50 && isRightEnabled) {
+          if (hdiff < -50 && isRightEnabled) {
             slideRight();
           } else if (hdiff > 50 && isLeftEnabled) {
             slideLeft();
