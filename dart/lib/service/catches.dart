@@ -83,7 +83,7 @@ class _CatchesPager extends Pager<Catches> {
 
       final list = await Future.wait(reports.map((report) async {
         final values = exp.values..[reportIdValue] = report.id;
-        final fishList = await Reports.TABLE_CATCH.scan(expression, names, values);
+        final fishList = await Reports.TABLE_LEAF.scan(expression, names, values);
         return fishList.map((fish) => new Catches(fish, report.dateAt, report.location, report.condition));
       }));
       return list.expand((a) => a).toList();

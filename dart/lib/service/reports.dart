@@ -15,9 +15,9 @@ final _logger = new Logger('Reports');
 class Reports {
   static const DATE_AT = "DATE_AT";
 
-  static final DynamoDB_Table<Fishes> TABLE_CATCH = new DynamoDB_Table("CATCH", "CATCH_ID", (Map map) {
-    return new Fishes.fromData(map[DynamoDB.CONTENT], map['CATCH_ID'], map['REPORT_ID']);
-  }, (Fishes obj) {
+  static final DynamoDB_Table<Leaf> TABLE_LEAF = new DynamoDB_Table("LEAF", "LEAF_ID", (Map map) {
+    return new Leaf.fromData(map[DynamoDB.CONTENT], map['LEAF_ID'], map['REPORT_ID']);
+  }, (Leaf obj) {
     return {DynamoDB.CONTENT: obj.toMap(), 'REPORT_ID': obj.reportId};
   });
 
@@ -36,10 +36,10 @@ class Reports {
     ..add(adding)
     ..sort((a, b) => b.dateAt.compareTo(a.dateAt));
 
-  static Future<Null> _loadFishes(Report report) async {
-    final list = await TABLE_CATCH.query(
-        "COGNITO_ID-REPORT_ID-index", {DynamoDB.COGNITO_ID: await cognitoId, TABLE_REPORT.ID_COLUMN: report.id});
-    report.fishes
+  static Future<Null> _loadLeaves(Report report) async {
+    final list = await TABLE_LEAF
+        .query("COGNITO_ID-REPORT_ID-index", {DynamoDB.COGNITO_ID: await cognitoId, TABLE_REPORT.ID_COLUMN: report.id});
+    report.leaves
       ..clear()
       ..addAll(list);
   }
@@ -50,7 +50,7 @@ class Reports {
       return found.clone();
     } else {
       final report = await TABLE_REPORT.get(id);
-      await _loadFishes(report);
+      await _loadLeaves(report);
       _addToCache(report);
       return report.clone();
     }
@@ -68,21 +68,21 @@ class Reports {
 
     _logger.finest("Update report:\n old=${oldReport}\n new=${newReport}");
 
-    newReport.fishes.forEach((fish) => fish.reportId = newReport.id);
+    newReport.leaves.forEach((fish) => fish.reportId = newReport.id);
 
-    List<Fishes> distinct(List<Fishes> src, List<Fishes> dst) => src.where((a) => dst.every((b) => b.id != a.id));
+    List<Leaf> distinct(List<Leaf> src, List<Leaf> dst) => src.where((a) => dst.every((b) => b.id != a.id));
 
     // No old, On new
-    Future adding() => Future.wait(distinct(newReport.fishes, oldReport.fishes).map(TABLE_CATCH.put));
+    Future adding() => Future.wait(distinct(newReport.leaves, oldReport.leaves).map(TABLE_LEAF.put));
 
     // On old, No new
-    Future deleting() => Future.wait(distinct(oldReport.fishes, newReport.fishes).map((o) => TABLE_CATCH.delete(o.id)));
+    Future deleting() => Future.wait(distinct(oldReport.leaves, newReport.leaves).map((o) => TABLE_LEAF.delete(o.id)));
 
     // On old, On new
-    Future marging() => Future.wait(newReport.fishes.where((newFish) {
-          final oldFish = oldReport.fishes.firstWhere((oldFish) => oldFish.id == newFish.id, orElse: () => null);
+    Future marging() => Future.wait(newReport.leaves.where((newFish) {
+          final oldFish = oldReport.leaves.firstWhere((oldFish) => oldFish.id == newFish.id, orElse: () => null);
           return oldFish != null && oldFish.isNeedUpdate(newFish);
-        }).map(TABLE_CATCH.update));
+        }).map(TABLE_LEAF.update));
 
     Future updating() async {
       if (oldReport.isNeedUpdate(newReport)) TABLE_REPORT.update(newReport);
@@ -103,7 +103,7 @@ class Reports {
 
     await Future.wait([
       TABLE_REPORT.put(report),
-      Future.wait(report.fishes.map((fish) => TABLE_CATCH.put(fish..reportId = report.id)))
+      Future.wait(report.leaves.map((fish) => TABLE_LEAF.put(fish..reportId = report.id)))
     ]);
     await _addToCache(report);
 
@@ -151,7 +151,7 @@ class _PagerReports implements Pager<Report> {
       await _ready.future;
       final cached = Reports._cachedList;
       final list = (await _db.more(pageSize)).where((r) => cached.every((c) => c.id != r.id));
-      await Future.wait(list.map(Reports._loadFishes));
+      await Future.wait(list.map(Reports._loadLeaves));
       _logger.finer(() => "Loaded reports: ${list}");
       return list;
     } catch (ex) {
