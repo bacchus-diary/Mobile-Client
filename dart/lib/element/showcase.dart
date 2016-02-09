@@ -156,8 +156,12 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
 
   add() async {
     final dialog = await photoWayDialog.future;
-    dialog.onClosed(() {
-      _pickPhoto(dialog.take);
+    dialog.onClosed(() async {
+      if (dialog.take != null) {
+        _pickPhoto(await PhotoShop.photo(dialog.take));
+      } else if (dialog.file != null) {
+        _pickPhoto(dialog.file);
+      }
     });
     dialog.open();
   }
@@ -165,16 +169,12 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
   /**
    * Picking photo and upload
    */
-  _pickPhoto(bool take) async {
-    if (take == null) return;
-
+  _pickPhoto(Blob photo) async {
     try {
-      final shop = new PhotoShop(take);
-      Future.wait([shop.timestamp, shop.geoinfo]).catchError((ex) => _logger.warning(() => "Error: ${ex}"));
-
+      final String url = PhotoShop.makeUrl(photo);
       final leaf = new Leaf.fromMap(reportId, {});
 
-      leaf.photo.reduced.mainview.url = await shop.photoUrl;
+      leaf.photo.reduced.mainview.url = url;
       list.add(leaf);
       _slide((sections, index, current, other) {
         current.value = list.length - 1;
@@ -182,7 +182,7 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
       });
 
       final path = await leaf.photo.original.storagePath;
-      await S3File.putObject(path, await shop.photo);
+      await S3File.putObject(path, photo);
       FabricAnswers.eventCustom(name: 'UploadPhoto', attributes: {'type': 'NEW_LEAF'});
     } catch (ex) {
       _logger.warning(() => "Failed to pick photo: ${ex}");

@@ -21,8 +21,15 @@
     </style>
 
     <p>Photo ...</p>
-    <div class="buttons">
-        <paper-button id="take" raised ng-click="done(true)">TAKE</paper-button>
-        <paper-button id="choose" raised ng-click="done(false)">CHOOSE</paper-button>
+    
+    <div ng-if="isBrawser">
+        <input type="file" id="fileInput">
+        <paper-button raised ng-click="done(null)">OK</paper-button>
+    </div>
+    <div ng-if="!isBrawser">
+        <div class="buttons">
+            <paper-button id="take" raised ng-click="done(true)">TAKE</paper-button>
+            <paper-button id="choose" raised ng-click="done(false)">CHOOSE</paper-button>
+        </div>
     </div>
 </paper-dialog>
