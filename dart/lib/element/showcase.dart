@@ -25,7 +25,7 @@ typedef _AfterSlide();
     templateUrl: 'packages/bacchus_diary/element/showcase.html',
     cssUrl: 'packages/bacchus_diary/element/showcase.css',
     useShadowDom: true)
-class ShowcaseElement implements ShadowRootAware, ScopeAware {
+class ShowcaseElement implements ShadowRootAware {
   @NgOneWayOneTime('setter') set setter(Setter<ShowcaseElement> v) => v?.value = this; // Optional
   @NgOneWay('list') List<Leaf> list;
   @NgOneWay('reportId') String reportId;
@@ -66,19 +66,6 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
     _logger.finest(() => "Opening Showcase");
   }
 
-  Scope _scope;
-  void set scope(Scope scope) {
-    _scope = scope;
-  }
-
-  _scopeApply() {
-    try {
-      _scope.apply();
-    } catch (ex) {
-      _logger.warning(() => "${ex}");
-    }
-  }
-
   _AfterSlide _afterSlide;
 
   _slide(proc(List<Element> sections, int pageNo, GetterSetter<int> current, GetterSetter<int> other),
@@ -102,7 +89,6 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
       _afterSlide = () {
         if (post != null) post(current, other);
         current.value = null;
-        _scopeApply();
       };
       _pages.selected = nextSelected;
     }
@@ -184,7 +170,6 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
       list.add(leaf);
       _slide((sections, index, current, other) {
         current.value = list.length - 1;
-        new Future.delayed(const Duration(milliseconds: 300), _scopeApply);
       });
 
       final path = await leaf.photo.original.storagePath;
