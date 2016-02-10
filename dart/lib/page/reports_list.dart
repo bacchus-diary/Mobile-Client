@@ -8,6 +8,7 @@ import 'package:logging/logging.dart';
 import 'package:core_elements/core_animation.dart';
 
 import 'package:bacchus_diary/model/report.dart';
+import 'package:bacchus_diary/service/leaves.dart';
 import 'package:bacchus_diary/service/reports.dart';
 import 'package:bacchus_diary/util/cordova.dart';
 import 'package:bacchus_diary/util/fabric.dart';
@@ -30,6 +31,8 @@ class ReportsListPage extends MainPage {
 
   bool get noReports => reports.list.isEmpty && !reports.hasMore;
 
+  int get imageSize => (window.innerWidth / 3).round();
+
   ReportsListPage(Router router) : super(router);
 
   void onShadowRoot(ShadowRoot sr) {
@@ -43,7 +46,7 @@ class ReportsListPage extends MainPage {
 
       new Future.delayed(const Duration(seconds: 2), () {
         if (noReports) {
-          final target = root.querySelector('.list .no-reports');
+          final target = root.querySelector('.list-reports .no-reports');
           final dy = (window.innerHeight / 4).round();
 
           _logger.finest(() => "Show add_first_report button: ${target}: +${dy}");
@@ -77,12 +80,15 @@ class ReportsListPage extends MainPage {
 class _Search {
   String text;
 
-  List<Leaf> leaves;
+  PagingList<Leaf> results;
+  bool get isEmpty => results == null || results.list.isEmpty && !results.hasMore;
 
-  start() {
-    final words = (text ?? "").split(' ');
+  start() async {
+    final words = (text ?? "").split(' ').where((x) => x.isNotEmpty);
     if (words.isEmpty) {
-      leaves = null;
+      results = null;
+    } else {
+      results = new PagingList(await Leaves.byWords(words));
     }
   }
 }
