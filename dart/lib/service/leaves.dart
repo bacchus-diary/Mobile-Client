@@ -10,6 +10,17 @@ import 'package:bacchus_diary/util/pager.dart';
 final _logger = new Logger('Leaves');
 
 class Leaves {
+  static Pager<Leaf> byWords(List<String> words) {
+    final map = new ExpressionMap();
+
+    final nameContent = map.putName('CONTENT');
+    final nameDesc = map.putName('description');
+
+    final exp = words.map((word) => "${nameContent}.${nameDesc} CONTAINS ${map.putValue(word)}").join(' AND ');
+
+    return Reports.TABLE_LEAF.scanPager(exp, map.names, map.values);
+  }
+
   static Pager<Leaf> byDescription(String desc) {
     final map = new ExpressionMap();
 
