@@ -1,5 +1,37 @@
 @import "../../web/styles/common";
 
+core-toolbar {
+  height: 138px;
+
+  .search {
+    position: absolute;
+    top: 65px;
+    left: 0;
+    right: 0;
+    
+    @include display-flex();
+    @include align-items(center);
+    @include justify-content(space-between);
+    
+    margin-right: 16px;
+    margin-left: 24px;
+    padding-left: 8px;
+    padding-right: 8px;
+    
+    @include border-radius(5px);
+    border: solid 4px #eee;
+    
+    background-color: white;
+    color: #888;
+    
+    paper-input-decorator {
+      width: 100%;
+      padding-top: 0;
+      padding-bottom: 8px;
+    }
+  }
+}
+
 .list {  
   .no-reports {
     top: -50px;

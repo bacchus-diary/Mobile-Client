@@ -24,6 +24,8 @@ final _logger = new Logger('ReportsListPage');
 class ReportsListPage extends MainPage {
   final pageSize = 20;
 
+  final _Search search = new _Search();
+
   final PagingList<Report> reports = Reports.paging;
 
   bool get noReports => reports.list.isEmpty && !reports.hasMore;
@@ -69,5 +71,18 @@ class ReportsListPage extends MainPage {
 
   addReport() {
     router.go('add', {});
+  }
+}
+
+class _Search {
+  String text;
+
+  List<Leaf> leaves;
+
+  start() {
+    final words = (text ?? "").split(' ');
+    if (words.isEmpty) {
+      leaves = null;
+    }
   }
 }
