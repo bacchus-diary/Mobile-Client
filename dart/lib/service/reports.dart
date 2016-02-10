@@ -50,8 +50,9 @@ class Reports {
       return found.clone();
     } else {
       final report = await TABLE_REPORT.get(id);
-      await _loadLeaves(report);
+      final loading = _loadLeaves(report);
       _addToCache(report);
+      await loading;
       return report.clone();
     }
   }
@@ -68,7 +69,7 @@ class Reports {
 
     _logger.finest("Update report:\n old=${oldReport}\n new=${newReport}");
 
-    newReport.leaves.forEach((fish) => fish.reportId = newReport.id);
+    newReport.leaves.forEach((x) => x.reportId = newReport.id);
 
     List<Leaf> distinct(List<Leaf> src, List<Leaf> dst) => src.where((a) => dst.every((b) => b.id != a.id));
 
@@ -79,9 +80,9 @@ class Reports {
     Future deleting() => Future.wait(distinct(oldReport.leaves, newReport.leaves).map((o) => TABLE_LEAF.delete(o.id)));
 
     // On old, On new
-    Future marging() => Future.wait(newReport.leaves.where((newFish) {
-          final oldFish = oldReport.leaves.firstWhere((oldFish) => oldFish.id == newFish.id, orElse: () => null);
-          return oldFish != null && oldFish.isNeedUpdate(newFish);
+    Future marging() => Future.wait(newReport.leaves.where((newOne) {
+          final oldOne = oldReport.leaves.firstWhere((oldOne) => oldOne.id == newOne.id, orElse: () => null);
+          return oldOne != null && oldOne.isNeedUpdate(newOne);
         }).map(TABLE_LEAF.update));
 
     Future updating() async {
@@ -101,11 +102,11 @@ class Reports {
     final report = reportSrc.clone();
     _logger.finest("Adding report: ${report}");
 
-    await Future.wait([
-      TABLE_REPORT.put(report),
-      Future.wait(report.leaves.map((fish) => TABLE_LEAF.put(fish..reportId = report.id)))
-    ]);
-    await _addToCache(report);
+    final putting = Future.wait(
+        [TABLE_REPORT.put(report), Future.wait(report.leaves.map((x) => TABLE_LEAF.put(x..reportId = report.id)))]);
+
+    _addToCache(report);
+    await putting;
 
     _logger.finest(() => "Added report: ${report}");
   }
