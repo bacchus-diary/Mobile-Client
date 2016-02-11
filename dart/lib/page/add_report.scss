@@ -64,16 +64,7 @@ div#rating {
 }
 
 div#comment {
-  padding-left: 3px;
-  padding-right: 3px;
-}
-
-div#photo {
-  @include display-flex();
-  @include align-items(center);
-  @include justify-content(center);
-  width: 100%;
-  &>* {
-    width: 100%;
-  }
+  padding-left: 4px;
+  padding-right: 4px;
+  @include font-normal(16px);
 }
