@@ -56,6 +56,7 @@ core-toolbar {
 
 infinite-scroll::shadow div#content { 
   .item {
+    position: relative;
     padding-top: 8px;
     padding-bottom: 4px;
     padding-left: 8px;
@@ -90,7 +91,11 @@ infinite-scroll::shadow div#content {
       @include flex-shrink(0);
     }
     
-    .timestamp {
+    .wide {
+      @include flex-grow(2);
+    }
+    
+    .date {
       @include display-flex();
       @include align-items(center);
       @include justify-content(flex-end);

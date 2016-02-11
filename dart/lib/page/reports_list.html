@@ -62,13 +62,13 @@
                                 <div class="image">
                                     <fit-image width="imageSize" height="imageSize" shrink="true" url="report.leaves.first.photo.reduced.thumbnail.url"></fit-image>
                                 </div>
-        			        	<div class="column">
+        			        	<div class="column wide">
                                     <div class="rating">
                                         <div class="star" ng-repeat="grade in [1, 2, 3, 4, 5]">
                                             <core-icon icon="grade" ng-class="{ 'checked': grade <= report.rating }"></core-icon>
                                         </div>
                                     </div>
-        		                	<div class="timestamp">
+        		                	<div class="date">
         		                		<p>{{ report.dateAt | date:"yyyy-MM-dd" }}</p>
         		                	</div>
         			                <div class="description">
