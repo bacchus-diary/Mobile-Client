@@ -34,12 +34,14 @@
                 
                 <infinite-scroll pager="search.results" page-size="{{ search.pageSize }}">
                     <div id="content">
-                        <div class="row" ng-repeat="leaf in search.results">
-                            <div class="image">
-                                <fit-image width="100" height="100" shrink="true" url="leaf.photo.reduced.thumbnail.url"></fit-image>
-                            </div>
-                            <div class="description">
-                                <p>{{ leaf.description }}</p>
+                        <div class="item" ng-repeat="leaf in search.results.list">
+                            <div class="row">
+                                <div class="image">
+                                    <fit-image width="imageSize" height="imageSize" shrink="true" url="leaf.photo.reduced.thumbnail.url"></fit-image>
+                                </div>
+                                <div class="description">
+                                    <p>{{ leaf.description }}</p>
+                                </div>
                             </div>
                             
                             <paper-ripple fit ng-click="goLeaf($event, leaf)"></paper-ripple>
@@ -55,8 +57,8 @@
                 
                 <infinite-scroll pager="reports" page-size="{{ pageSize }}">
                     <div id="content">
-        		        <div class="row" ng-repeat="report in reports.list">
-        		        	<div class="head">
+        		        <div class="item" ng-repeat="report in reports.list">
+        		        	<div class="row">
                                 <div class="image">
                                     <fit-image width="imageSize" height="imageSize" shrink="true" url="report.leaves.first.photo.reduced.thumbnail.url"></fit-image>
                                 </div>

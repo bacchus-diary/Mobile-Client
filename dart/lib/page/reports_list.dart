@@ -79,6 +79,7 @@ class ReportsListPage extends MainPage {
 }
 
 class _Search {
+  final pageSize = 20;
   String text;
 
   PagingList<Leaf> results;

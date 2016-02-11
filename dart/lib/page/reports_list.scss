@@ -55,7 +55,7 @@ core-toolbar {
 }
 
 infinite-scroll::shadow div#content { 
-  .row {
+  .item {
     padding-top: 8px;
     padding-bottom: 4px;
     padding-left: 8px;
@@ -103,7 +103,7 @@ infinite-scroll::shadow div#content {
       @include font-normal(16px);
     }
     
-    .head {
+    .row {
       @include display-flex();
       @include align-items(flex-start);
       @include justify-content(space-between)
