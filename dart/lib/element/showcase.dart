@@ -19,6 +19,7 @@ import 'package:bacchus_diary/util/getter_setter.dart';
 final _logger = new Logger('ShowcaseElement');
 
 typedef _AfterSlide();
+typedef OnChanged();
 
 @Component(
     selector: 'showcase',
@@ -29,6 +30,10 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
   @NgOneWayOneTime('setter') set setter(Setter<ShowcaseElement> v) => v?.value = this; // Optional
   @NgOneWay('list') List<Leaf> list;
   @NgOneWay('reportId') String reportId;
+  @NgOneWay('readonly') bool readonly;
+  @NgOneWay('on-changed') OnChanged onChanged;
+
+  onChange() => onChanged == null ? null : onChanged();
 
   final FuturedValue<PhotoWayDialog> photoWayDialog = new FuturedValue();
 
@@ -98,6 +103,8 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
       ..selected = 0
       ..addEventListener('core-animated-pages-transition-end', (event) => _afterSlide());
     _logger.finest(() => "Opening Showcase");
+
+    if (list.isNotEmpty) _indexA.value = 0;
   }
 
   Scope _scope;
@@ -145,7 +152,8 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
   bool get isLeftEnabled =>
       _slide((sections, pageNo, current, other) => list.isNotEmpty && (current.value == null || current.value > 0));
 
-  bool get isRightEnabled => _slide((sections, pageNo, current, other) => current.value != null);
+  bool get isRightEnabled => _slide(
+      (sections, pageNo, current, other) => current.value != null && (!readonly || current.value < list.length - 1));
 
   slideLeft([post]) {
     _slide((sections, pageNo, current, other) {
@@ -189,6 +197,7 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
       final currentIndex = current.value;
       slideRight((current, other) {
         list.removeAt(currentIndex).photo.delete();
+        onChange();
         if (other.value != null) {
           other.value = other.value - 1;
         }
@@ -224,6 +233,7 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
 
       leaf.photo.reduced.mainview.url = url;
       list.add(leaf);
+      onChange();
       _slide((sections, index, current, other) {
         current.value = list.length - 1;
         _isAdding = false;
