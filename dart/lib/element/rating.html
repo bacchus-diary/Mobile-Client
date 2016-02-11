@@ -1,0 +1,16 @@
+<div id="root">
+    <div class="rating" ng-if="starSize != null">
+        <div class="star" ng-repeat="grade in grades">
+            <paper-icon-button icon="grade" ng-if="!readonly"
+                    ng-click="stars = grade"
+                    ng-class="{ 'checked': grade <= stars }"
+                    style="width: {{ starSize }}px; height: {{ starSize }}px;">
+            </paper-icon-button>
+            
+            <core-icon icon="grade" ng-if="readonly"
+                    ng-class="{ 'checked': grade <= stars }"
+                    style="width: {{ starSize }}px; height: {{ starSize }}px;">
+            </core-icon>
+        </div>
+    </div>
+</div>

@@ -49,23 +49,7 @@ div#more-menu {
 }
 
 div#rating {
-  @include display-flex();
-  @include align-items(center);
-  @include justify-content(space-around);
   margin: 10px;
-  
-  .star {
-    @include display-flex();
-    @include align-items(center);
-    @include justify-content(center);
-    
-    core-icon {
-      color: #bbb;
-      &.checked {
-        color: #fc0;
-      }
-    }
-  }
 }
 
 #dateAt {

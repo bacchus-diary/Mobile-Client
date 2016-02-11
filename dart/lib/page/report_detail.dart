@@ -50,7 +50,14 @@ class ReportDetailPage extends SubPage {
 
   Timer _submitTimer;
 
-  int get starSize => (window.innerWidth / 8).round();
+  int get stars => report?.rating;
+  set stars(int v) {
+    _logger.info(() => "Setting rating: ${report.rating} -> ${v}");
+    if (report != null && report?.rating != v) {
+      report.rating = v;
+      onChanged();
+    }
+  }
 
   @override
   void onShadowRoot(ShadowRoot sr) {

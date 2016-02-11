@@ -32,12 +32,7 @@
 		    		<p>{{ report.dateAt | date:"EEE, MMM d, yyyy, 'about' h a" }}</p>
 		    	</div>
                 <div id="rating">
-                    <div class="star" ng-repeat="grade in [1, 2, 3, 4, 5]">
-                        <core-icon icon="grade"
-                                ng-class="{ 'checked': grade <= report.rating }"
-                                style="width: {{ starSize }}px; height: {{ starSize }}px;">
-                        </core-icon>
-                    </div>
+                    <rating stars="stars" space="0.5">
                 </div>
 		    	
 		    	<div id="comment">

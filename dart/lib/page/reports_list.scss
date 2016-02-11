@@ -64,50 +64,6 @@ infinite-scroll::shadow div#content {
     
     border-bottom: solid 10px #eee;
     
-    p {
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      -webkit-line-clamp: 3;
-      overflow: hidden;
-      overflow-wrap: break-word;
-    }
-    
-    .rating {
-      @include display-flex();
-      @include align-items(center);
-      @include justify-content(flex-end);
-      
-      .star {
-        core-icon {
-          color: #bbb;
-          &.checked {
-            color: #fc0;
-          }
-        }
-      }
-    }
-    
-    .image {
-      @include flex-shrink(0);
-    }
-    
-    .wide {
-      @include flex-grow(2);
-    }
-    
-    .date {
-      @include display-flex();
-      @include align-items(center);
-      @include justify-content(flex-end);
-      @include font-light(14px);
-    }
-
-    .description {
-      margin-top: 8px;
-      margin-left: 10px;
-      @include font-normal(16px);
-    }
-    
     .row {
       @include display-flex();
       @include align-items(flex-start);
@@ -121,9 +77,40 @@ infinite-scroll::shadow div#content {
       @include justify-content(flex-start);
     }
     
+    .image {
+      @include flex-shrink(0);
+    }
+    
+    .wide {
+      @include flex-grow(2);
+    }
+    
+    .rating {
+      margin-left: auto;
+    }
+    
+    .date {
+      margin-left: auto;
+      @include font-light(14px);
+    }
+
+    .description {
+      margin-top: 8px;
+      margin-left: 10px;
+      @include font-normal(16px);
+    }
+    
     .comment {
       margin-top: 4px;
       @include font-light(16px);
+    }
+    
+    p {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
+      overflow: hidden;
+      overflow-wrap: break-word;
     }
     
     & > [fit] {
