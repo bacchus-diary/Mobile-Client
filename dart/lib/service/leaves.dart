@@ -19,8 +19,8 @@ class Leaves {
     final nameContent = map.putName(DynamoDB.CONTENT);
     final nameDesc = map.putName('description');
 
-    final list = ["${map.putName(DynamoDB.COGNITO_ID)} == ${map.putValue(await cognitoId)}"];
-    list.addAll(words.map((word) => "${nameContent}.${nameDesc} CONTAINS ${map.putValue(word)}"));
+    final list = ["${map.putName(DynamoDB.COGNITO_ID)} = ${map.putValue(await cognitoId)}"];
+    list.addAll(words.map((word) => "contains (${nameContent}.${nameDesc}, ${map.putValue(word)})"));
     final exp = list.join(' AND ');
 
     return Reports.TABLE_LEAF.scanPager(exp, map.names, map.values);
@@ -33,9 +33,7 @@ class Leaves {
     final nameDesc = map.putName('description');
     final valueDesc = map.putValue(desc);
 
-    final exp1 = "${nameContent}.${nameDesc} CONTAINS ${valueDesc}";
-    final exp2 = "${valueDesc} CONTAINS ${nameContent}.${nameDesc}";
-    final exp = [exp1, exp2].join(' OR ');
+    final exp = "contains (${nameContent}.${nameDesc}, ${valueDesc})";
 
     return Reports.TABLE_LEAF.scanPager(exp, map.names, map.values);
   }
