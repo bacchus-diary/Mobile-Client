@@ -2,12 +2,14 @@ library bacchus_diary.page.reports_list;
 
 import 'dart:async';
 import 'dart:html';
+import 'dart:math';
 
 import 'package:angular/angular.dart';
 import 'package:logging/logging.dart';
 import 'package:core_elements/core_animation.dart';
 
 import 'package:bacchus_diary/model/report.dart';
+import 'package:bacchus_diary/service/leaves.dart';
 import 'package:bacchus_diary/service/reports.dart';
 import 'package:bacchus_diary/util/cordova.dart';
 import 'package:bacchus_diary/util/fabric.dart';
@@ -24,9 +26,13 @@ final _logger = new Logger('ReportsListPage');
 class ReportsListPage extends MainPage {
   final pageSize = 20;
 
+  final _Search search = new _Search();
+
   final PagingList<Report> reports = Reports.paging;
 
   bool get noReports => reports.list.isEmpty && !reports.hasMore;
+
+  int get imageSize => (window.innerWidth * sqrt(2) / (2 + sqrt(2))).round();
 
   ReportsListPage(Router router) : super(router);
 
@@ -41,7 +47,7 @@ class ReportsListPage extends MainPage {
 
       new Future.delayed(const Duration(seconds: 2), () {
         if (noReports) {
-          final target = root.querySelector('.list .no-reports');
+          final target = root.querySelector('.list-reports .no-reports');
           final dy = (window.innerHeight / 4).round();
 
           _logger.finest(() => "Show add_first_report button: ${target}: +${dy}");
@@ -69,5 +75,22 @@ class ReportsListPage extends MainPage {
 
   addReport() {
     router.go('add', {});
+  }
+}
+
+class _Search {
+  final pageSize = 20;
+  String text;
+
+  PagingList<Leaf> results;
+  bool get isEmpty => results == null || results.list.isEmpty && !results.hasMore;
+
+  start() async {
+    final words = (text ?? "").split(' ').where((x) => x.isNotEmpty);
+    if (words.isEmpty) {
+      results = null;
+    } else {
+      results = new PagingList(await Leaves.byWords(words));
+    }
   }
 }

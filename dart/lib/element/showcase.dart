@@ -1,5 +1,6 @@
 library bacchus_diary.element.showcase;
 
+import 'dart:async';
 import 'dart:html';
 
 import 'package:angular/angular.dart';
@@ -7,6 +8,7 @@ import 'package:logging/logging.dart';
 
 import 'package:core_elements/core_animated_pages.dart';
 import 'package:core_elements/core_animation.dart';
+import 'package:paper_elements/paper_autogrow_textarea.dart';
 import 'package:rikulo_ui/gesture.dart';
 
 import 'package:bacchus_diary/dialog/photo_way.dart';
@@ -19,6 +21,7 @@ import 'package:bacchus_diary/util/getter_setter.dart';
 final _logger = new Logger('ShowcaseElement');
 
 typedef _AfterSlide();
+typedef OnChanged();
 
 @Component(
     selector: 'showcase',
@@ -29,6 +32,9 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
   @NgOneWayOneTime('setter') set setter(Setter<ShowcaseElement> v) => v?.value = this; // Optional
   @NgOneWay('list') List<Leaf> list;
   @NgOneWay('reportId') String reportId;
+  @NgOneWay('on-changed') OnChanged onChanged;
+
+  onChange() => onChanged == null ? null : onChanged();
 
   final FuturedValue<PhotoWayDialog> photoWayDialog = new FuturedValue();
 
@@ -98,6 +104,9 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
       ..selected = 0
       ..addEventListener('core-animated-pages-transition-end', (event) => _afterSlide());
     _logger.finest(() => "Opening Showcase");
+
+    if (list.isNotEmpty) _indexA.value = 0;
+    _updateDescription();
   }
 
   Scope _scope;
@@ -111,6 +120,20 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
     } catch (ex) {
       _logger.warning(() => "${ex}");
     }
+  }
+
+  static const _durUpdateTextarea = const Duration(milliseconds: 200);
+  _updateDescription() async {
+    await new Future.delayed(_durUpdateTextarea, () {
+      _slide((sections, pageNo, current, other) {
+        sections[pageNo].querySelectorAll('paper-autogrow-textarea').forEach((PaperAutogrowTextarea e) {
+          e.querySelectorAll('textarea').forEach((t) {
+            _logger.finer(() => "Updating: ${e} <= ${t}");
+            e.update(t);
+          });
+        });
+      });
+    });
   }
 
   _AfterSlide _afterSlide;
@@ -136,6 +159,7 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
       _afterSlide = () {
         current.value = null;
         if (post != null) post(current, other);
+        _updateDescription();
       };
       _pages.selected = nextSelected;
     }
@@ -189,6 +213,7 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
       final currentIndex = current.value;
       slideRight((current, other) {
         list.removeAt(currentIndex).photo.delete();
+        onChange();
         if (other.value != null) {
           other.value = other.value - 1;
         }
@@ -224,6 +249,7 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
 
       leaf.photo.reduced.mainview.url = url;
       list.add(leaf);
+      onChange();
       _slide((sections, index, current, other) {
         current.value = list.length - 1;
         _isAdding = false;

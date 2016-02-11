@@ -35,45 +35,11 @@
 }
 
 div#rating {
-  @include display-flex();
-  @include align-items(center);
-  @include justify-content(space-around);
   margin: 10px;
-  
-  .star {
-    @include display-flex();
-    @include align-items(center);
-    @include justify-content(center);
-    
-    paper-icon-button {
-      color: #bbb;
-      &.checked {
-        color: #fc0;
-      }
-      &::shadow {
-        #ripple {
-          color: #fc0;
-        }
-        core-icon {
-          width: 100%;
-          height: 100%;
-        }
-      }
-    }
-  }
 }
 
 div#comment {
-  padding-left: 3px;
-  padding-right: 3px;
-}
-
-div#photo {
-  @include display-flex();
-  @include align-items(center);
-  @include justify-content(center);
-  width: 100%;
-  &>* {
-    width: 100%;
-  }
+  padding-left: 4px;
+  padding-right: 4px;
+  @include font-normal(16px);
 }

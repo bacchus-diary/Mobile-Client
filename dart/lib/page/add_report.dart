@@ -38,7 +38,8 @@ class AddReportPage extends SubPage {
     report = new Report.fromMap({});
   }
 
-  int get starSize => (window.innerWidth / 8).round();
+  int get stars => report?.rating;
+  set stars(int v) => report?.rating = v;
 
   //********************************
   // Submit

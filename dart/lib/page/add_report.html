@@ -28,13 +28,7 @@
     	<div>
 	   		<div id="input" ng-if="report != null">
                 <div id="rating">
-                    <div class="star" ng-repeat="grade in [1, 2, 3, 4, 5]">
-                        <paper-icon-button icon="grade"
-                                ng-click="report.rating = grade"
-                                ng-class="{ 'checked': grade <= report.rating }"
-                                style="width: {{starSize}}px; height: {{starSize}}px;">
-                        </paper-icon-button>
-                    </div>
+                    <rating stars="stars" space="0.5">
                 </div>
 		    	<div id="comment">
 		    		<paper-input-decorator label="Write something to note">

@@ -10,7 +10,7 @@
                     <div class="desc">
                         <paper-input-decorator label="NO TEXT">
                             <paper-autogrow-textarea>
-                                <textarea ng-model="leafA.description"></textarea>
+                                <textarea ng-model="leafA.description" ng-change="onChange()"></textarea>
                             </paper-autogrow-textarea>
                         </paper-input-decorator>
                     </div>
@@ -46,7 +46,7 @@
                     <div class="desc">
                         <paper-input-decorator label="NO TEXT">
                             <paper-autogrow-textarea>
-                                <textarea ng-model="leafB.description"></textarea>
+                                <textarea ng-model="leafB.description" ng-change="onChange()"></textarea>
                             </paper-autogrow-textarea>
                         </paper-input-decorator>
                     </div>
