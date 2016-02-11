@@ -73,12 +73,7 @@ class _FBSettings {
 class FBPublish {
   static final Logger _logger = new Logger('FBPublish');
 
-  static String generateMessage(Report report) {
-    final array = [report.comment ?? "", ""];
-    final formatter = new FishFormatter();
-    array.addAll(report.fishes.map(formatter.call));
-    return array.join("\n").trim();
-  }
+  static String generateMessage(Report report) => report.comment;
 
   static Future<String> publish(Report report) async {
     _logger.fine(() => "Publishing report: ${report.id}");
@@ -108,17 +103,22 @@ class FBPublish {
     final params = {
       'fb:explicitly_shared': 'true',
       'message': generateMessage(report),
-      "image[0][url]": await report.photo.original.makeUrl(),
-      "image[0][user_generated]": 'true',
-      'place': og('spot'),
-      fb.objectName: og('catch_report', {
+      fb.objectName: og('leaf', {
         'appName': fb.appName,
         'objectName': fb.objectName,
         'bucketName': settings.s3Bucket,
         'urlTimeout': fb.imageTimeout,
-        'table_catch': "${settings.appName}.CATCH"
+        'table_leaf': "${settings.appName}.LEAF"
       })
     };
+    final List<Completer> gettingUrls = report.leaves.map((_) => new Completer());
+    report.leaves.asMap().forEach((index, leaf) async {
+      final pre = "image[${index}]";
+      params["${pre}[url]"] = await leaf.photo.original.makeUrl();
+      params["${pre}[user_generated]"] = 'true';
+      gettingUrls[index].complete();
+    });
+    await Future.wait(gettingUrls.map((x) => x.future));
 
     final url = "${fb.hostname}/me/${fb.appName}:${fb.actionName}";
     _logger.fine(() => "Posting to ${url}: ${params}");
