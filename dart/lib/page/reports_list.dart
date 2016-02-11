@@ -2,6 +2,7 @@ library bacchus_diary.page.reports_list;
 
 import 'dart:async';
 import 'dart:html';
+import 'dart:math';
 
 import 'package:angular/angular.dart';
 import 'package:logging/logging.dart';
@@ -31,7 +32,7 @@ class ReportsListPage extends MainPage {
 
   bool get noReports => reports.list.isEmpty && !reports.hasMore;
 
-  int get imageSize => (window.innerWidth / 3).round();
+  int get imageSize => (window.innerWidth * sqrt(2) / (2 + sqrt(2))).round();
 
   ReportsListPage(Router router) : super(router);
 
