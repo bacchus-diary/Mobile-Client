@@ -30,7 +30,6 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
   @NgOneWayOneTime('setter') set setter(Setter<ShowcaseElement> v) => v?.value = this; // Optional
   @NgOneWay('list') List<Leaf> list;
   @NgOneWay('reportId') String reportId;
-  @NgOneWay('readonly') bool readonly;
   @NgOneWay('on-changed') OnChanged onChanged;
 
   onChange() => onChanged == null ? null : onChanged();
@@ -152,8 +151,7 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
   bool get isLeftEnabled =>
       _slide((sections, pageNo, current, other) => list.isNotEmpty && (current.value == null || current.value > 0));
 
-  bool get isRightEnabled => _slide(
-      (sections, pageNo, current, other) => current.value != null && (!readonly || current.value < list.length - 1));
+  bool get isRightEnabled => _slide((sections, pageNo, current, other) => current.value != null);
 
   slideLeft([post]) {
     _slide((sections, pageNo, current, other) {
