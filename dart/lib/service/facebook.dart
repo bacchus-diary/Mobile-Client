@@ -72,7 +72,7 @@ class _FBSettings {
 class FBPublish {
   static final Logger _logger = new Logger('FBPublish');
 
-  static String generateMessage(Report report) => report.comment;
+  static String generateMessage(Report report) => report.comment ?? "";
 
   static Future<String> publish(Report report) async {
     _logger.fine(() => "Publishing report: ${report.id}");
