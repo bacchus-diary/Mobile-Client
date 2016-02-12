@@ -10,6 +10,7 @@ import 'package:paper_elements/paper_toast.dart';
 
 import 'package:bacchus_diary/element/showcase.dart';
 import 'package:bacchus_diary/dialog/alert.dart';
+import 'package:bacchus_diary/dialog/confirm.dart';
 import 'package:bacchus_diary/model/report.dart';
 import 'package:bacchus_diary/service/facebook.dart';
 import 'package:bacchus_diary/service/reports.dart';
@@ -28,6 +29,7 @@ class AddReportPage extends SubPage {
   Report report;
 
   final FuturedValue<ShowcaseElement> showcase = new FuturedValue();
+  final Getter<ConfirmDialog> confirmDialog = new PipeValue();
   final Getter<AlertDialog> alertDialog = new PipeValue();
 
   @override
@@ -91,14 +93,22 @@ class AddReportPage extends SubPage {
             FabricAnswers.eventCustom(name: 'AddReportPage.Submit');
           }
           if (_isSubmitted && publish) {
-            final published = await doit('publish', () => FBPublish.publish(report));
-            if (published)
-              try {
-              toast("Completed on publishing to Facebook");
-              await Reports.update(report);
-            } catch (ex) {
-              _logger.warning(() => "Failed to update published id: ${ex}");
-            }
+            confirmDialog.value
+              ..message = "Publish to Facebook ?"
+              ..onClossing(() async {
+                if (confirmDialog.value.result) {
+                  final published = await doit('publish', () => FBPublish.publish(report));
+                  if (published) {
+                    try {
+                      toast("Completed on publishing to Facebook");
+                      await Reports.update(report);
+                    } catch (ex) {
+                      _logger.warning(() => "Failed to update published id: ${ex}");
+                    }
+                  }
+                }
+              })
+              ..open();
           }
         } catch (ex) {
           _logger.warning(() => "Error on submitting: ${ex}");
