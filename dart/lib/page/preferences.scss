@@ -36,34 +36,6 @@
   }
 }
 
-#unit {
-  .content > div {
-    .name {
-      flex: 2;
-    }
-    
-    .toggle {
-      flex: 1;
-      
-      &>* {
-        flex: 1;
-      }
-      &>p:first-child {
-        text-align: right;
-      }
-      
-      paper-toggle-button {
-        &::shadow .toggle {
-          background-color: green;
-        }
-        &::shadow [checked] .toggle {
-          background-color: blue;
-        }
-      }
-    }
-  }
-}
-
 #social {  
   .toggle {
     paper-toggle-button {

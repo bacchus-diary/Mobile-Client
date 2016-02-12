@@ -5,27 +5,10 @@ import 'dart:html';
 import 'dart:js';
 
 import 'package:bacchus_diary/router.dart';
-import 'package:bacchus_diary/formatter/fish_formatter.dart';
-import 'package:bacchus_diary/formatter/temperature_formatter.dart';
-import 'package:bacchus_diary/formatter/tide_formatter.dart';
 import 'package:bacchus_diary/dialog/alert.dart';
 import 'package:bacchus_diary/dialog/confirm.dart';
-import 'package:bacchus_diary/dialog/distributions_filter.dart';
-import 'package:bacchus_diary/dialog/edit_fish.dart';
-import 'package:bacchus_diary/dialog/edit_timestamp.dart';
-import 'package:bacchus_diary/dialog/edit_tide.dart';
-import 'package:bacchus_diary/dialog/edit_weather.dart';
-import 'package:bacchus_diary/dialog/geolocation.dart';
 import 'package:bacchus_diary/dialog/photo_way.dart';
-import 'package:bacchus_diary/element/distributions_filter.dart';
 import 'package:bacchus_diary/element/fit_image.dart';
-import 'package:bacchus_diary/element/float_buttons.dart';
-import 'package:bacchus_diary/element/calendar.dart';
-import 'package:bacchus_diary/element/choose_list.dart';
-import 'package:bacchus_diary/element/collapser.dart';
-import 'package:bacchus_diary/element/expandable_gmap.dart';
-import 'package:bacchus_diary/element/expandable_text.dart';
-import 'package:bacchus_diary/element/num_input.dart';
 import 'package:bacchus_diary/element/rating.dart';
 import 'package:bacchus_diary/element/showcase.dart';
 import 'package:bacchus_diary/element/infinite_scroll.dart';
@@ -34,7 +17,6 @@ import 'package:bacchus_diary/page/add_report.dart';
 import 'package:bacchus_diary/page/reports_list.dart';
 import 'package:bacchus_diary/page/report_detail.dart';
 import 'package:bacchus_diary/page/preferences.dart';
-import 'package:bacchus_diary/page/distributions.dart';
 import 'package:bacchus_diary/util/fabric.dart';
 import 'package:bacchus_diary/util/cordova.dart';
 import 'package:bacchus_diary/util/resource_url_resolver_cordova.dart';
@@ -92,29 +74,11 @@ class AppExceptionHandler extends ExceptionHandler {
 
 class AppModule extends Module {
   AppModule() {
-    bind(FishFormatter);
-    bind(TemperatureFormatter);
-    bind(TideFormatter);
-
     bind(AlertDialog);
     bind(ConfirmDialog);
-    bind(DistributionsFilterDialog);
-    bind(EditFishDialog);
-    bind(EditTimestampDialog);
-    bind(EditTideDialog);
-    bind(EditWeatherDialog);
-    bind(GeolocationDialog);
     bind(PhotoWayDialog);
 
-    bind(DistributionsFilterElement);
     bind(FitImageElement);
-    bind(FloatButtonsElement);
-    bind(CalendarElement);
-    bind(ChooseListElement);
-    bind(CollapserElement);
-    bind(ExpandableGMapElement);
-    bind(ExpandableTextElement);
-    bind(NumInputElement);
     bind(RatingElement);
     bind(ShowcaseElement);
     bind(InfiniteScrollElement);
@@ -124,7 +88,6 @@ class AppModule extends Module {
     bind(ReportsListPage);
     bind(ReportDetailPage);
     bind(PreferencesPage);
-    bind(DistributionsPage);
 
     bind(RouteInitializerFn, toValue: getRouteInitializer);
     bind(NgRoutingUsePushState, toValue: new NgRoutingUsePushState.value(false));

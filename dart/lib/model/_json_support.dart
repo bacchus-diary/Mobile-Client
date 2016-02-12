@@ -6,7 +6,6 @@ export 'dart:convert';
 
 import 'package:logging/logging.dart';
 
-import 'package:bacchus_diary/model/value_unit.dart';
 import 'package:bacchus_diary/util/getter_setter.dart';
 
 final _logger = new Logger('CachedProp');
@@ -32,9 +31,6 @@ class CachedProp<T> {
 
   factory CachedProp.forMap(Map data, String name, _Decoder<T> decoder) =>
       new CachedProp(data, name, decoder, (JsonSupport obj) => obj == null ? null : obj.asMap);
-
-  factory CachedProp.forValueUnit(Map data, String name, T decoder(num value)) =>
-      new CachedProp(data, name, decoder, (ValueUnit obj) => obj == null ? null : obj.asStandard().value);
 
   StreamSubscription<T> _currentListener;
   T _listen(T a) {
