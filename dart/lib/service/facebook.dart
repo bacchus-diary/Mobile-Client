@@ -112,13 +112,15 @@ class FBPublish {
           'table_leaf': "${settings.appName}.LEAF"
         })
       };
-      int index = 0;
-      await Future.wait(report.leaves.map((leaf) async {
+
+      final List<Completer> gettings = report.leaves.map((_) => new Completer()).toList();
+      report.leaves.asMap().forEach((index, leaf) async {
         final pre = "image[${index}]";
         params["${pre}[url]"] = await leaf.photo.original.makeUrl();
         params["${pre}[user_generated]"] = 'true';
-        return index = index + 1;
-      }));
+        gettings[index].complete();
+      });
+      await Future.wait(gettings.map((x) => x.future));
       return params;
     }
 
