@@ -86,6 +86,27 @@ class AddReportPage extends SubPage {
             return false;
           }
         }
+        confirmPublish() {
+          final result = new Completer();
+          confirmDialog.value
+            ..message = "Publish to Facebook ?"
+            ..onClossing(() async {
+              if (confirmDialog.value.result) {
+                final published = await doit('publish', () => FBPublish.publish(report));
+                if (published) {
+                  try {
+                    toast("Completed on publishing to Facebook");
+                    await Reports.update(report);
+                  } catch (ex) {
+                    _logger.warning(() => "Failed to update published id: ${ex}");
+                  }
+                }
+                result.complete();
+              }
+            })
+            ..open();
+          return result.future;
+        }
 
         try {
           _isSubmitted = await doit('add', () => Reports.add(report));
@@ -93,22 +114,7 @@ class AddReportPage extends SubPage {
             FabricAnswers.eventCustom(name: 'AddReportPage.Submit');
           }
           if (_isSubmitted && publish) {
-            confirmDialog.value
-              ..message = "Publish to Facebook ?"
-              ..onClossing(() async {
-                if (confirmDialog.value.result) {
-                  final published = await doit('publish', () => FBPublish.publish(report));
-                  if (published) {
-                    try {
-                      toast("Completed on publishing to Facebook");
-                      await Reports.update(report);
-                    } catch (ex) {
-                      _logger.warning(() => "Failed to update published id: ${ex}");
-                    }
-                  }
-                }
-              })
-              ..open();
+            await confirmPublish();
           }
         } catch (ex) {
           _logger.warning(() => "Error on submitting: ${ex}");
