@@ -7,7 +7,6 @@ import 'dart:js';
 
 import 'package:logging/logging.dart';
 
-import 'package:bacchus_diary/formatter/fish_formatter.dart';
 import 'package:bacchus_diary/settings.dart';
 import 'package:bacchus_diary/service/aws/cognito.dart';
 import 'package:bacchus_diary/model/report.dart';
@@ -83,42 +82,45 @@ class FBPublish {
     final settings = await Settings;
     final fb = await _FBSettings.load();
 
-    og(String name, [Map info = const {}]) {
-      final url = "https://api.fathens.org/bacchus-diary/open_graph/${name}";
-      final data = {
-        'url': url,
-        'region': settings.awsRegion,
-        'table_report': "${settings.appName}.REPORT",
-        'appId': fb.appId,
-        'cognitoId': cred.id,
-        'reportId': report.id
-      }..addAll(info);
+    makeParams() async {
+      og(String name, [Map info = const {}]) {
+        final url = "https://api.fathens.org/bacchus-diary/open_graph/${name}";
+        final data = {
+          'url': url,
+          'region': settings.awsRegion,
+          'table_report': "${settings.appName}.REPORT",
+          'appId': fb.appId,
+          'cognitoId': cred.id,
+          'reportId': report.id
+        }..addAll(info);
 
-      var text = JSON.encode(data);
-      text = new Base64Encoder().convert(new AsciiEncoder().convert(text));
-      text = Uri.encodeFull(text);
-      return "${url}/${text}";
+        var text = JSON.encode(data);
+        text = new Base64Encoder().convert(new AsciiEncoder().convert(text));
+        text = Uri.encodeFull(text);
+        return "${url}/${text}";
+      }
+
+      final params = {
+        'fb:explicitly_shared': 'true',
+        'message': generateMessage(report),
+        fb.objectName: og('report', {
+          'appName': fb.appName,
+          'objectName': fb.objectName,
+          'bucketName': settings.s3Bucket,
+          'urlTimeout': fb.imageTimeout,
+          'table_leaf': "${settings.appName}.LEAF"
+        })
+      };
+      int index = 0;
+      await Future.wait(report.leaves.map((leaf) async {
+        final pre = "image[${index}]";
+        params["${pre}[url]"] = await leaf.photo.original.makeUrl();
+        params["${pre}[user_generated]"] = 'true';
+        return index = index + 1;
+      }));
+      return params;
     }
-
-    final params = {
-      'fb:explicitly_shared': 'true',
-      'message': generateMessage(report),
-      fb.objectName: og('leaf', {
-        'appName': fb.appName,
-        'objectName': fb.objectName,
-        'bucketName': settings.s3Bucket,
-        'urlTimeout': fb.imageTimeout,
-        'table_leaf': "${settings.appName}.LEAF"
-      })
-    };
-    final List<Completer> gettingUrls = report.leaves.map((_) => new Completer());
-    report.leaves.asMap().forEach((index, leaf) async {
-      final pre = "image[${index}]";
-      params["${pre}[url]"] = await leaf.photo.original.makeUrl();
-      params["${pre}[user_generated]"] = 'true';
-      gettingUrls[index].complete();
-    });
-    await Future.wait(gettingUrls.map((x) => x.future));
+    final params = await makeParams();
 
     final url = "${fb.hostname}/me/${fb.appName}:${fb.actionName}";
     _logger.fine(() => "Posting to ${url}: ${params}");
