@@ -12,6 +12,7 @@ import 'package:bacchus_diary/service/aws/cognito.dart';
 import 'package:bacchus_diary/model/report.dart';
 import 'package:bacchus_diary/util/cordova.dart';
 import 'package:bacchus_diary/util/fabric.dart';
+import 'package:bacchus_diary/util/withjs.dart';
 
 class FBConnect {
   static final Logger _logger = new Logger('FBConnect');
@@ -120,21 +121,26 @@ class FBPublish {
       }));
       return params;
     }
-    final params = await makeParams();
 
-    final url = "${fb.hostname}/me/${fb.appName}:${fb.actionName}";
-    _logger.fine(() => "Posting to ${url}: ${params}");
+    try {
+      final params = await makeParams();
+      final url = "${fb.hostname}/me/${fb.appName}:${fb.actionName}";
+      _logger.fine(() => "Posting to ${url}: ${params}");
 
-    final result = await HttpRequest.postFormData("${url}?access_token=${token}", params);
-    _logger.fine(() => "Result of posting to facebook: ${result?.responseText}");
+      final result = await HttpRequest.postFormData("${url}?access_token=${token}", params);
+      _logger.fine(() => "Result of posting to facebook: ${result?.responseText}");
 
-    if ((result.status / 100).floor() != 2) throw result.responseText;
-    final Map obj = JSON.decode(result.responseText);
+      if ((result.status / 100).floor() != 2) throw result.responseText;
+      final Map obj = JSON.decode(result.responseText);
 
-    if (!obj.containsKey('id')) throw obj;
+      if (!obj.containsKey('id')) throw obj;
 
-    FabricAnswers.eventShare(method: 'Facebook');
-    return (report.published ??= new Published.fromMap({})).facebook = obj['id'];
+      FabricAnswers.eventShare(method: 'Facebook');
+      return (report.published ??= new Published.fromMap({})).facebook = obj['id'];
+    } catch (ex) {
+      _logger.warning(() => "Fatal error on posting to Facebook: ${stringify(ex)}");
+      throw ex;
+    }
   }
 
   static Future<Map> getAction(String id) async {
