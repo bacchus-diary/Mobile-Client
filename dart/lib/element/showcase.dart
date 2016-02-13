@@ -276,8 +276,13 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
   }
 
   _readDescription(Blob data, Leaf leaf) async {
-    final cv = new CVision(data);
-    leaf.description = await cv.readText();
-    _updateDescription();
+    try {
+      final cv = new CVision(data, list: ['TEXT_DETECTION', 'LOGO_DETECTION']);
+      final descs = [await cv.findLogo(), await cv.readText()].where((String x) => x != null && x.isNotEmpty);
+      leaf.description = descs.join('\n\n');
+      _updateDescription();
+    } catch (ex) {
+      _logger.warning(() => "Failed to read label: ${ex}");
+    }
   }
 }

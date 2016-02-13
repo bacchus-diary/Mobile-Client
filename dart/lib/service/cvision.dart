@@ -18,7 +18,7 @@ class CVision {
     final result = new Completer<Map>();
 
     final settings = await Settings;
-    final url = "{urlGCV}?key=${settings.googleKey}";
+    final url = "${urlGCV}?key=${settings.googleKey}";
 
     try {
       final features = [];
@@ -27,12 +27,13 @@ class CVision {
       final dataMap = {
         'requests': [
           {
-            'image': {'content': base64(data)},
+            'image': {'content': await base64(data)},
             'features': features
           }
         ]
       };
 
+      _logger.info(() => "Requesting: ${featuresMap}");
       final req = new HttpRequest()
         ..open('POST', url)
         ..setRequestHeader('Content-Type', 'application/json')
@@ -44,7 +45,12 @@ class CVision {
         if (req.status == 200) {
           try {
             final map = JSON.decode(text);
-            result.complete(map);
+            final resList = map['responses'] as List;
+            if (resList.isNotEmpty) {
+              result.complete(resList.first);
+            } else {
+              result.completeError("Result is empty");
+            }
           } catch (ex) {
             _logger.warning(() => "Could not parse as json: ${text}");
             result.completeError(ex);
@@ -75,13 +81,47 @@ class CVision {
     return BASE64.encode(list);
   }
 
+  static const FEATURES = const {
+    'FACE_DETECTION': 10,
+    'LANDMARK_DETECTION': 10,
+    'LOGO_DETECTION': 10,
+    'LABEL_DETECTION': 10,
+    'TEXT_DETECTION': 10,
+    'SAFE_SEARCH_DETECTION': 10,
+    'IMAGE_PROPERTIES': 10
+  };
+
   final Blob srcData;
+  Map<String, int> featuresMap;
+  Future<Map> resutsMap;
 
-  CVision(this.srcData);
-
-  Future<String> readText() async {
-    final result = await request(srcData, {'TEXT_DETECTION': 1});
-
-    return result['responses'][0]['textAnnotations'][0]['description'];
+  CVision(this.srcData, {List<String> list, Map<String, int> map}) {
+    if (map != null) {
+      featuresMap = map;
+    } else if (list != null) {
+      map = {};
+      list.forEach((name) => map[name] = FEATURES[name]);
+      featuresMap = map;
+    } else {
+      featuresMap = FEATURES;
+    }
+    resutsMap = request(srcData, featuresMap);
   }
+
+  _singleRequest(String featureName, String annotationName, proc(List<Map> list)) async {
+    final map = await resutsMap;
+    final list = map[annotationName] as List;
+    if (list != null && list.isNotEmpty) {
+      return proc(list);
+    } else {
+      _logger.warning(() => "No result for ${featureName}(${annotationName})");
+      return null;
+    }
+  }
+
+  Future<String> readText() async =>
+      _singleRequest('TEXT_DETECTION', 'textAnnotations', (list) => list.first['description']);
+
+  Future<String> findLogo() async =>
+      _singleRequest('LOGO_DETECTION', 'logoAnnotations', (list) => list.first['description']);
 }
