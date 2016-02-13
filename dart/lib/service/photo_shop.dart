@@ -36,7 +36,7 @@ class PhotoShop {
         (data) async {
           try {
             _logger.finest(() => "Loaging choosed photo data...");
-            final list = new Base64Decoder().convert(data);
+            final list = BASE64.decode(data);
             final blob = new Blob([new Uint8List.fromList(list)], CONTENT_TYPE);
             _logger.fine(() => "Get photo data: ${blob}");
             result.complete(blob);
