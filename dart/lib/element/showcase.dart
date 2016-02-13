@@ -15,6 +15,7 @@ import 'package:bacchus_diary/dialog/photo_way.dart';
 import 'package:bacchus_diary/model/report.dart';
 import 'package:bacchus_diary/model/photo.dart';
 import 'package:bacchus_diary/service/aws/s3file.dart';
+import 'package:bacchus_diary/service/cvision.dart';
 import 'package:bacchus_diary/service/photo_shop.dart';
 import 'package:bacchus_diary/util/fabric.dart';
 import 'package:bacchus_diary/util/getter_setter.dart';
@@ -235,6 +236,7 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
       onChange();
 
       _uploadPhoto(data, leaf.photo);
+      _readDescription(data, leaf);
 
       _slide((sections, index, current, other) {
         current.value = list.length - 1;
@@ -270,5 +272,11 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
     final path = await photo.original.storagePath;
     await S3File.putObject(path, data);
     FabricAnswers.eventCustom(name: 'UploadPhoto', attributes: {'type': 'NEW_LEAF'});
+  }
+
+  _readDescription(Blob data, Leaf leaf) async {
+    final cv = new CVision(data);
+    leaf.description = await cv.readText();
+    _updateDescription();
   }
 }
