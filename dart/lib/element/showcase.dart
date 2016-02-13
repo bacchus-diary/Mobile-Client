@@ -13,6 +13,7 @@ import 'package:rikulo_ui/gesture.dart';
 
 import 'package:bacchus_diary/dialog/photo_way.dart';
 import 'package:bacchus_diary/model/report.dart';
+import 'package:bacchus_diary/model/photo.dart';
 import 'package:bacchus_diary/service/aws/s3file.dart';
 import 'package:bacchus_diary/service/photo_shop.dart';
 import 'package:bacchus_diary/util/fabric.dart';
@@ -226,47 +227,48 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
     _setupGesture();
 
     _isAdding = true;
-    final dialog = await photoWayDialog.future;
-    dialog.onClosed(() async {
-      if (dialog.take != null) {
-        try {
-          _pickPhoto(await PhotoShop.photo(dialog.take));
-        } catch (ex) {
-          _logger.warning(() => "Could not pick photo: ${ex}");
-          _isAdding = false;
-        }
-      } else if (dialog.file != null) {
-        _pickPhoto(dialog.file);
-      } else {
-        _isAdding = false;
-      }
-    });
-    dialog.open();
-  }
-
-  /**
-   * Picking photo and upload
-   */
-  _pickPhoto(Blob photo) async {
     try {
-      final String url = PhotoShop.makeUrl(photo);
-      final leaf = new Leaf.fromMap(reportId, {});
+      final data = await _pickPhoto();
+      final leaf = new Leaf.fromMap(reportId, {})..photo.reduced.mainview.url = PhotoShop.makeUrl(data);
 
-      leaf.photo.reduced.mainview.url = url;
       list.add(leaf);
       onChange();
+
+      _uploadPhoto(data, leaf.photo);
+
       _slide((sections, index, current, other) {
         current.value = list.length - 1;
         _isAdding = false;
       });
-
-      final path = await leaf.photo.original.storagePath;
-      await S3File.putObject(path, photo);
-      FabricAnswers.eventCustom(name: 'UploadPhoto', attributes: {'type': 'NEW_LEAF'});
     } catch (ex) {
-      _logger.warning(() => "Failed to pick photo: ${ex}");
-    } finally {
       _isAdding = false;
     }
+  }
+
+  Future<Blob> _pickPhoto() async {
+    final result = new Completer<Blob>();
+
+    final dialog = await photoWayDialog.future;
+    dialog.onClosed(() async {
+      final take = dialog.take;
+      if (take != null) {
+        try {
+          result.complete(await PhotoShop.photo(take));
+        } catch (ex) {
+          _logger.warning(() => "Could not pick photo: ${ex}");
+        }
+      } else if (dialog.file != null) {
+        result.complete(dialog.file);
+      }
+    });
+    dialog.open();
+
+    return result.future;
+  }
+
+  _uploadPhoto(Blob data, Photo photo) async {
+    final path = await photo.original.storagePath;
+    await S3File.putObject(path, data);
+    FabricAnswers.eventCustom(name: 'UploadPhoto', attributes: {'type': 'NEW_LEAF'});
   }
 }
