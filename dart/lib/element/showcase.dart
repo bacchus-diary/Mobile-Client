@@ -9,7 +9,6 @@ import 'package:logging/logging.dart';
 import 'package:core_elements/core_animated_pages.dart';
 import 'package:core_elements/core_animation.dart';
 import 'package:paper_elements/paper_autogrow_textarea.dart';
-import 'package:rikulo_ui/gesture.dart';
 
 import 'package:bacchus_diary/dialog/photo_way.dart';
 import 'package:bacchus_diary/model/report.dart';
@@ -81,20 +80,6 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
     ['A', 'B'].forEach((key) {
       final owner = _pages.querySelector("section#page${key} .leaf-view .gesture");
       _logger.fine(() => "Setting gester on ${owner}");
-      new SwipeGesture(owner, (SwipeGestureState state) {
-        _logger.info(() => "Swiped: ${state}");
-        state.gesture.disable();
-        try {
-          final int hdiff = state.transition.x;
-          if (hdiff < -50 && isRightEnabled) {
-            slideRight();
-          } else if (hdiff > 50 && isLeftEnabled) {
-            slideLeft();
-          }
-        } finally {
-          state.gesture.enable();
-        }
-      });
     });
     _isGestureSetup = true;
   }
