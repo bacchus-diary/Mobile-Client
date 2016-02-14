@@ -66,10 +66,17 @@ class ReportsListPage extends MainPage {
     });
   }
 
-  goReport(Event event, String id) {
+  goReport(Event event, Report report) {
     event.target as Element..style.opacity = '1';
     afterRippling(() {
-      router.go('report-detail', {'reportId': id});
+      router.go('report-detail', {'reportId': report.id});
+    });
+  }
+
+  goLeaf(Event event, Leaf leaf) {
+    event.target as Element..style.opacity = '1';
+    afterRippling(() {
+      router.go('report-detail', {'reportId': leaf.reportId});
     });
   }
 
@@ -79,18 +86,23 @@ class ReportsListPage extends MainPage {
 }
 
 class _Search {
-  final pageSize = 20;
-  String text;
+  static String _text;
+  static PagingList<Leaf> _results;
 
-  PagingList<Leaf> results;
+  final pageSize = 20;
+
+  String get text => _text;
+  set text(String v) => _text = v;
+
+  PagingList<Leaf> get results => _results;
   bool get isEmpty => results == null || results.list.isEmpty && !results.hasMore;
 
   start() async {
     final words = (text ?? "").split(' ').where((x) => x.isNotEmpty);
     if (words.isEmpty) {
-      results = null;
+      _results = null;
     } else {
-      results = new PagingList(await Leaves.byWords(words));
+      _results = new PagingList(await Leaves.byWords(words));
     }
   }
 }
