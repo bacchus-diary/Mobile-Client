@@ -66,10 +66,17 @@ class ReportsListPage extends MainPage {
     });
   }
 
-  goReport(Event event, String id) {
+  goReport(Event event, Report report) {
     event.target as Element..style.opacity = '1';
     afterRippling(() {
-      router.go('report-detail', {'reportId': id});
+      router.go('report-detail', {'reportId': report.id});
+    });
+  }
+
+  goLeaf(Event event, Leaf leaf) {
+    event.target as Element..style.opacity = '1';
+    afterRippling(() {
+      router.go('report-detail', {'reportId': leaf.reportId});
     });
   }
 
