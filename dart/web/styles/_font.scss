@@ -1,4 +1,4 @@
-$font-name-normal: 'Playfair Display';
+$font-name-normal: 'Roboto Slab';
 
 @mixin font-spec($name, $style, $weight, $size: "") {
   font: {
@@ -12,13 +12,10 @@ $font-name-normal: 'Playfair Display';
 }
 
 @mixin font-mono($size: "") {
-  @include font-spec('Cutive Mono', normal, 300, $size);
-}
-@mixin font-italic-light($size: "") {
-  @include font-spec($font-name-normal, italic, 100, $size);
+  @include font-spec('Roboto Mono', normal, 300, $size);
 }
 @mixin font-light($size: "") {
-  @include font-spec($font-name-normal, normal, 200, $size);
+  @include font-spec($font-name-normal, normal, 100, $size);
 }
 @mixin font-normal($size: "") {
   @include font-spec($font-name-normal, normal, 300, $size);
@@ -27,8 +24,5 @@ $font-name-normal: 'Playfair Display';
   @include font-spec($font-name-normal, normal, 400, $size);
 }
 @mixin font-extra-bold($size: "") {
-  @include font-spec($font-name-normal, normal, 600, $size);
-}
-@mixin font-italic-bold($size: "") {
-  @include font-spec($font-name-normal, italic, 800, $size);
+  @include font-spec($font-name-normal, normal, 700, $size);
 }
