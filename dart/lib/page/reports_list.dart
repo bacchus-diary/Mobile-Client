@@ -86,18 +86,23 @@ class ReportsListPage extends MainPage {
 }
 
 class _Search {
-  final pageSize = 20;
-  String text;
+  static String _text;
+  static PagingList<Leaf> _results;
 
-  PagingList<Leaf> results;
+  final pageSize = 20;
+
+  String get text => _text;
+  set text(String v) => _text = v;
+
+  PagingList<Leaf> get results => _results;
   bool get isEmpty => results == null || results.list.isEmpty && !results.hasMore;
 
   start() async {
     final words = (text ?? "").split(' ').where((x) => x.isNotEmpty);
     if (words.isEmpty) {
-      results = null;
+      _results = null;
     } else {
-      results = new PagingList(await Leaves.byWords(words));
+      _results = new PagingList(await Leaves.byWords(words));
     }
   }
 }
