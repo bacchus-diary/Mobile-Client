@@ -1,4 +1,4 @@
-name: triton_note
+name: bacchus_diary
 environment:
   sdk: '>=1.0.0 <2.0.0'
 dependencies:

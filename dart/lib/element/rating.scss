@@ -1,0 +1,38 @@
+@import "../../web/styles/common";
+
+div#root {
+  display: block;
+}
+.rating {
+  @include display-flex();
+  @include align-items(center);
+  @include justify-content(space-around);
+  
+  .star {
+    @include display-flex();
+    @include align-items(center);
+    @include justify-content(center);
+    
+    paper-icon-button {
+      color: #bbb;
+      &.checked {
+        color: #fc0;
+      }
+      &::shadow {
+        #ripple {
+          color: #fc0;
+        }
+        core-icon {
+          width: 100%;
+          height: 100%;
+        }
+      }
+    }
+    core-icon {
+      color: #bbb;
+      &.checked {
+        color: #fc0;
+      }
+    }
+  }
+}

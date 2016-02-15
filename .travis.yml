@@ -1,0 +1,39 @@
+osx_image: xcode7
+language: objective-c
+
+branches:
+  except:
+    - /^[0-9]/
+    - /^deployed\/\w+\/\w+\/\w+$/
+
+env:
+  global:
+    - BUILD_NUM=$TRAVIS_BUILD_NUMBER
+    - PROJECT_REPO_SLUG=$TRAVIS_REPO_SLUG
+    - GIT_BRANCH=$TRAVIS_BRANCH
+  matrix:
+    - PLATFORM=android
+    - PLATFORM=ios
+
+before_install:
+  - rvm use 2.2.3 --install --disable-binary
+  - sudo easy_install pip && sudo pip install awscli
+  - aws s3 cp s3://${AWS_S3_BUCKET}/${PROJECT_REPO_SLUG}/persistent.tar.bz2 - | tar jxf -
+  - curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.29.0/install.sh | bash
+  - source $HOME/.nvm/nvm.sh
+  - nvm install 4.2.2
+install:
+  - gem install bundler --no-document
+  - bundle install
+  - brew update || brew update
+  - dart --version || (brew tap dart-lang/dart && brew install dart)
+  - test "$PLATFORM" != "android" || (brew install android && export ANDROID_HOME=$(brew --prefix android))
+
+script:
+  - fastlane enable_crash_reporting
+  - fastlane $PLATFORM build
+
+notifications:
+  email: false
+  slack:
+    secure: OD7+1H9UhmI5mRNWlFbM9nUOF+UGw9Jo3/PtFCET3dUbnMen9bUA5YRcfn8tHwsAVeRzWooL2HCKcB3dr3PROZu5N6iEcLGjUcl72IanbDv95TQ9tyXJSotbbBOVKp+EOqxHT9zxz+faFNnQsYDnrBIucx7MAUGC2Kbjt355sW5O6nO8cHSj4OOGg/yQMuus+lX+l6gPvpeP1aWr4yKxW04cd6RIJ4bCNClaIOb9Tvcue8rJNUIcUZloXLJfBaPL3W95rk2wG5bzGnSw/Bu7zn/uTg1jKPSZzopW6wckQj1Ei14iO2p7QYKNikYOzJ+ivn8FftNS+wDm1WXVbC/MHYJrWcZk20szXrkw+mQzfv6v4TmQ6p4/pAWu4pqsf0NB+x5OrPRb+BhhmN32+ad9uXiWBim8tCu7z8FlDgA2YDFHEmdMf9WJX/NdtSa9AHfyRj1kCta7qQrNx6BQbRnngWmJS/+hY6F5/Q40laxucfAxIQPneQxSX8zZLdDpoV86gMmhmO+3Xbd+9iAsmx0LLrp1vwMhlFFEOxxbWmNG6b3lH71Zy93y/Xgx36kmLWCvawFlXpMnuKDNKMwXpJZp6lHoDZcYQ1Ut34VhCnIl0VgpIAkEKJm1BBgp3Ru2Rw51CbDEBB1XS4Qe6b0Z8ftV+pcqr/hCOKE93rLdvKOKMxo=

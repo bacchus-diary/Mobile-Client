@@ -1,4 +1,4 @@
-library triton_note.service.facebook;
+library bacchus_diary.service.facebook;
 
 import 'dart:async';
 import 'dart:convert';
@@ -7,12 +7,12 @@ import 'dart:js';
 
 import 'package:logging/logging.dart';
 
-import 'package:triton_note/formatter/fish_formatter.dart';
-import 'package:triton_note/settings.dart';
-import 'package:triton_note/service/aws/cognito.dart';
-import 'package:triton_note/model/report.dart';
-import 'package:triton_note/util/cordova.dart';
-import 'package:triton_note/util/fabric.dart';
+import 'package:bacchus_diary/settings.dart';
+import 'package:bacchus_diary/service/aws/cognito.dart';
+import 'package:bacchus_diary/model/report.dart';
+import 'package:bacchus_diary/util/cordova.dart';
+import 'package:bacchus_diary/util/fabric.dart';
+import 'package:bacchus_diary/util/withjs.dart';
 
 class FBConnect {
   static final Logger _logger = new Logger('FBConnect');
@@ -73,12 +73,7 @@ class _FBSettings {
 class FBPublish {
   static final Logger _logger = new Logger('FBPublish');
 
-  static String generateMessage(Report report) {
-    final array = [report.comment ?? "", ""];
-    final formatter = new FishFormatter();
-    array.addAll(report.fishes.map(formatter.call));
-    return array.join("\n").trim();
-  }
+  static String generateMessage(Report report) => report.comment ?? "";
 
   static Future<String> publish(Report report) async {
     _logger.fine(() => "Publishing report: ${report.id}");
@@ -88,51 +83,66 @@ class FBPublish {
     final settings = await Settings;
     final fb = await _FBSettings.load();
 
-    og(String name, [Map info = const {}]) {
-      final url = "https://api.fathens.org/triton-note/open_graph/${name}";
-      final data = {
-        'url': url,
-        'region': settings.awsRegion,
-        'table_report': "${settings.appName}.REPORT",
-        'appId': fb.appId,
-        'cognitoId': cred.id,
-        'reportId': report.id
-      }..addAll(info);
+    makeParams() async {
+      og(String name, [Map info = const {}]) {
+        final url = "https://api.fathens.org/bacchus-diary/open_graph/${name}";
+        final data = {
+          'url': url,
+          'region': settings.awsRegion,
+          'table_report': "${settings.appName}.REPORT",
+          'appId': fb.appId,
+          'cognitoId': cred.id,
+          'reportId': report.id
+        }..addAll(info);
 
-      var text = JSON.encode(data);
-      text = new Base64Encoder().convert(new AsciiEncoder().convert(text));
-      text = Uri.encodeFull(text);
-      return "${url}/${text}";
+        var text = JSON.encode(data);
+        text = new Base64Encoder().convert(new AsciiEncoder().convert(text));
+        text = Uri.encodeFull(text);
+        return "${url}/${text}";
+      }
+
+      final params = {
+        'fb:explicitly_shared': 'true',
+        'message': generateMessage(report),
+        fb.objectName: og('report', {
+          'appName': fb.appName,
+          'objectName': fb.objectName,
+          'bucketName': settings.s3Bucket,
+          'urlTimeout': fb.imageTimeout,
+          'table_leaf': "${settings.appName}.LEAF"
+        })
+      };
+
+      final List<Completer> gettings = report.leaves.map((_) => new Completer()).toList();
+      report.leaves.asMap().forEach((index, leaf) async {
+        final pre = "image[${index}]";
+        params["${pre}[url]"] = await leaf.photo.original.makeUrl();
+        params["${pre}[user_generated]"] = 'true';
+        gettings[index].complete();
+      });
+      await Future.wait(gettings.map((x) => x.future));
+      return params;
     }
 
-    final params = {
-      'fb:explicitly_shared': 'true',
-      'message': generateMessage(report),
-      "image[0][url]": await report.photo.original.makeUrl(),
-      "image[0][user_generated]": 'true',
-      'place': og('spot'),
-      fb.objectName: og('catch_report', {
-        'appName': fb.appName,
-        'objectName': fb.objectName,
-        'bucketName': settings.s3Bucket,
-        'urlTimeout': fb.imageTimeout,
-        'table_catch': "${settings.appName}.CATCH"
-      })
-    };
+    try {
+      final params = await makeParams();
+      final url = "${fb.hostname}/me/${fb.appName}:${fb.actionName}";
+      _logger.fine(() => "Posting to ${url}: ${params}");
 
-    final url = "${fb.hostname}/me/${fb.appName}:${fb.actionName}";
-    _logger.fine(() => "Posting to ${url}: ${params}");
+      final result = await HttpRequest.postFormData("${url}?access_token=${token}", params);
+      _logger.fine(() => "Result of posting to facebook: ${result?.responseText}");
 
-    final result = await HttpRequest.postFormData("${url}?access_token=${token}", params);
-    _logger.fine(() => "Result of posting to facebook: ${result?.responseText}");
+      if ((result.status / 100).floor() != 2) throw result.responseText;
+      final Map obj = JSON.decode(result.responseText);
 
-    if ((result.status / 100).floor() != 2) throw result.responseText;
-    final Map obj = JSON.decode(result.responseText);
+      if (!obj.containsKey('id')) throw obj;
 
-    if (!obj.containsKey('id')) throw obj;
-
-    FabricAnswers.eventShare(method: 'Facebook');
-    return (report.published ??= new Published.fromMap({})).facebook = obj['id'];
+      FabricAnswers.eventShare(method: 'Facebook');
+      return (report.published ??= new Published.fromMap({})).facebook = obj['id'];
+    } catch (ex) {
+      _logger.warning(() => "Fatal error on posting to Facebook: ${stringify(ex)}");
+      throw ex;
+    }
   }
 
   static Future<Map> getAction(String id) async {

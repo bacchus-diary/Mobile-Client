@@ -8,7 +8,7 @@
   
 <title>Triton Note</title>
 
-<link href='https://fonts.googleapis.com/css?family=Exo+2:100italic,600,200,300,400,800italic|Roboto+Mono:300' rel='stylesheet' type='text/css'>
+<link href='https://fonts.googleapis.com/css?family=Roboto+Slab:400,100,300,700|Roboto+Mono:300&subset=latin,latin-ext,cyrillic,greek,greek-ext,vietnamese,cyrillic-ext' rel='stylesheet' type='text/css'>
 
 <link rel="import" href="packages/polymer/polymer.html">
 <link rel="import" href="packages/core_elements/core_animated_pages.html">
@@ -56,12 +56,6 @@
 	
 	<ng-view></ng-view>
     
-    <div id="options">
-        <paper-dialog id="fileChooser" heading="Choose file" transition="core-transition-center" backdrop autoclosedisabled>
-            <input type="file" id="fileInput">
-        </paper-dialog>
-    </div>
-
     <script type="text/javascript" src="https://sdk.amazonaws.com/js/aws-sdk-2.2.26.min.js"></script>
     <script type="text/javascript" src="https://raw.githack.com/aws/amazon-cognito-js/master/dist/amazon-cognito.min.js"></script>
     <script type="text/javascript" src="https://raw.githack.com/mattiasw/ExifReader/master/js/ExifReader.js"></script>

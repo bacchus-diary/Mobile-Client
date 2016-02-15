@@ -1,4 +1,4 @@
-library triton_note.util.resource_url_resolver_cordova;
+library bacchus_diary.util.resource_url_resolver_cordova;
 
 import 'dart:html';
 import 'package:angular/angular.dart';

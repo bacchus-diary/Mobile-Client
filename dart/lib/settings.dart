@@ -1,4 +1,4 @@
-library triton_note.settings;
+library bacchus_diary.settings;
 
 import 'dart:async';
 import 'dart:js';
@@ -6,10 +6,10 @@ import 'dart:js';
 import 'package:logging/logging.dart';
 import 'package:yaml/yaml.dart';
 
-import 'package:triton_note/service/aws/cognito.dart';
-import 'package:triton_note/service/aws/s3file.dart';
-import 'package:triton_note/service/aws/sns.dart';
-import 'package:triton_note/util/cordova.dart';
+import 'package:bacchus_diary/service/aws/cognito.dart';
+import 'package:bacchus_diary/service/aws/s3file.dart';
+import 'package:bacchus_diary/service/aws/sns.dart';
+import 'package:bacchus_diary/util/cordova.dart';
 
 final Logger _logger = new Logger('Settings');
 

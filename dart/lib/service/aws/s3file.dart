@@ -1,4 +1,4 @@
-library triton_note.service.aws.s3file;
+library bacchus_diary.service.aws.s3file;
 
 import 'dart:async';
 import 'dart:html';
@@ -6,7 +6,7 @@ import 'dart:js';
 
 import 'package:logging/logging.dart';
 
-import 'package:triton_note/settings.dart';
+import 'package:bacchus_diary/settings.dart';
 
 final _logger = new Logger('S3File');
 

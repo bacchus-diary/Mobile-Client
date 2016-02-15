@@ -1,4 +1,4 @@
-library triton_note.util.cordova;
+library bacchus_diary.util.cordova;
 
 import 'dart:async';
 import 'dart:html';

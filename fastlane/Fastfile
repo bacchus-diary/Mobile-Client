@@ -16,6 +16,12 @@ end
 
 before_all do
   into_mode
+  
+  def icon(key = nil)
+    name = ['icon'].push(key).select { |x| x != nil }.join('-')
+    File.join('..', 'resources', "#{name}.png")
+  end
+  File.rename(icon(ENV["FASTLANE_PLATFORM_NAME"]), icon())
 
   dart
   cordova(plugins: [
@@ -67,13 +73,13 @@ platform :ios do
       )
 
       update_project_provisioning(
-      xcodeproj: "#{ENV["APPLICATION_NAME"]}.xcodeproj",
+      xcodeproj: "#{ENV["APPLICATION_DISPLAY_NAME"]}.xcodeproj",
       target_filter: ".*",
       build_configuration: "Release"
       )
 
       gym(
-      scheme: ENV["APPLICATION_NAME"],
+      scheme: ENV["APPLICATION_DISPLAY_NAME"],
       configuration: "Release",
       use_legacy_build_api: is_adhoc?,
       include_bitcode: false,
@@ -94,7 +100,7 @@ platform :ios do
               File.join('Pods', 'Crashlytics', 'submit'),
               ENV["FABRIC_API_KEY"],
               ENV["FABRIC_BUILD_SECRET"],
-              "-ipaPath '#{ENV["APPLICATION_NAME"]}.ipa'",
+              "-ipaPath '#{ENV["APPLICATION_DISPLAY_NAME"]}.ipa'",
               "-notesPath '#{ENV["RELEASE_NOTE_PATH"]}'",
               "-groupAliases '#{ENV["FABRIC_CRASHLYTICS_GROUPS"]}'",
               "-notifications YES",

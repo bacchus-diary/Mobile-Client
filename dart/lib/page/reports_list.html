@@ -6,55 +6,78 @@
 	    <core-menu>
             <core-item icon="view-list" label="Reports List" ng-click="goReportsList()"></core-item>
 	        <core-item icon="settings" label="Preferences" ng-click="goPreferences()"></core-item>
-            <core-item icon="track-changes" label="Distributions" ng-click="goDistributions()"></core-item>
 	    </core-menu>
 	</core-header-panel>
 
     <core-header-panel main mode="waterfall">
     	<core-toolbar>
-    	
 			<paper-icon-button icon="menu" ng-click="openMenu()"></paper-icon-button>
     	
       		<span flex>Report List</span>
       		
    			<paper-fab mini icon="add" class="red" ng-click="addReport()"></paper-fab>
-    	
+            
+            <div class=search>
+                <paper-input-decorator label="Search ...">
+                    <input ng-model="search.text">
+                </paper-input-decorator>
+                <paper-icon-button icon="search" ng-click="search.start()"></paper-icon-button>
+            </div>
     	</core-toolbar>
     	
     	<div>
-		    <div class="list">
+            <div class="list-leaves" ng-if="search.results != null">
+                <div class="no-leaves" ng-if="search.isEmpty">
+                    <p>NO MATCHES FOUND</p>
+                </div>
+                
+                <infinite-scroll pager="search.results" page-size="{{ search.pageSize }}">
+                    <div id="content">
+                        <div class="item" ng-repeat="leaf in search.results.list">
+                            <div class="row">
+                                <div class="image">
+                                    <fit-image width="imageSize" height="imageSize" shrink="true" url="leaf.photo.reduced.thumbnail.url"></fit-image>
+                                </div>
+                                <div class="description">
+                                    <p>{{ leaf.description }}</p>
+                                </div>
+                            </div>
+                            
+                            <paper-ripple fit ng-click="goLeaf($event, leaf)"></paper-ripple>
+                        </div>
+                    </div>
+                </infinite-scroll>
+            </div>
+            
+		    <div class="list-reports" ng-if="search.results == null">
                 <div class="no-reports" ng-if="noReports">
                     <paper-button ng-click="addReport()">ADD YOUR FIRST REPORT NOW !</paper-button>
                 </div>
                 
                 <infinite-scroll pager="reports" page-size="{{ pageSize }}">
                     <div id="content">
-        		        <div class="report-row" ng-repeat="report in reports.list">
-        		        	<div class="head">
+        		        <div class="item" ng-repeat="report in reports.list">
+        		        	<div class="row">
                                 <div class="image">
-                                    <div class="loading" ng-if="report.photo.reduced.thumbnail.url == null">
-                                        <paper-spinner active class="gray"></paper-spinner>
+                                    <fit-image width="imageSize" height="imageSize" shrink="true" url="report.leaves.first.photo.reduced.thumbnail.url"></fit-image>
+                                </div>
+        			        	<div class="column wide">
+                                    <div class="rating" style="width: {{ imageSize }}px">
+                                        <rating stars="report.rating" readonly="true"></rating>
                                     </div>
-                                    <div ng-if="report.photo.reduced.thumbnail.url != null">
-                                        <fit-image width="100" height="100" shrink="true" url="report.photo.reduced.thumbnail.url"></fit-image>
+        		                	<div class="date">
+        		                		<p>{{ report.dateAt | date:"yyyy-MM-dd" }}</p>
+        		                	</div>
+        			                <div class="description">
+                                        <p>{{ report.leaves.first.description }}</p>
                                     </div>
                                 </div>
-        			        	<div class="desc">
-        		                	<div class="spot">
-        		                		<p>{{report.location.name}}, {{report.dateAt | date:"yyyy-MM-dd" }}</p>
-        		                	</div>
-        			                <div class="fishes">
-        				        		<div ng-repeat="fish in report.fishes">
-        				        			<p>{{fish | fishFilter }}</p>
-        				        		</div>
-        			                </div>
-        		                </div>
         	                </div>
         	                <div class="comment">
-        	                	<p>{{report.comment}}</p>
+        	                	<p>{{ report.comment }}</p>
         	                </div>
                             
-                            <paper-ripple fit ng-click="goReport($event, report.id)"></paper-ripple>
+                            <paper-ripple fit ng-click="goReport($event, report)"></paper-ripple>
         		        </div>
                     </div>
                 </infinite-scroll>

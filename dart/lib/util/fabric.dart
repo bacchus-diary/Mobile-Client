@@ -1,11 +1,11 @@
-library triton_note.util.fabric;
+library bacchus_diary.util.fabric;
 
 import 'dart:html';
 import 'dart:js';
 
 import 'package:logging/logging.dart';
 
-import 'package:triton_note/util/withjs.dart';
+import 'package:bacchus_diary/util/withjs.dart';
 
 final _logger = new Logger('Fabric');
 
