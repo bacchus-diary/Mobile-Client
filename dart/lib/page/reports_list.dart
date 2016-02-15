@@ -9,7 +9,7 @@ import 'package:logging/logging.dart';
 import 'package:core_elements/core_animation.dart';
 
 import 'package:bacchus_diary/model/report.dart';
-import 'package:bacchus_diary/service/leaves.dart';
+import 'package:bacchus_diary/service/search.dart';
 import 'package:bacchus_diary/service/reports.dart';
 import 'package:bacchus_diary/util/cordova.dart';
 import 'package:bacchus_diary/util/fabric.dart';
@@ -102,7 +102,7 @@ class _Search {
     if (words.isEmpty) {
       _results = null;
     } else {
-      _results = new PagingList(await Leaves.byWords(words));
+      _results = new PagingList(await Search.byWords(words));
     }
   }
 }

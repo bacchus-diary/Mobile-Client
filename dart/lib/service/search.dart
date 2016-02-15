@@ -1,4 +1,4 @@
-library bacchus_diary.service.leaves;
+library bacchus_diary.service.search;
 
 import 'dart:async';
 
@@ -10,9 +10,9 @@ import 'package:bacchus_diary/service/aws/dynamodb.dart';
 import 'package:bacchus_diary/service/reports.dart';
 import 'package:bacchus_diary/util/pager.dart';
 
-final _logger = new Logger('Leaves');
+final _logger = new Logger('Search');
 
-class Leaves {
+class Search {
   static Future<Pager<Leaf>> byWords(List<String> words) async {
     final map = new ExpressionMap();
 
