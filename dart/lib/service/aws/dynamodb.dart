@@ -257,7 +257,7 @@ class _ContentDecoder {
       case 'M':
         return fromDynamoMap(value as Map);
       case 'L':
-        return (value as List).map((a) => decode(a));
+        return (value as List).map((a) => decode(a)).toList();
       case 'S':
         return value as String;
       case 'N':
@@ -280,7 +280,7 @@ class _ContentEncoder {
   static encode(value) {
     if (value == null) return null;
     if (value is Map) return {'M': toDynamoMap(value)};
-    if (value is List) return {'L': value.map((a) => encode(a))};
+    if (value is List) return {'L': value.map((a) => encode(a)).toList()};
     if (value is String) return value.isEmpty ? null : {'S': value};
     if (value is num) return {'N': value.toString()};
     if (value is DateTime) return {'N': value.toUtc().millisecondsSinceEpoch.toString()};
