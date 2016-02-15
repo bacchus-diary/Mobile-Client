@@ -58,31 +58,31 @@ class Search implements Pager<Report> {
     _pagerLeaves.reset();
   }
 
-  Future<List<Report>> _moreLeaves(int pageSize) async {
-    final result = [];
-    add(int more) async {
-      final list = (await _pagerLeaves.more(pageSize));
-      final reports = list.map((x) => x.reportId).toSet().map(Reports.get).toList();
-      result.addAll(reports);
-    }
-    while (result.length < pageSize && _pagerLeaves.hasMore) {
-      add(pageSize - result.length);
-    }
-    return result;
-  }
+  Future<List<Report>> more(final int pageSize) async {
+    final Map<String, Report> result = {};
 
-  Future<List<Report>> more(int pageSize) async {
-    final reports = await _pagerReports.more((pageSize / 2).floor());
-    reports.addAll(await _moreLeaves(pageSize - reports.length));
-    reports.addAll(await _pagerReports.more(pageSize - reports.length));
-    reports.sort((a, b) {
-      final byRating = b.rating.compareTo(a.rating);
-      if (byRating != 0) {
-        return byRating;
-      } else {
-        return b.dateAt.compareTo(a.dateAt);
-      }
-    });
-    return reports;
+    while (result.length < pageSize && hasMore) {
+      await Future.wait((await _pagerLeaves.more((pageSize / 2).ceil())).map((leaf) async {
+        if (!result.containsKey(leaf.reportId)) {
+          result[leaf.reportId] = await Reports.get(leaf.reportId);
+        }
+      }));
+      await Future.wait((await _pagerReports.more(pageSize - result.length)).map((report) async {
+        if (!result.containsKey(report.id)) {
+          await Reports.loadLeaves(report);
+          result[report.id] = report;
+        }
+      }));
+    }
+
+    return result.values.toList()
+      ..sort((a, b) {
+        final byRating = b.rating.compareTo(a.rating);
+        if (byRating != 0) {
+          return byRating;
+        } else {
+          return b.dateAt.compareTo(a.dateAt);
+        }
+      });
   }
 }
