@@ -14,6 +14,7 @@ final _logger = new Logger('Reports');
 
 class Reports {
   static const DATE_AT = "DATE_AT";
+  static const LEAF_INDEXES = 'LEAF_INDEXES';
 
   static final DynamoDB_Table<Leaf> TABLE_LEAF = new DynamoDB_Table("LEAF", "LEAF_ID", (Map map) {
     return new Leaf.fromData(map[DynamoDB.CONTENT], map['LEAF_ID'], map['REPORT_ID']);
@@ -25,7 +26,9 @@ class Reports {
     return new Report.fromData(map[DynamoDB.CONTENT], map['REPORT_ID'],
         new DateTime.fromMillisecondsSinceEpoch(map['DATE_AT'], isUtc: true).toLocal());
   }, (Report obj) {
-    return {DynamoDB.CONTENT: obj.toMap(), 'REPORT_ID': obj.id, 'DATE_AT': obj.dateAt};
+    final content = obj.toMap();
+    content[LEAF_INDEXES] = obj.leaves.map((x) => x.id).toList();
+    return {DynamoDB.CONTENT: content, 'REPORT_ID': obj.id, 'DATE_AT': obj.dateAt};
   });
 
   static final PagingList<Report> paging = new PagingList(new _PagerReports());
@@ -39,9 +42,20 @@ class Reports {
   static Future<Null> _loadLeaves(Report report) async {
     final list = await TABLE_LEAF
         .query("COGNITO_ID-REPORT_ID-index", {DynamoDB.COGNITO_ID: await cognitoId, TABLE_REPORT.ID_COLUMN: report.id});
+
+    final List<Leaf> leaves = [];
+    (report.toMap()[LEAF_INDEXES] as List<String>)?.forEach((leafId) {
+      final leaf = list.firstWhere((x) => x.id == leafId, orElse: () => null);
+      if (leaf != null) {
+        leaves.add(leaf);
+        list.remove(leaf);
+      }
+    });
+    leaves.addAll(list);
+
     report.leaves
       ..clear()
-      ..addAll(list);
+      ..addAll(leaves);
   }
 
   static Future<Report> get(String id) async {
