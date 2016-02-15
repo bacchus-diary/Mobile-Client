@@ -28,9 +28,11 @@ class ReportsListPage extends MainPage {
 
   final _Search search = new _Search();
 
-  final PagingList<Report> reports = Reports.paging;
+  final PagingList<Report> _reports = Reports.paging;
+  PagingList<Report> get reports => search.results ?? _reports;
 
-  bool get noReports => reports.list.isEmpty && !reports.hasMore;
+  bool get noReports => search.results == null && reports.list.isEmpty && !reports.hasMore;
+  bool get noMatches => search.results != null && search.isEmpty;
 
   int get imageSize => (window.innerWidth * sqrt(2) / (2 + sqrt(2))).round();
 
@@ -87,14 +89,14 @@ class ReportsListPage extends MainPage {
 
 class _Search {
   static String _text;
-  static PagingList<Leaf> _results;
+  static PagingList<Report> _results;
 
   final pageSize = 20;
 
   String get text => _text;
   set text(String v) => _text = v;
 
-  PagingList<Leaf> get results => _results;
+  PagingList<Report> get results => _results;
   bool get isEmpty => results == null || results.list.isEmpty && !results.hasMore;
 
   start() async {
