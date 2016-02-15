@@ -14,7 +14,7 @@ core-drawer-panel {
   core-header-panel[main] {
     core-toolbar {
       span[flex] {
-        @include font-bold(24px);
+        @include font-normal(24px);
       }
       
       .tabs {
