@@ -6,6 +6,7 @@ import 'dart:html';
 import 'package:angular/angular.dart';
 import 'package:logging/logging.dart';
 import 'package:core_elements/core_dropdown.dart';
+import 'package:paper_elements/paper_autogrow_textarea.dart';
 import 'package:paper_elements/paper_toast.dart';
 
 import 'package:bacchus_diary/element/showcase.dart';
@@ -67,8 +68,19 @@ class ReportDetailPage extends SubPage {
     _report.then((v) async {
       report = v;
       moreMenu = new _MoreMenu(root, report, onChanged, back);
+
+      new Future.delayed(_durUpdateTextarea, () {
+        root.querySelectorAll('paper-autogrow-textarea').forEach((PaperAutogrowTextarea e) {
+          e.querySelectorAll('textarea').forEach((t) {
+            _logger.finer(() => "Updating comment area: ${e} <= ${t}");
+            e.update(t);
+          });
+        });
+      });
     });
   }
+
+  static const _durUpdateTextarea = const Duration(milliseconds: 200);
 
   void detach() {
     super.detach();
