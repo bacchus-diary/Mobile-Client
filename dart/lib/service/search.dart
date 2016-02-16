@@ -62,12 +62,14 @@ class Search implements Pager<Report> {
     final Map<String, Report> result = {};
 
     while (result.length < pageSize && hasMore) {
-      await Future.wait((await _pagerLeaves.more((pageSize / 2).ceil())).map((leaf) async {
+      final leaves = await _pagerLeaves.more(((pageSize - result.length) / 2).ceil());
+      await Future.wait(leaves.map((leaf) async {
         if (!result.containsKey(leaf.reportId)) {
           result[leaf.reportId] = await Reports.get(leaf.reportId);
         }
       }));
-      await Future.wait((await _pagerReports.more(pageSize - result.length)).map((report) async {
+      final reports = await _pagerReports.more(pageSize - result.length);
+      await Future.wait(reports.map((report) async {
         if (!result.containsKey(report.id)) {
           await Reports.loadLeaves(report);
           result[report.id] = report;
