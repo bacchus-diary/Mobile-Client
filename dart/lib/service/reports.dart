@@ -39,12 +39,26 @@ class Reports {
     ..add(adding)
     ..sort((a, b) => b.dateAt.compareTo(a.dateAt));
 
-  static Future<Null> _loadLeaves(Report report) async {
+  static Report _onCache(String id) => _cachedList.firstWhere((r) => r.id == id, orElse: () => null);
+
+  static Future<Null> loadLeaves(Report report) async {
+    final found = _onCache(report.id);
+    if (found != null) {
+      report.leaves
+        ..clear()
+        ..addAll(found.leaves);
+      return;
+    }
+    final indexes = report.toMap()[LEAF_INDEXES] as List<String>;
+    if (indexes != null && indexes.every((leafId) => report.leaves.any((leaf) => leaf.id == leafId))) {
+      return;
+    }
+
     final list = await TABLE_LEAF
         .query("COGNITO_ID-REPORT_ID-index", {DynamoDB.COGNITO_ID: await cognitoId, TABLE_REPORT.ID_COLUMN: report.id});
 
     final List<Leaf> leaves = [];
-    (report.toMap()[LEAF_INDEXES] as List<String>)?.forEach((leafId) {
+    indexes?.forEach((leafId) {
       final leaf = list.firstWhere((x) => x.id == leafId, orElse: () => null);
       if (leaf != null) {
         leaves.add(leaf);
@@ -64,7 +78,7 @@ class Reports {
       return found.clone();
     } else {
       final report = await TABLE_REPORT.get(id);
-      final loading = _loadLeaves(report);
+      final loading = loadLeaves(report);
       _addToCache(report);
       await loading;
       return report.clone();
@@ -166,7 +180,7 @@ class _PagerReports implements Pager<Report> {
       await _ready.future;
       final cached = Reports._cachedList;
       final list = (await _db.more(pageSize)).where((r) => cached.every((c) => c.id != r.id));
-      await Future.wait(list.map(Reports._loadLeaves));
+      await Future.wait(list.map(Reports.loadLeaves));
       _logger.finer(() => "Loaded reports: ${list}");
       return list;
     } catch (ex) {

@@ -9,7 +9,7 @@ import 'package:logging/logging.dart';
 import 'package:core_elements/core_animation.dart';
 
 import 'package:bacchus_diary/model/report.dart';
-import 'package:bacchus_diary/service/leaves.dart';
+import 'package:bacchus_diary/service/search.dart';
 import 'package:bacchus_diary/service/reports.dart';
 import 'package:bacchus_diary/util/cordova.dart';
 import 'package:bacchus_diary/util/fabric.dart';
@@ -26,15 +26,19 @@ final _logger = new Logger('ReportsListPage');
 class ReportsListPage extends MainPage {
   final pageSize = 20;
 
-  final _Search search = new _Search();
+  _Search search;
 
-  final PagingList<Report> reports = Reports.paging;
+  final PagingList<Report> _reports = Reports.paging;
+  PagingList<Report> get reports => search.results ?? _reports;
 
-  bool get noReports => reports.list.isEmpty && !reports.hasMore;
+  bool get noReports => search.results == null && reports.list.isEmpty && !reports.hasMore;
+  bool get noMatches => search.results != null && search.isEmpty;
 
   int get imageSize => (window.innerWidth * sqrt(2) / (2 + sqrt(2))).round();
 
-  ReportsListPage(Router router) : super(router);
+  ReportsListPage(Router router) : super(router) {
+    search = new _Search(_showAddReport);
+  }
 
   void onShadowRoot(ShadowRoot sr) {
     super.onShadowRoot(sr);
@@ -44,8 +48,14 @@ class ReportsListPage extends MainPage {
 
     reports.more(pageSize).then((_) {
       FabricAnswers.eventCustom(name: "ReportsListPage.Loaded");
+      _showAddReport();
+    });
+  }
 
-      new Future.delayed(const Duration(seconds: 2), () {
+  static const durNoReports = const Duration(seconds: 2);
+  _showAddReport() {
+    if (search.results == null) {
+      new Future.delayed(durNoReports, () {
         if (noReports) {
           final target = root.querySelector('.list-reports .no-reports');
           final dy = (window.innerHeight / 4).round();
@@ -63,7 +73,7 @@ class ReportsListPage extends MainPage {
             ..play();
         }
       });
-    });
+    }
   }
 
   goReport(Event event, Report report) {
@@ -85,24 +95,43 @@ class ReportsListPage extends MainPage {
   }
 }
 
+typedef _SearchChanged();
+
 class _Search {
+  static const durChange = const Duration(seconds: 2);
+
   static String _text;
-  static PagingList<Leaf> _results;
+  static PagingList<Report> _results;
+
+  _Search(this._onChanged);
+
+  final _SearchChanged _onChanged;
 
   final pageSize = 20;
 
   String get text => _text;
   set text(String v) => _text = v;
 
-  PagingList<Leaf> get results => _results;
+  PagingList<Report> get results => _results;
   bool get isEmpty => results == null || results.list.isEmpty && !results.hasMore;
 
+  Timer _changeTimer;
+
+  onChange() async {
+    _logger.finest("Changed: Start timer to search.");
+    if (_changeTimer != null && _changeTimer.isActive) _changeTimer.cancel();
+    _changeTimer = new Timer(durChange, start);
+  }
+
   start() async {
+    if (_changeTimer != null && _changeTimer.isActive) _changeTimer.cancel();
+
     final words = (text ?? "").split(' ').where((x) => x.isNotEmpty);
     if (words.isEmpty) {
       _results = null;
     } else {
-      _results = new PagingList(await Leaves.byWords(words));
+      _results = new PagingList(await Search.byWords(words));
     }
+    _onChanged();
   }
 }
