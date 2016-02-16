@@ -32,15 +32,6 @@ core-toolbar {
   }
 }
 
-.list-leaves {  
-  .no-leaves {
-    @include display-flex();
-    @include align-items(center);
-    @include justify-content(space-around);
-    height: 30%;
-  }
-}
-
 .list-reports {  
   .no-reports {
     top: -50px;
@@ -51,6 +42,13 @@ core-toolbar {
       background-color: red;
       color: white;
     }
+  } 
+  .no-matches {
+    @include display-flex();
+    @include align-items(center);
+    @include justify-content(space-around);
+    height: 30%;
+    margin-top: 10%;
   }
 }
 

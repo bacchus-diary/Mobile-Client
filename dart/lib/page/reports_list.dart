@@ -9,7 +9,7 @@ import 'package:logging/logging.dart';
 import 'package:core_elements/core_animation.dart';
 
 import 'package:bacchus_diary/model/report.dart';
-import 'package:bacchus_diary/service/leaves.dart';
+import 'package:bacchus_diary/service/search.dart';
 import 'package:bacchus_diary/service/reports.dart';
 import 'package:bacchus_diary/util/cordova.dart';
 import 'package:bacchus_diary/util/fabric.dart';
@@ -28,9 +28,11 @@ class ReportsListPage extends MainPage {
 
   final _Search search = new _Search();
 
-  final PagingList<Report> reports = Reports.paging;
+  final PagingList<Report> _reports = Reports.paging;
+  PagingList<Report> get reports => search.results ?? _reports;
 
-  bool get noReports => reports.list.isEmpty && !reports.hasMore;
+  bool get noReports => search.results == null && reports.list.isEmpty && !reports.hasMore;
+  bool get noMatches => search.results != null && search.isEmpty;
 
   int get imageSize => (window.innerWidth * sqrt(2) / (2 + sqrt(2))).round();
 
@@ -87,14 +89,14 @@ class ReportsListPage extends MainPage {
 
 class _Search {
   static String _text;
-  static PagingList<Leaf> _results;
+  static PagingList<Report> _results;
 
   final pageSize = 20;
 
   String get text => _text;
   set text(String v) => _text = v;
 
-  PagingList<Leaf> get results => _results;
+  PagingList<Report> get results => _results;
   bool get isEmpty => results == null || results.list.isEmpty && !results.hasMore;
 
   start() async {
@@ -102,7 +104,7 @@ class _Search {
     if (words.isEmpty) {
       _results = null;
     } else {
-      _results = new PagingList(await Leaves.byWords(words));
+      _results = new PagingList(await Search.byWords(words));
     }
   }
 }
