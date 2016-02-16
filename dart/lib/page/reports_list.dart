@@ -110,6 +110,8 @@ class _Search {
   }
 
   start() async {
+    if (_changeTimer != null && _changeTimer.isActive) _changeTimer.cancel();
+
     final words = (text ?? "").split(' ').where((x) => x.isNotEmpty);
     if (words.isEmpty) {
       _results = null;
