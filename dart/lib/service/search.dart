@@ -17,10 +17,10 @@ class Search implements Pager<Report> {
     final map = new ExpressionMap();
 
     final nameContent = map.putName(DynamoDB.CONTENT);
-    final nameDesc = map.putName('description');
+    final nameDesc = map.putName(Leaf.DESCRIPTION_UPPER);
 
     final list = ["${map.putName(DynamoDB.COGNITO_ID)} = ${map.putValue(await cognitoId)}"];
-    list.addAll(words.map((word) => "contains (${nameContent}.${nameDesc}, ${map.putValue(word)})"));
+    list.addAll(words.map((word) => "contains (${nameContent}.${nameDesc}, ${map.putValue(word.toUpperCase())})"));
     final exp = list.join(' AND ');
 
     return Reports.TABLE_LEAF.scanPager(exp, map.names, map.values);
@@ -30,10 +30,10 @@ class Search implements Pager<Report> {
     final map = new ExpressionMap();
 
     final nameContent = map.putName(DynamoDB.CONTENT);
-    final nameDesc = map.putName('comment');
+    final nameDesc = map.putName(Report.COMMENT_UPPER);
 
     final list = ["${map.putName(DynamoDB.COGNITO_ID)} = ${map.putValue(await cognitoId)}"];
-    list.addAll(words.map((word) => "contains (${nameContent}.${nameDesc}, ${map.putValue(word)})"));
+    list.addAll(words.map((word) => "contains (${nameContent}.${nameDesc}, ${map.putValue(word.toUpperCase())})"));
     final exp = list.join(' AND ');
 
     return Reports.TABLE_REPORT.scanPager(exp, map.names, map.values);
