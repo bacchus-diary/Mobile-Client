@@ -26,7 +26,7 @@ final _logger = new Logger('ReportsListPage');
 class ReportsListPage extends MainPage {
   final pageSize = 20;
 
-  final _Search search = new _Search();
+  _Search search;
 
   final PagingList<Report> _reports = Reports.paging;
   PagingList<Report> get reports => search.results ?? _reports;
@@ -36,7 +36,9 @@ class ReportsListPage extends MainPage {
 
   int get imageSize => (window.innerWidth * sqrt(2) / (2 + sqrt(2))).round();
 
-  ReportsListPage(Router router) : super(router);
+  ReportsListPage(Router router) : super(router) {
+    search = new _Search(_showAddReport);
+  }
 
   void onShadowRoot(ShadowRoot sr) {
     super.onShadowRoot(sr);
@@ -46,8 +48,14 @@ class ReportsListPage extends MainPage {
 
     reports.more(pageSize).then((_) {
       FabricAnswers.eventCustom(name: "ReportsListPage.Loaded");
+      _showAddReport();
+    });
+  }
 
-      new Future.delayed(const Duration(seconds: 2), () {
+  static const durNoReports = const Duration(seconds: 2);
+  _showAddReport() {
+    if (search.results == null) {
+      new Future.delayed(durNoReports, () {
         if (noReports) {
           final target = root.querySelector('.list-reports .no-reports');
           final dy = (window.innerHeight / 4).round();
@@ -65,7 +73,7 @@ class ReportsListPage extends MainPage {
             ..play();
         }
       });
-    });
+    }
   }
 
   goReport(Event event, Report report) {
@@ -87,9 +95,17 @@ class ReportsListPage extends MainPage {
   }
 }
 
+typedef _SearchChanged();
+
 class _Search {
+  static const durChange = const Duration(seconds: 2);
+
   static String _text;
   static PagingList<Report> _results;
+
+  _Search(this._onChanged);
+
+  final _SearchChanged _onChanged;
 
   final pageSize = 20;
 
@@ -99,12 +115,23 @@ class _Search {
   PagingList<Report> get results => _results;
   bool get isEmpty => results == null || results.list.isEmpty && !results.hasMore;
 
+  Timer _changeTimer;
+
+  onChange() async {
+    _logger.finest("Changed: Start timer to search.");
+    if (_changeTimer != null && _changeTimer.isActive) _changeTimer.cancel();
+    _changeTimer = new Timer(durChange, start);
+  }
+
   start() async {
+    if (_changeTimer != null && _changeTimer.isActive) _changeTimer.cancel();
+
     final words = (text ?? "").split(' ').where((x) => x.isNotEmpty);
     if (words.isEmpty) {
       _results = null;
     } else {
       _results = new PagingList(await Search.byWords(words));
     }
+    _onChanged();
   }
 }

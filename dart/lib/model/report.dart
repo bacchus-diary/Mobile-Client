@@ -7,6 +7,8 @@ import 'package:bacchus_diary/model/photo.dart';
 import 'package:bacchus_diary/service/aws/dynamodb.dart';
 
 abstract class Report implements DBRecord<Report> {
+  static const COMMENT_UPPER = 'comment_upper';
+
   int rating;
   String comment;
   DateTime dateAt;
@@ -37,7 +39,10 @@ class _ReportImpl implements Report {
   set rating(int v) => _data['rating'] = v;
 
   String get comment => _data['comment'];
-  set comment(String v) => _data['comment'] = v;
+  set comment(String v) {
+    _data[Report.COMMENT_UPPER] = v.toUpperCase();
+    _data['comment'] = v;
+  }
 
   Published get published => _published.value;
   set published(Published v) => _published.value = v;
@@ -76,6 +81,8 @@ class _PublishedImpl extends JsonSupport implements Published {
 }
 
 abstract class Leaf implements DBRecord<Leaf> {
+  static const DESCRIPTION_UPPER = 'description_upper';
+
   String reportId;
   final Photo photo;
   final String id;
@@ -103,7 +110,10 @@ class _LeafImpl implements Leaf {
   final Photo photo;
 
   String get description => _data['description'];
-  set description(String v) => _data['description'] = v;
+  set description(String v) {
+    _data[Leaf.DESCRIPTION_UPPER] = v.toUpperCase();
+    _data['description'] = v;
+  }
 
   @override
   String toString() => "${_data}, id=${id}, reportId=${reportId}";
