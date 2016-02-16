@@ -1,7 +1,6 @@
 library bacchus_diary.service.search;
 
 import 'dart:async';
-import 'dart:math';
 
 import 'package:logging/logging.dart';
 

@@ -48,6 +48,7 @@ core-toolbar {
     @include align-items(center);
     @include justify-content(space-around);
     height: 30%;
+    margin-top: 10%;
   }
 }
 
