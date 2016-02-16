@@ -88,6 +88,8 @@ class ReportsListPage extends MainPage {
 }
 
 class _Search {
+  static const durChange = const Duration(seconds: 2);
+
   static String _text;
   static PagingList<Report> _results;
 
@@ -98,6 +100,14 @@ class _Search {
 
   PagingList<Report> get results => _results;
   bool get isEmpty => results == null || results.list.isEmpty && !results.hasMore;
+
+  Timer _changeTimer;
+
+  onChange() async {
+    _logger.finest("Changed: Start timer to search.");
+    if (_changeTimer != null && _changeTimer.isActive) _changeTimer.cancel();
+    _changeTimer = new Timer(durChange, start);
+  }
 
   start() async {
     final words = (text ?? "").split(' ').where((x) => x.isNotEmpty);

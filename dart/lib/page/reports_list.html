@@ -19,7 +19,7 @@
             
             <div class=search>
                 <paper-input-decorator label="Search ...">
-                    <input ng-model="search.text">
+                    <input ng-model="search.text" ng-keyup="search.onChange()">
                 </paper-input-decorator>
                 <paper-icon-button icon="search" ng-click="search.start()"></paper-icon-button>
             </div>
