@@ -1,1 +1,13 @@
-This app makes it easy to record fishing. And distribution map made by them will be a help of your awesome fishing plan of weekend.
+The label of the alcohol is automatically read !! It means that you can later search for words in labels, without any manual input. All that you need to do is to rate it !
+
+( See our web page https://www.fathens.org/bacchus-diary.html )
+
+Why this app
+
+LESS TYPING
+
+By automatic label reading, all that you need to do in order to logging the alcohol is only to pick a photo, and rate it by stars. You can also comment to it, if you want. You do NOT need to enter the name or detail attributes of alcohol. Those are read automatically, and you can search for them later .
+
+NO MORE SIGN UP
+
+​You don't need to remember yet another account name and password for this service. You can sign in with Facebook account transparently. And, in passing, you can post your rating of the alcohol to Facebook.
