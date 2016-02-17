@@ -32,7 +32,7 @@ module Fastlane
       def self.build_num
         v = ENV["BUILD_NUM"]
         if v != nil then
-          num = "#{v}00"
+          num = "#{v}000"
           target = 'config.xml'
           puts "Setting build number '#{num}' to #{target}"
 
