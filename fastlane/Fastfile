@@ -81,7 +81,7 @@ platform :ios do
       gym(
       scheme: ENV["APPLICATION_DISPLAY_NAME"],
       configuration: "Release",
-      use_legacy_build_api: is_adhoc?,
+      use_legacy_build_api: true,
       include_bitcode: false,
       silent: true,
       xcargs: {
