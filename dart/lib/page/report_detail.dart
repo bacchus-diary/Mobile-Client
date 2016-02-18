@@ -110,7 +110,7 @@ class ReportDetailPage extends SubPage {
 
   _remove() async {
     if (_submitTimer != null && _submitTimer.isActive) _submitTimer.cancel();
-    await Reports.remove(report.id);
+    await Reports.remove(report);
     back();
   }
 }

@@ -87,11 +87,10 @@ class Reports {
     }
   }
 
-  static Future<Null> remove(String id) async {
-    _logger.fine("Removing report.id: ${id}");
-    final report = await get(id);
-    _cachedList.removeWhere((r) => r.id == id);
-    await TABLE_REPORT.delete(id);
+  static Future<Null> remove(Report report) async {
+    _logger.fine("Removing report: ${report}");
+    _cachedList.removeWhere((r) => r.id == report.id);
+    await TABLE_REPORT.delete(report.id);
     await Future.wait(report.leaves.map((x) => TABLE_LEAF.delete(x.id)));
   }
 
