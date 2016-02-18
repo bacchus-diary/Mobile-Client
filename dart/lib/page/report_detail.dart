@@ -82,6 +82,16 @@ class ReportDetailPage extends SubPage {
 
   static const _durUpdateTextarea = const Duration(milliseconds: 200);
 
+  back() async {
+    if (report.leaves.isEmpty) {
+      if (await moreMenu.confirm("No photo on this report. Delete this report ?")) {
+        _remove();
+      }
+    } else {
+      super.back();
+    }
+  }
+
   void detach() {
     super.detach();
 
@@ -100,6 +110,7 @@ class ReportDetailPage extends SubPage {
   }
 
   _update() async {
+    if (report.leaves.isEmpty) return;
     try {
       await Reports.update(report);
       FabricAnswers.eventCustom(name: 'ModifyReport');
@@ -111,7 +122,7 @@ class ReportDetailPage extends SubPage {
   _remove() async {
     if (_submitTimer != null && _submitTimer.isActive) _submitTimer.cancel();
     await Reports.remove(report);
-    back();
+    super.back();
   }
 }
 
@@ -150,14 +161,18 @@ class _MoreMenu {
 
   CoreDropdown get dropdown => _root.querySelector('#more-menu core-dropdown');
 
-  confirm(String message, whenOk()) {
+  Future<bool> confirm(String message) async {
+    final result = new Completer();
+
     dropdown.close();
     confirmDialog.value
       ..message = message
       ..onClossing(() {
-        if (confirmDialog.value.result) whenOk();
+        result.complete(confirmDialog.value.result);
       })
       ..open();
+
+    return result.future;
   }
 
   toast(String msg, [Duration dur = const Duration(seconds: 8)]) =>
@@ -167,10 +182,10 @@ class _MoreMenu {
         ..text = msg
         ..show();
 
-  publish() {
+  publish() async {
     final msg =
         published ? "This report is already published. Are you sure to publish again ?" : "Publish to Facebook ?";
-    confirm(msg, () async {
+    if (await confirm(msg)) {
       try {
         await FBPublish.publish(_report);
         _onChanged();
@@ -179,8 +194,10 @@ class _MoreMenu {
         _logger.warning(() => "Error on publishing to Facebook: ${ex}");
         toast("Failed on publishing to Facebook");
       }
-    });
+    }
   }
 
-  delete() => confirm("Delete this report ?", _remove);
+  delete() async {
+    if (await confirm("Delete this report ?")) _remove();
+  }
 }
