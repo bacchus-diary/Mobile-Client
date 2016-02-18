@@ -62,7 +62,7 @@ class Reports {
       final leaf = list.firstWhere((x) => x.id == leafId, orElse: () => null);
       if (leaf != null) {
         leaves.add(leaf);
-        list.remove(leaf);
+        list.removeWhere((x) => x.id == leaf.id);
       }
     });
     leaves.addAll(list);
