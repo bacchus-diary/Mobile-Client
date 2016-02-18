@@ -50,7 +50,9 @@ class Reports {
       return;
     }
     final indexes = report.toMap()[LEAF_INDEXES] as List<String>;
-    if (indexes != null && indexes.every((leafId) => report.leaves.any((leaf) => leaf.id == leafId))) {
+    if (indexes != null &&
+        indexes.isNotEmpty &&
+        indexes.every((leafId) => report.leaves.any((leaf) => leaf.id == leafId))) {
       return;
     }
 
