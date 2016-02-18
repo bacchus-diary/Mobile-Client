@@ -65,7 +65,7 @@ class ReportDetailPage extends SubPage {
     super.onShadowRoot(sr);
     FabricAnswers.eventContentView(contentName: "ReportDetailPage");
 
-    _report.then((v) async {
+    _report.then((v) {
       report = v;
       moreMenu = new _MoreMenu(root, report, onChanged, _remove);
 
