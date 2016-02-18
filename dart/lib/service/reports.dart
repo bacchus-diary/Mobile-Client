@@ -99,7 +99,9 @@ class Reports {
     final oldReport = await get(newReport.id);
     assert(oldReport != null);
 
-    _logger.finest("Update report:\n old=${oldReport}\n new=${newReport}");
+    _logger.finest("Updating report:\n old=${oldReport}\n new=${newReport}");
+
+    if (newReport.leaves.isEmpty) throw "Updating report's leaves is Empty.";
 
     newReport.leaves.forEach((x) => x.reportId = newReport.id);
 
@@ -133,6 +135,8 @@ class Reports {
   static Future<Null> add(Report reportSrc) async {
     final report = reportSrc.clone();
     _logger.finest("Adding report: ${report}");
+
+    if (report.leaves.isEmpty) throw "Adding report's leaves is Empty.";
 
     final putting = Future.wait(
         [TABLE_REPORT.put(report), Future.wait(report.leaves.map((x) => TABLE_LEAF.put(x..reportId = report.id)))]);
