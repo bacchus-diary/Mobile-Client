@@ -50,7 +50,9 @@ class Reports {
       return;
     }
     final indexes = report.toMap()[LEAF_INDEXES] as List<String>;
-    if (indexes != null && indexes.every((leafId) => report.leaves.any((leaf) => leaf.id == leafId))) {
+    if (indexes != null &&
+        indexes.isNotEmpty &&
+        indexes.every((leafId) => report.leaves.any((leaf) => leaf.id == leafId))) {
       return;
     }
 
@@ -62,7 +64,7 @@ class Reports {
       final leaf = list.firstWhere((x) => x.id == leafId, orElse: () => null);
       if (leaf != null) {
         leaves.add(leaf);
-        list.remove(leaf);
+        list.removeWhere((x) => x.id == leaf.id);
       }
     });
     leaves.addAll(list);
@@ -85,17 +87,20 @@ class Reports {
     }
   }
 
-  static Future<Null> remove(String id) async {
-    _logger.fine("Removing report.id: ${id}");
-    _cachedList.removeWhere((r) => r.id == id);
-    await TABLE_REPORT.delete(id);
+  static Future<Null> remove(Report report) async {
+    _logger.fine("Removing report: ${report}");
+    _cachedList.removeWhere((r) => r.id == report.id);
+    await TABLE_REPORT.delete(report.id);
+    await Future.wait(report.leaves.map((x) => TABLE_LEAF.delete(x.id)));
   }
 
   static Future<Null> update(Report newReport) async {
     final oldReport = await get(newReport.id);
     assert(oldReport != null);
 
-    _logger.finest("Update report:\n old=${oldReport}\n new=${newReport}");
+    _logger.finest("Updating report:\n old=${oldReport}\n new=${newReport}");
+
+    if (newReport.leaves.isEmpty) throw "Updating report's leaves is Empty.";
 
     newReport.leaves.forEach((x) => x.reportId = newReport.id);
 
@@ -129,6 +134,8 @@ class Reports {
   static Future<Null> add(Report reportSrc) async {
     final report = reportSrc.clone();
     _logger.finest("Adding report: ${report}");
+
+    if (report.leaves.isEmpty) throw "Adding report's leaves is Empty.";
 
     final putting = Future.wait(
         [TABLE_REPORT.put(report), Future.wait(report.leaves.map((x) => TABLE_LEAF.put(x..reportId = report.id)))]);

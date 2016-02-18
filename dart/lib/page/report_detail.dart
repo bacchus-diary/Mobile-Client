@@ -65,9 +65,9 @@ class ReportDetailPage extends SubPage {
     super.onShadowRoot(sr);
     FabricAnswers.eventContentView(contentName: "ReportDetailPage");
 
-    _report.then((v) async {
+    _report.then((v) {
       report = v;
-      moreMenu = new _MoreMenu(root, report, onChanged, back);
+      moreMenu = new _MoreMenu(root, report, onChanged, _remove);
 
       new Future.delayed(_durUpdateTextarea, () {
         root.querySelectorAll('paper-autogrow-textarea').forEach((PaperAutogrowTextarea e) {
@@ -81,6 +81,16 @@ class ReportDetailPage extends SubPage {
   }
 
   static const _durUpdateTextarea = const Duration(milliseconds: 200);
+
+  back() async {
+    if (report.leaves.isEmpty) {
+      if (await moreMenu.confirm("No photo on this report. Delete this report ?")) {
+        _remove();
+      }
+    } else {
+      super.back();
+    }
+  }
 
   void detach() {
     super.detach();
@@ -99,12 +109,20 @@ class ReportDetailPage extends SubPage {
     _submitTimer = new Timer(submitDuration, _update);
   }
 
-  void _update() {
-    Reports.update(report).then((_) {
+  _update() async {
+    if (report.leaves.isEmpty) return;
+    try {
+      await Reports.update(report);
       FabricAnswers.eventCustom(name: 'ModifyReport');
-    }).catchError((ex) {
+    } catch (ex) {
       _logger.warning(() => "Failed to update report: ${ex}");
-    });
+    }
+  }
+
+  _remove() async {
+    if (_submitTimer != null && _submitTimer.isActive) _submitTimer.cancel();
+    await Reports.remove(report);
+    super.back();
   }
 }
 
@@ -113,12 +131,12 @@ class _MoreMenu {
   final Report _report;
   final OnChanged _onChanged;
   bool published = false;
-  final _back;
+  final _remove;
 
   Getter<ConfirmDialog> confirmDialog = new PipeValue();
   final PipeValue<bool> dialogResult = new PipeValue();
 
-  _MoreMenu(this._root, this._report, this._onChanged, void back()) : this._back = back {
+  _MoreMenu(this._root, this._report, this._onChanged, this._remove) {
     setPublished(_report?.published?.facebook);
   }
 
@@ -143,14 +161,18 @@ class _MoreMenu {
 
   CoreDropdown get dropdown => _root.querySelector('#more-menu core-dropdown');
 
-  confirm(String message, whenOk()) {
+  Future<bool> confirm(String message) async {
+    final result = new Completer();
+
     dropdown.close();
     confirmDialog.value
       ..message = message
       ..onClossing(() {
-        if (confirmDialog.value.result) whenOk();
+        result.complete(confirmDialog.value.result);
       })
       ..open();
+
+    return result.future;
   }
 
   toast(String msg, [Duration dur = const Duration(seconds: 8)]) =>
@@ -160,10 +182,10 @@ class _MoreMenu {
         ..text = msg
         ..show();
 
-  publish() {
+  publish() async {
     final msg =
         published ? "This report is already published. Are you sure to publish again ?" : "Publish to Facebook ?";
-    confirm(msg, () async {
+    if (await confirm(msg)) {
       try {
         await FBPublish.publish(_report);
         _onChanged();
@@ -172,11 +194,10 @@ class _MoreMenu {
         _logger.warning(() => "Error on publishing to Facebook: ${ex}");
         toast("Failed on publishing to Facebook");
       }
-    });
+    }
   }
 
-  delete() => confirm("Delete this report ?", () async {
-        await Reports.remove(_report.id);
-        _back();
-      });
+  delete() async {
+    if (await confirm("Delete this report ?")) _remove();
+  }
 }
