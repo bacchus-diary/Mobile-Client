@@ -212,14 +212,15 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
 
     _isAdding = true;
     try {
-      final data = await _pickPhoto();
-      final leaf = new Leaf.fromMap(reportId, {})..photo.reduced.mainview.url = PhotoShop.makeUrl(data);
+      final base64 = await _pickPhoto();
+      final blob = PhotoShop.decodeBase64(base64);
+      final leaf = new Leaf.fromMap(reportId, {})..photo.reduced.mainview.url = PhotoShop.makeUrl(blob);
 
       list.add(leaf);
       onChange();
 
-      _uploadPhoto(data, leaf.photo);
-      _readDescription(data, leaf);
+      _uploadPhoto(blob, leaf.photo);
+      _readDescription(base64, leaf);
 
       _slide((sections, index, current, other) {
         current.value = list.length - 1;
@@ -252,9 +253,9 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
     return result.future;
   }
 
-  _uploadPhoto(String data, Photo photo) async {
+  _uploadPhoto(Blob blob, Photo photo) async {
     final path = await photo.original.storagePath;
-    await S3File.putObject(path, await PhotoShop.decodeBase64(data));
+    await S3File.putObject(path, blob);
     FabricAnswers.eventCustom(name: 'UploadPhoto', attributes: {'type': 'NEW_LEAF'});
   }
 

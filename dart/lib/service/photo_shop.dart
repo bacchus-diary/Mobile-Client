@@ -16,9 +16,8 @@ final _logger = new Logger('PhotoShop');
 class PhotoShop {
   static const CONTENT_TYPE = 'image/jpeg';
 
-  static String makeUrl(String data) {
-    _logger.finest(() => "Loading Base64 data to Uri ...");
-    final url = Url.createObjectUrlFromBlob(decodeBase64(data));
+  static String makeUrl(Blob blob) {
+    final url = Url.createObjectUrlFromBlob(blob);
     _logger.fine("Url of data => ${url}");
     return url;
   }
@@ -28,8 +27,8 @@ class PhotoShop {
     return new Blob([new Uint8List.fromList(list)], CONTENT_TYPE);
   }
 
-  static Future<String> encodeBase64(Blob data) async {
-    final list = await readAsList(data);
+  static Future<String> encodeBase64(Blob blob) async {
+    final list = await readAsList(blob);
     return BASE64.encode(list);
   }
 
