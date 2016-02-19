@@ -16,14 +16,24 @@ final _logger = new Logger('PhotoShop');
 class PhotoShop {
   static const CONTENT_TYPE = 'image/jpeg';
 
-  static String makeUrl(Blob blob) {
-    final String url = Url.createObjectUrlFromBlob(blob);
-    _logger.fine("Url of blob => ${url}");
-    return url;
+  static String makeUrl(String data) {
+    final uri = new Uri.dataFromString(data, mimeType: CONTENT_TYPE, base64: true);
+    _logger.fine("Url of blob => ${uri}");
+    return uri.toString();
   }
 
-  static Future<Blob> photo(bool take) async {
-    final result = new Completer<Blob>();
+  static Blob decodeBase64(String encoded) {
+    final list = BASE64.decode(encoded);
+    return new Blob([new Uint8List.fromList(list)], CONTENT_TYPE);
+  }
+
+  static Future<String> encodeBase64(Blob data) async {
+    final list = await readAsList(data);
+    return BASE64.encode(list);
+  }
+
+  static Future<String> photo(bool take) async {
+    final result = new Completer<String>();
     try {
       final params = {
         'correctOrientation': true,
@@ -35,11 +45,8 @@ class PhotoShop {
       context['navigator']['camera'].callMethod('getPicture', [
         (data) async {
           try {
-            _logger.finest(() => "Loaging choosed photo data...");
-            final list = BASE64.decode(data);
-            final blob = new Blob([new Uint8List.fromList(list)], CONTENT_TYPE);
-            _logger.fine(() => "Get photo data: ${blob}");
-            result.complete(blob);
+            _logger.finest(() => "Choosed photo data received");
+            result.complete(data);
           } catch (ex) {
             result.completeError("Failed to read photo data: ${ex}");
           }

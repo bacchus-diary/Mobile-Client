@@ -230,8 +230,8 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
     }
   }
 
-  Future<Blob> _pickPhoto() async {
-    final result = new Completer<Blob>();
+  Future<String> _pickPhoto() async {
+    final result = new Completer<String>();
 
     final dialog = await photoWayDialog.future;
     dialog.onClosed(() async {
@@ -240,7 +240,7 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
         if (take != null) {
           result.complete(await PhotoShop.photo(take));
         } else if (dialog.file != null) {
-          result.complete(dialog.file);
+          result.complete(await PhotoShop.encodeBase64(dialog.file));
         }
       } catch (ex) {
         _logger.warning(() => "Could not pick photo: ${ex}");
@@ -252,13 +252,13 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
     return result.future;
   }
 
-  _uploadPhoto(Blob data, Photo photo) async {
+  _uploadPhoto(String data, Photo photo) async {
     final path = await photo.original.storagePath;
-    await S3File.putObject(path, data);
+    await S3File.putObject(path, await PhotoShop.decodeBase64(data));
     FabricAnswers.eventCustom(name: 'UploadPhoto', attributes: {'type': 'NEW_LEAF'});
   }
 
-  _readDescription(Blob data, Leaf leaf) async {
+  _readDescription(String data, Leaf leaf) async {
     try {
       final cv = new CVision(data, list: ['TEXT_DETECTION', 'LOGO_DETECTION']);
       final descs = [await cv.findLogo(), await cv.readText()].where((String x) => x != null && x.isNotEmpty);

@@ -14,7 +14,7 @@ final Logger _logger = new Logger('CVision');
 class CVision {
   static const urlGCV = "https://vision.googleapis.com/v1/images:annotate";
 
-  static Future<Map> request(Blob data, Map<String, int> featuresMap) async {
+  static Future<Map> request(String base64data, Map<String, int> featuresMap) async {
     final result = new Completer<Map>();
 
     final settings = await Settings;
@@ -27,7 +27,7 @@ class CVision {
       final dataMap = {
         'requests': [
           {
-            'image': {'content': await base64(data)},
+            'image': {'content': base64data},
             'features': features
           }
         ]
@@ -76,11 +76,6 @@ class CVision {
     return result.future;
   }
 
-  static Future<String> base64(Blob data) async {
-    final list = await readAsList(data);
-    return BASE64.encode(list);
-  }
-
   static const FEATURES = const {
     'FACE_DETECTION': 10,
     'LANDMARK_DETECTION': 10,
@@ -91,7 +86,7 @@ class CVision {
     'IMAGE_PROPERTIES': 10
   };
 
-  final Blob srcData;
+  final String srcData;
   Map<String, int> featuresMap;
   Future<Map> resutsMap;
 

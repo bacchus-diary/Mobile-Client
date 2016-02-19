@@ -4,7 +4,7 @@
 		<section id="pageA">
             <div class="leaf-view" ng-if="width != null">
                 <div class="leaf" ng-if="leafA != null">
-                    <div class="photo">
+                    <div class="photo" ng-if="leafA.photo.reduced.mainview.url != null">
                         <fit-image width="width" height="width" shrink="true" url="leafA.photo.reduced.mainview.url" loading="imageLoading"></fit-image>
                     </div>
                     <div class="desc">
@@ -39,7 +39,7 @@
 		</section>
         <section id="pageB">
             <div class="leaf-view" ng-if="width != null">
-                <div class="leaf" ng-if="leafB != null">
+                <div class="leaf" ng-if="leafB != null && leafB.photo.reduced.mainview.url != null">
                     <div class="photo">
                         <fit-image width="width" height="width" shrink="true" url="leafB.photo.reduced.mainview.url" loading="imageLoading"></fit-image>
                     </div>
