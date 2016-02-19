@@ -5,7 +5,7 @@
             <div class="leaf-view" ng-if="width != null">
                 <div class="leaf" ng-if="leafA != null">
                     <div class="photo">
-                        <fit-image width="width" height="width" shrink="true" url="leafA.photo.reduced.mainview.url"></fit-image>
+                        <fit-image width="width" height="width" shrink="true" url="leafA.photo.reduced.mainview.url" loading="imageLoading"></fit-image>
                     </div>
                     <div class="desc">
                         <paper-input-decorator label="NO TEXT">
@@ -41,7 +41,7 @@
             <div class="leaf-view" ng-if="width != null">
                 <div class="leaf" ng-if="leafB != null">
                     <div class="photo">
-                        <fit-image width="width" height="width" shrink="true" url="leafB.photo.reduced.mainview.url"></fit-image>
+                        <fit-image width="width" height="width" shrink="true" url="leafB.photo.reduced.mainview.url" loading="imageLoading"></fit-image>
                     </div>
                     <div class="desc">
                         <paper-input-decorator label="NO TEXT">

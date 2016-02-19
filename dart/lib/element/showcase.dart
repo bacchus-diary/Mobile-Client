@@ -38,6 +38,7 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
   onChange() => onChanged == null ? null : onChanged();
 
   final FuturedValue<PhotoWayDialog> photoWayDialog = new FuturedValue();
+  final PipeValue<ImageElement> imageLoading = new PipeValue();
 
   final GetterSetter<int> _indexA = new PipeValue();
   final GetterSetter<int> _indexB = new PipeValue();
@@ -66,12 +67,7 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
 
   bool _isAdding = false;
   bool get isPhotoLoading =>
-      _isAdding ||
-      _slide((sections, pageNo, current, other) {
-        if (current.value == null) return false;
-        final height = sections[pageNo].querySelector('.leaf .photo')?.clientHeight ?? 0;
-        return height == 0;
-      });
+      _isAdding || _slide((sections, pageNo, current, other) => current.value != null && imageLoading.value == null);
 
   bool _isGestureSetup = false;
   _setupGesture() async {
@@ -89,6 +85,7 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
     _root = sr;
     _pages = _root.querySelector('core-animated-pages') as CoreAnimatedPages
       ..selected = 0
+      ..addEventListener('core-animated-pages-transition-prepare', (event) => imageLoading.value = null)
       ..addEventListener('core-animated-pages-transition-end', (event) => _afterSlide());
     _logger.finest(() => "Opening Showcase");
 
