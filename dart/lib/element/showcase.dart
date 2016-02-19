@@ -153,10 +153,11 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
     return result;
   }
 
-  bool get isLeftEnabled =>
-      _slide((sections, pageNo, current, other) => list.isNotEmpty && (current.value == null || current.value > 0));
+  bool get isLeftEnabledA => list.isNotEmpty && (_indexA.value == null || _indexA.value > 0);
+  bool get isRightEnabledA => list.isNotEmpty && _indexA.value != null;
 
-  bool get isRightEnabled => _slide((sections, pageNo, current, other) => current.value != null);
+  bool get isLeftEnabledB => list.isNotEmpty && (_indexB.value == null || _indexB.value > 0);
+  bool get isRightEnabledB => list.isNotEmpty && _indexB.value != null;
 
   slideLeft([post]) {
     _slide((sections, pageNo, current, other) {
