@@ -25,11 +25,7 @@ module Fastlane
       end
 
       def self.ionic
-        list = Dir[File.join('resources', ENV["FASTLANE_PLATFORM_NAME"], '**', '*.png')]
-        puts "Resources of #{ENV["FASTLANE_PLATFORM_NAME"]}: #{list}"
-        if list.empty? then
-          system("ionic resources")
-        end
+        system("ionic resources")
       end
 
       def self.node_modules
