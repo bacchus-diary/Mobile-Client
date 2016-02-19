@@ -4,7 +4,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:html';
 import 'dart:js';
-import 'dart:typed_data';
 
 import 'package:logging/logging.dart';
 
@@ -24,7 +23,7 @@ class PhotoShop {
 
   static Blob decodeBase64(String encoded) {
     final list = BASE64.decode(encoded);
-    return new Blob([new Uint8List.fromList(list)], CONTENT_TYPE);
+    return new Blob([list], CONTENT_TYPE);
   }
 
   static Future<String> encodeBase64(Blob blob) async {
