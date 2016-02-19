@@ -17,9 +17,10 @@ class PhotoShop {
   static const CONTENT_TYPE = 'image/jpeg';
 
   static String makeUrl(String data) {
-    final uri = new Uri.dataFromString(data, mimeType: CONTENT_TYPE, base64: true);
-    _logger.fine("Url of blob => ${uri}");
-    return uri.toString();
+    _logger.finest(() => "Loading Base64 data to Uri ...");
+    final url = Url.createObjectUrlFromBlob(decodeBase64(data));
+    _logger.fine("Url of data => ${url}");
+    return url;
   }
 
   static Blob decodeBase64(String encoded) {
