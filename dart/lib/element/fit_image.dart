@@ -18,6 +18,7 @@ final _logger = new Logger('FitImageElement');
     useShadowDom: true)
 class FitImageElement {
   @NgOneWayOneTime('setter') set setter(Setter<FitImageElement> v) => v?.value = this; // Optional
+  @NgOneWay('loading') Setter<ImageElement> loading; // Optional
   @NgOneWay('width') int width;
   @NgOneWay('height') int height;
   @NgOneWay('url') String url;
@@ -37,6 +38,8 @@ class FitImageElement {
 
     _logger.fine("Image loaded: ${event.target}");
     final ImageElement target = event.target;
+
+    if (loading != null) loading.value = target;
 
     final real = new Size.fromRect(target.client);
     final base = new Size(width.toDouble(), height.toDouble());

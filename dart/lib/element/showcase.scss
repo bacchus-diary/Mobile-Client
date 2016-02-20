@@ -29,6 +29,7 @@ div.slider {
           @include flex-direction(column);
           @include align-items(center);
           @include justify-content(center);
+          margin-bottom: 10%;
           
           @include font-extra-bold(30px);
           color: #777;
