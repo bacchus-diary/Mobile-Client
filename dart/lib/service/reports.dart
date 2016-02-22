@@ -41,6 +41,9 @@ class Reports {
 
   static Report _onCache(String id) => _cachedList.firstWhere((r) => r.id == id, orElse: () => null);
 
+  static Future<List<Leaf>> _findLeaves(String reportId) async => TABLE_LEAF
+      .query("COGNITO_ID-REPORT_ID-index", {DynamoDB.COGNITO_ID: await cognitoId, TABLE_REPORT.ID_COLUMN: reportId});
+
   static Future<Null> loadLeaves(Report report) async {
     final found = _onCache(report.id);
     if (found != null) {
@@ -56,8 +59,7 @@ class Reports {
       return;
     }
 
-    final list = await TABLE_LEAF
-        .query("COGNITO_ID-REPORT_ID-index", {DynamoDB.COGNITO_ID: await cognitoId, TABLE_REPORT.ID_COLUMN: report.id});
+    final list = await _findLeaves(report.id);
 
     final List<Leaf> leaves = [];
     indexes?.forEach((leafId) {
@@ -92,6 +94,8 @@ class Reports {
     _cachedList.removeWhere((r) => r.id == report.id);
     await TABLE_REPORT.delete(report.id);
     await Future.wait(report.leaves.map((x) => TABLE_LEAF.delete(x.id)));
+    // 念のためデータベース上のすべての Leaf を削除
+    await Future.wait((await _findLeaves(report.id)).map((x) => TABLE_LEAF.delete(x.id)));
   }
 
   static Future<Null> update(Report newReport) async {
