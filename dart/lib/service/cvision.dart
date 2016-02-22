@@ -7,7 +7,6 @@ import 'dart:html';
 import 'package:logging/logging.dart';
 
 import 'package:bacchus_diary/settings.dart';
-import 'package:bacchus_diary/util/file_reader.dart';
 
 final Logger _logger = new Logger('CVision');
 
