@@ -76,6 +76,11 @@ class Reports {
       ..addAll(leaves);
   }
 
+  static Future<Null> _removeLeaf(Leaf leaf) async {
+    leaf.photo.delete();
+    TABLE_LEAF.delete(leaf.id);
+  }
+
   static Future<Report> get(String id) async {
     final found = _cachedList.firstWhere((r) => r.id == id, orElse: () => null);
     if (found != null) {
@@ -93,9 +98,9 @@ class Reports {
     _logger.fine("Removing report: ${report}");
     _cachedList.removeWhere((r) => r.id == report.id);
     await TABLE_REPORT.delete(report.id);
-    await Future.wait(report.leaves.map((x) => TABLE_LEAF.delete(x.id)));
+    await Future.wait(report.leaves.map(_removeLeaf));
     // 念のためデータベース上のすべての Leaf を削除
-    await Future.wait((await _findLeaves(report.id)).map((x) => TABLE_LEAF.delete(x.id)));
+    await Future.wait((await _findLeaves(report.id)).map(_removeLeaf));
   }
 
   static Future<Null> update(Report newReport) async {
@@ -114,7 +119,7 @@ class Reports {
     Future adding() => Future.wait(distinct(newReport.leaves, oldReport.leaves).map(TABLE_LEAF.put));
 
     // On old, No new
-    Future deleting() => Future.wait(distinct(oldReport.leaves, newReport.leaves).map((o) => TABLE_LEAF.delete(o.id)));
+    Future deleting() => Future.wait(distinct(oldReport.leaves, newReport.leaves).map(_removeLeaf));
 
     // On old, On new
     Future marging() => Future.wait(newReport.leaves.where((newOne) {
