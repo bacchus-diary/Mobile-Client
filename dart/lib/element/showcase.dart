@@ -150,11 +150,14 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
     return result;
   }
 
-  bool get isLeftEnabledA => list.isNotEmpty && (_indexA.value == null || _indexA.value > 0);
-  bool get isRightEnabledA => list.isNotEmpty && _indexA.value != null;
+  bool _isAnalyzing = false;
+  bool get _isSlideEnabled => !_isAnalyzing && list.isNotEmpty;
 
-  bool get isLeftEnabledB => list.isNotEmpty && (_indexB.value == null || _indexB.value > 0);
-  bool get isRightEnabledB => list.isNotEmpty && _indexB.value != null;
+  bool get isLeftEnabledA => _isSlideEnabled && (_indexA.value == null || _indexA.value > 0);
+  bool get isRightEnabledA => _isSlideEnabled && _indexA.value != null;
+
+  bool get isLeftEnabledB => _isSlideEnabled && (_indexB.value == null || _indexB.value > 0);
+  bool get isRightEnabledB => _isSlideEnabled && _indexB.value != null;
 
   slideLeft([post]) {
     _slide((sections, pageNo, current, other) {
@@ -262,14 +265,26 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
     FabricAnswers.eventCustom(name: 'UploadPhoto', attributes: {'type': 'NEW_LEAF'});
   }
 
-  _readDescription(String data, Leaf leaf) async {
-    try {
-      final cv = new CVision(data, list: ['TEXT_DETECTION', 'LOGO_DETECTION']);
-      final descs = [await cv.findLogo(), await cv.readText()].where((String x) => x != null && x.isNotEmpty);
-      leaf.description = descs.join('\n\n');
-      _updateDescription();
-    } catch (ex) {
-      _logger.warning(() => "Failed to read label: ${ex}");
+  _readDescription(String data, Leaf leaf) {
+    _isAnalyzing = true;
+    analyze() async {
+      try {
+        final cv = new CVision(data, list: ['TEXT_DETECTION', 'LOGO_DETECTION', 'SAFE_SEARCH_DETECTION']);
+        final safe = await cv.safeLevel();
+
+        if (safe.isAllUnder(4)) {
+          final descs = [await cv.findLogo(), await cv.readText()].where((String x) => x != null && x.isNotEmpty);
+          leaf.description = descs.join('\n\n');
+          _updateDescription();
+        } else {
+          delete();
+        }
+      } catch (ex) {
+        _logger.warning(() => "Failed to read label: ${ex}");
+      } finally {
+        _isAnalyzing = false;
+      }
     }
+    analyze();
   }
 }
