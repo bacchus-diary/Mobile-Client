@@ -214,7 +214,10 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
     try {
       final base64 = await _pickPhoto();
       final blob = PhotoShop.decodeBase64(base64);
-      final leaf = new Leaf.fromMap(reportId, {})..photo.reduced.mainview.url = PhotoShop.makeUrl(blob);
+      final url = PhotoShop.makeUrl(blob);
+      final leaf = new Leaf.fromMap(reportId, {})
+        ..photo.reduced.mainview.url = url
+        ..photo.reduced.thumbnail.url = url;
 
       list.add(leaf);
       onChange();

@@ -96,11 +96,11 @@ abstract class Leaf implements DBRecord<Leaf> {
 class _LeafImpl implements Leaf {
   final Map _data;
 
-  _LeafImpl(Map data, String id, String reportId)
+  _LeafImpl(Map data, String id, String reportId, [Photo photo])
       : _data = data,
         this.id = id,
         this.reportId = reportId,
-        photo = new Photo(reportId, id);
+        this.photo = photo ?? new Photo(reportId, id);
 
   String get _mapString => JSON.encode(_data);
   Map toMap() => JSON.decode(_mapString);
@@ -126,5 +126,5 @@ class _LeafImpl implements Leaf {
     }
   }
 
-  Leaf clone() => new _LeafImpl(toMap(), id, reportId);
+  Leaf clone() => new _LeafImpl(toMap(), id, reportId, photo);
 }
