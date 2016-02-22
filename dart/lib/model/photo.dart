@@ -33,16 +33,18 @@ class Photo {
         reduced = new ReducedImages(reportId, id);
 
   delete() async {
-    del(path) async {
+    del(Image image) async {
+      final path = await image.storagePath;
       try {
         await S3File.delete(path);
       } catch (ex) {
         _logger.warning(() => "Failed to delete on S3(${path}): ${ex}");
       }
     }
-    original.storagePath.then(del);
-    new Future.delayed(new Duration(minutes: 1), () {
-      reduced..mainview.storagePath.then(del)..thumbnail.storagePath.then(del);
+    del(original);
+    new Future.delayed(new Duration(seconds: 10), () {
+      del(reduced.mainview);
+      del(reduced.thumbnail);
     });
   }
 }
