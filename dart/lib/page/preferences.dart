@@ -62,4 +62,6 @@ class PreferencesPage extends MainPage {
     }
     toggle.checked = (await CognitoIdentity.credential).hasFacebook();
   }
+
+  changeTacking(event) async {}
 }
