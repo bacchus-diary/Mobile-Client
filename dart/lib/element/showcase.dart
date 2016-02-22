@@ -10,6 +10,7 @@ import 'package:core_elements/core_animated_pages.dart';
 import 'package:core_elements/core_animation.dart';
 import 'package:paper_elements/paper_autogrow_textarea.dart';
 
+import 'package:bacchus_diary/dialog/alert.dart';
 import 'package:bacchus_diary/dialog/photo_way.dart';
 import 'package:bacchus_diary/model/report.dart';
 import 'package:bacchus_diary/model/photo.dart';
@@ -38,6 +39,7 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
   onChange() => onChanged == null ? null : onChanged();
 
   final FuturedValue<PhotoWayDialog> photoWayDialog = new FuturedValue();
+  final FuturedValue<AlertDialog> alertDialog = new FuturedValue();
   final PipeValue<ImageElement> imageLoading = new PipeValue();
 
   final GetterSetter<int> _indexA = new PipeValue();
@@ -277,7 +279,10 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
           leaf.description = descs.join('\n\n');
           _updateDescription();
         } else {
-          delete();
+          (await alertDialog.future)
+            ..message = "This photo contains inappropriate contents. Delete this photo."
+            ..onClosed(delete)
+            ..open();
         }
       } catch (ex) {
         _logger.warning(() => "Failed to read label: ${ex}");
