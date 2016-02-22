@@ -119,4 +119,31 @@ class CVision {
 
   Future<String> findLogo() async =>
       _singleRequest('LOGO_DETECTION', 'logoAnnotations', (list) => list.first['description']);
+
+  Future<SafeSearch> safeLevel() async {
+    final result = (await resutsMap)['safeSearchAnnotation'];
+    return new SafeSearch(result);
+  }
+}
+
+class SafeSearch {
+  static const LIKELIHOOD = const {
+    'UNKNOWN': 0,
+    'VERY_UNLIKELY': 1,
+    'UNLIKELY': 2,
+    'POSSIBLE': 3,
+    'LIKELY': 4,
+    'VERY_LIKELY': 5
+  };
+
+  final Map<String, String> _map;
+
+  SafeSearch(this._map);
+
+  int get adult => LIKELIHOOD[_map['adult']];
+  int get spoof => LIKELIHOOD[_map['spoof']];
+  int get medical => LIKELIHOOD[_map['medical']];
+  int get violence => LIKELIHOOD[_map['violence']];
+
+  bool isAllUnder(int level) => adult < level && spoof < level && medical < level && violence < level;
 }
