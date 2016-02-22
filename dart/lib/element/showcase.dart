@@ -10,6 +10,7 @@ import 'package:core_elements/core_animated_pages.dart';
 import 'package:core_elements/core_animation.dart';
 import 'package:paper_elements/paper_autogrow_textarea.dart';
 
+import 'package:bacchus_diary/dialog/alert.dart';
 import 'package:bacchus_diary/dialog/photo_way.dart';
 import 'package:bacchus_diary/model/report.dart';
 import 'package:bacchus_diary/model/photo.dart';
@@ -37,7 +38,10 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
 
   onChange() => onChanged == null ? null : onChanged();
 
+  bool get isProcessing => _isAdding || _isAnalyzing;
+
   final FuturedValue<PhotoWayDialog> photoWayDialog = new FuturedValue();
+  final FuturedValue<AlertDialog> alertDialog = new FuturedValue();
   final PipeValue<ImageElement> imageLoading = new PipeValue();
 
   final GetterSetter<int> _indexA = new PipeValue();
@@ -150,11 +154,14 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
     return result;
   }
 
-  bool get isLeftEnabledA => list.isNotEmpty && (_indexA.value == null || _indexA.value > 0);
-  bool get isRightEnabledA => list.isNotEmpty && _indexA.value != null;
+  bool _isAnalyzing = false;
+  bool get _isSlideEnabled => !_isAnalyzing && list.isNotEmpty;
 
-  bool get isLeftEnabledB => list.isNotEmpty && (_indexB.value == null || _indexB.value > 0);
-  bool get isRightEnabledB => list.isNotEmpty && _indexB.value != null;
+  bool get isLeftEnabledA => _isSlideEnabled && (_indexA.value == null || _indexA.value > 0);
+  bool get isRightEnabledA => _isSlideEnabled && _indexA.value != null;
+
+  bool get isLeftEnabledB => _isSlideEnabled && (_indexB.value == null || _indexB.value > 0);
+  bool get isRightEnabledB => _isSlideEnabled && _indexB.value != null;
 
   slideLeft([post]) {
     _slide((sections, pageNo, current, other) {
@@ -220,7 +227,6 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
         ..photo.reduced.thumbnail.url = url;
 
       list.add(leaf);
-      onChange();
 
       _uploadPhoto(blob, leaf.photo);
       _readDescription(base64, leaf);
@@ -262,14 +268,30 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
     FabricAnswers.eventCustom(name: 'UploadPhoto', attributes: {'type': 'NEW_LEAF'});
   }
 
-  _readDescription(String data, Leaf leaf) async {
-    try {
-      final cv = new CVision(data, list: ['TEXT_DETECTION', 'LOGO_DETECTION']);
-      final descs = [await cv.findLogo(), await cv.readText()].where((String x) => x != null && x.isNotEmpty);
-      leaf.description = descs.join('\n\n');
-      _updateDescription();
-    } catch (ex) {
-      _logger.warning(() => "Failed to read label: ${ex}");
+  _readDescription(String data, Leaf leaf) {
+    _isAnalyzing = true;
+    analyze() async {
+      try {
+        final cv = new CVision(data, list: ['TEXT_DETECTION', 'LOGO_DETECTION', 'SAFE_SEARCH_DETECTION']);
+        final safe = await cv.safeLevel();
+
+        if (safe.isAllUnder(4)) {
+          final descs = [await cv.findLogo(), await cv.readText()].where((String x) => x != null && x.isNotEmpty);
+          leaf.description = descs.join('\n\n');
+          onChange();
+          _updateDescription();
+        } else {
+          (await alertDialog.future)
+            ..message = "This photo contains inappropriate contents. Delete this photo."
+            ..onClosed(delete)
+            ..open();
+        }
+      } catch (ex) {
+        _logger.warning(() => "Failed to read label: ${ex}");
+      } finally {
+        _isAnalyzing = false;
+      }
     }
+    analyze();
   }
 }

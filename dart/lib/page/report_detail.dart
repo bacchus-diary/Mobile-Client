@@ -46,6 +46,7 @@ class ReportDetailPage extends SubPage {
 
   ReportDetailPage(RouteProvider rp) : this._report = Reports.get(rp.parameters['reportId']);
 
+  final Getter<ShowcaseElement> showcase = new PipeValue();
   Report report;
   _MoreMenu moreMenu;
 
@@ -83,6 +84,8 @@ class ReportDetailPage extends SubPage {
   static const _durUpdateTextarea = const Duration(milliseconds: 200);
 
   back() async {
+    if (showcase.value?.isProcessing ?? true) return;
+
     if (report.leaves.isEmpty) {
       if (await moreMenu.confirm("No photo on this report. Delete this report ?")) {
         _remove();
@@ -110,7 +113,7 @@ class ReportDetailPage extends SubPage {
   }
 
   _update() async {
-    if (report.leaves.isEmpty) return;
+    if ((showcase.value?.isProcessing ?? true) || report.leaves.isEmpty) return;
     try {
       await Reports.update(report);
       FabricAnswers.eventCustom(name: 'ModifyReport');
