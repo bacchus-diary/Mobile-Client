@@ -103,7 +103,7 @@ infinite-scroll::shadow div#content {
       @include font-light(16px);
     }
     
-    p {
+    p.long {
       display: -webkit-box;
       -webkit-box-orient: vertical;
       -webkit-line-clamp: 3;
