@@ -38,6 +38,8 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
 
   onChange() => onChanged == null ? null : onChanged();
 
+  bool get isProcessing => _isAdding || _isAnalyzing;
+
   final FuturedValue<PhotoWayDialog> photoWayDialog = new FuturedValue();
   final FuturedValue<AlertDialog> alertDialog = new FuturedValue();
   final PipeValue<ImageElement> imageLoading = new PipeValue();
@@ -225,7 +227,6 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
         ..photo.reduced.thumbnail.url = url;
 
       list.add(leaf);
-      onChange();
 
       _uploadPhoto(blob, leaf.photo);
       _readDescription(base64, leaf);
@@ -277,6 +278,7 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
         if (safe.isAllUnder(4)) {
           final descs = [await cv.findLogo(), await cv.readText()].where((String x) => x != null && x.isNotEmpty);
           leaf.description = descs.join('\n\n');
+          onChange();
           _updateDescription();
         } else {
           (await alertDialog.future)
