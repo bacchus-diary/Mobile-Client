@@ -10,9 +10,9 @@
   
   .content {
     &>div {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
+      @include display-flex();
+      @include flex-direction(column);
+      @include align-items(flex-start);
       width: 100%;
       
       padding-top: 16px;
@@ -23,9 +23,9 @@
       border-bottom: solid 1px #eee;
       
       .toggle {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
+        @include display-flex();
+        @include align-items(center);
+        @include flex-wrap(wrap);
         
         paper-toggle-button {
           margin-left: 10px;
@@ -44,6 +44,30 @@
       }
       &::shadow [checked] .toggle {
         background-color: blue;
+      }
+    }
+  }
+}
+
+div.line {
+  @include display-flex();
+  p.name {
+    @include font-bold(16px);
+    margin-left: 4px;
+    margin-right: 4px;
+  }
+}
+
+#photo {
+  #taking {
+    .toggle {
+      &>div {
+        @include display-flex();
+        @include align-items(center);
+      }
+      &>div:last-child {
+        margin-left: auto;
+        margin-right: auto;
       }
     }
   }
