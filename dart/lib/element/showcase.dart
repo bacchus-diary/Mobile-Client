@@ -38,6 +38,7 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
   onChange() => onChanged == null ? null : onChanged();
 
   final FuturedValue<PhotoWayDialog> photoWayDialog = new FuturedValue();
+  final PipeValue<ImageElement> imageLoading = new PipeValue();
 
   final GetterSetter<int> _indexA = new PipeValue();
   final GetterSetter<int> _indexB = new PipeValue();
@@ -66,12 +67,7 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
 
   bool _isAdding = false;
   bool get isPhotoLoading =>
-      _isAdding ||
-      _slide((sections, pageNo, current, other) {
-        if (current.value == null) return false;
-        final height = sections[pageNo].querySelector('.leaf .photo')?.clientHeight ?? 0;
-        return height == 0;
-      });
+      _isAdding || _slide((sections, pageNo, current, other) => current.value != null && imageLoading.value == null);
 
   bool _isGestureSetup = false;
   _setupGesture() async {
@@ -89,6 +85,7 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
     _root = sr;
     _pages = _root.querySelector('core-animated-pages') as CoreAnimatedPages
       ..selected = 0
+      ..addEventListener('core-animated-pages-transition-prepare', (event) => imageLoading.value = null)
       ..addEventListener('core-animated-pages-transition-end', (event) => _afterSlide());
     _logger.finest(() => "Opening Showcase");
 
@@ -153,10 +150,11 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
     return result;
   }
 
-  bool get isLeftEnabled =>
-      _slide((sections, pageNo, current, other) => list.isNotEmpty && (current.value == null || current.value > 0));
+  bool get isLeftEnabledA => list.isNotEmpty && (_indexA.value == null || _indexA.value > 0);
+  bool get isRightEnabledA => list.isNotEmpty && _indexA.value != null;
 
-  bool get isRightEnabled => _slide((sections, pageNo, current, other) => current.value != null);
+  bool get isLeftEnabledB => list.isNotEmpty && (_indexB.value == null || _indexB.value > 0);
+  bool get isRightEnabledB => list.isNotEmpty && _indexB.value != null;
 
   slideLeft([post]) {
     _slide((sections, pageNo, current, other) {
@@ -214,14 +212,18 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
 
     _isAdding = true;
     try {
-      final data = await _pickPhoto();
-      final leaf = new Leaf.fromMap(reportId, {})..photo.reduced.mainview.url = PhotoShop.makeUrl(data);
+      final base64 = await _pickPhoto();
+      final blob = PhotoShop.decodeBase64(base64);
+      final url = PhotoShop.makeUrl(blob);
+      final leaf = new Leaf.fromMap(reportId, {})
+        ..photo.reduced.mainview.url = url
+        ..photo.reduced.thumbnail.url = url;
 
       list.add(leaf);
       onChange();
 
-      _uploadPhoto(data, leaf.photo);
-      _readDescription(data, leaf);
+      _uploadPhoto(blob, leaf.photo);
+      _readDescription(base64, leaf);
 
       _slide((sections, index, current, other) {
         current.value = list.length - 1;
@@ -232,8 +234,8 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
     }
   }
 
-  Future<Blob> _pickPhoto() async {
-    final result = new Completer<Blob>();
+  Future<String> _pickPhoto() async {
+    final result = new Completer<String>();
 
     final dialog = await photoWayDialog.future;
     dialog.onClosed(() async {
@@ -242,7 +244,7 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
         if (take != null) {
           result.complete(await PhotoShop.photo(take));
         } else if (dialog.file != null) {
-          result.complete(dialog.file);
+          result.complete(await PhotoShop.encodeBase64(dialog.file));
         }
       } catch (ex) {
         _logger.warning(() => "Could not pick photo: ${ex}");
@@ -254,13 +256,13 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
     return result.future;
   }
 
-  _uploadPhoto(Blob data, Photo photo) async {
+  _uploadPhoto(Blob blob, Photo photo) async {
     final path = await photo.original.storagePath;
-    await S3File.putObject(path, data);
+    await S3File.putObject(path, blob);
     FabricAnswers.eventCustom(name: 'UploadPhoto', attributes: {'type': 'NEW_LEAF'});
   }
 
-  _readDescription(Blob data, Leaf leaf) async {
+  _readDescription(String data, Leaf leaf) async {
     try {
       final cv = new CVision(data, list: ['TEXT_DETECTION', 'LOGO_DETECTION']);
       final descs = [await cv.findLogo(), await cv.readText()].where((String x) => x != null && x.isNotEmpty);
