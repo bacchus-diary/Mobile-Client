@@ -21,6 +21,8 @@ final _logger = new Logger('PreferencesPage');
     useShadowDom: true)
 class PreferencesPage extends MainPage {
   static const submitDuration = const Duration(seconds: 20);
+  static const DATASET_PHOTO = 'photo';
+  static const KEY_PHOTO = 'taking';
 
   Timer _submitTimer;
 
@@ -34,10 +36,12 @@ class PreferencesPage extends MainPage {
 
     toggleButton(String parent) => root.querySelector("${parent} paper-toggle-button") as PaperToggleButton;
 
-    CognitoIdentity.credential.then((cred) {
-      new Future.delayed(new Duration(milliseconds: 10), () {
-        toggleButton('#social #connection').checked = cred.hasFacebook();
-      });
+    new Future.delayed(new Duration(milliseconds: 10), () async {
+      toggleButton('#social #connection').checked = (await CognitoIdentity.credential).hasFacebook();
+
+      final p = await CognitoSync.getDataset(DATASET_PHOTO);
+      final v = 'true' == await p.get(KEY_PHOTO);
+      toggleButton('#photo #taking').checked = v;
     });
   }
 
@@ -63,5 +67,11 @@ class PreferencesPage extends MainPage {
     toggle.checked = (await CognitoIdentity.credential).hasFacebook();
   }
 
-  changeTacking(event) async {}
+  changeTacking(event) async {
+    final toggle = event.target as PaperToggleButton;
+    _logger.fine(() => "Toggle AlwaysTAKE: ${toggle.checked}");
+    final value = toggle.checked.toString();
+    final p = await CognitoSync.getDataset(DATASET_PHOTO);
+    await p.put(KEY_PHOTO, value);
+  }
 }
