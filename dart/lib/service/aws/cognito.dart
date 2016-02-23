@@ -252,7 +252,7 @@ class CognitoSync {
         },
         'onConflict': (dataset, conflicts, callback) {
           _logger.finest(() => "[synchronize] onConflict: ${dataset}, ${conflicts}, ${callback}");
-          final resolved = conflicts.map((c) => c.callMethod('resolveWithRemoteRecord', []));
+          final resolved = conflicts.map((c) => c.callMethod('resolveWithLocalRecord', []));
           dataset.callMethod('resolve', [
             new JsObject.jsify(resolved),
             () {
