@@ -9,6 +9,7 @@ import 'package:paper_elements/paper_toggle_button.dart';
 
 import 'package:bacchus_diary/service/aws/cognito.dart';
 import 'package:bacchus_diary/service/facebook.dart';
+import 'package:bacchus_diary/service/preferences.dart';
 import 'package:bacchus_diary/util/fabric.dart';
 import 'package:bacchus_diary/util/main_frame.dart';
 
@@ -21,8 +22,6 @@ final _logger = new Logger('PreferencesPage');
     useShadowDom: true)
 class PreferencesPage extends MainPage {
   static const submitDuration = const Duration(seconds: 20);
-  static const DATASET_PHOTO = 'photo';
-  static const KEY_PHOTO = 'taking';
 
   Timer _submitTimer;
 
@@ -34,14 +33,12 @@ class PreferencesPage extends MainPage {
     super.onShadowRoot(sr);
     FabricAnswers.eventContentView(contentName: "PreferencesPage");
 
-    toggleButton(String parent) => root.querySelector("${parent} paper-toggle-button") as PaperToggleButton;
+    toggleButton(String parent, Future<bool> getValue()) async =>
+        root.querySelector("${parent} paper-toggle-button") as PaperToggleButton..checked = await getValue();
 
     new Future.delayed(new Duration(milliseconds: 10), () async {
-      toggleButton('#social #connection').checked = (await CognitoIdentity.credential).hasFacebook();
-
-      final p = await CognitoSync.getDataset(DATASET_PHOTO);
-      final v = 'true' == await p.get(KEY_PHOTO);
-      toggleButton('#photo #taking').checked = v;
+      toggleButton('#social #connection', () async => (await CognitoIdentity.credential).hasFacebook());
+      toggleButton('#photo #taking', Preferences.getPhotoAlwaysTake);
     });
   }
 
@@ -70,8 +67,6 @@ class PreferencesPage extends MainPage {
   changeTacking(event) async {
     final toggle = event.target as PaperToggleButton;
     _logger.fine(() => "Toggle AlwaysTAKE: ${toggle.checked}");
-    final value = toggle.checked.toString();
-    final p = await CognitoSync.getDataset(DATASET_PHOTO);
-    await p.put(KEY_PHOTO, value);
+    await Preferences.setPhotoAlwaysTake(toggle.checked);
   }
 }
