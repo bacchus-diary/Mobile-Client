@@ -7,6 +7,7 @@ import 'package:angular/angular.dart';
 import 'package:logging/logging.dart';
 import 'package:paper_elements/paper_dialog.dart';
 
+import 'package:bacchus_diary/service/preferences.dart';
 import 'package:bacchus_diary/util/cordova.dart';
 import 'package:bacchus_diary/util/getter_setter.dart';
 import 'package:bacchus_diary/util/main_frame.dart';
@@ -58,9 +59,14 @@ class PhotoWayDialog extends AbstractDialog implements ShadowRootAware {
   }
 
   start(proc(bool takeValue, Blob fileValue)) async {
-    onClossing(() {
-      proc(take, file);
-    });
-    open();
+    if (await Preferences.getPhotoAlwaysTake()) {
+      proc(true, null);
+    } else {
+      onClossing(() {
+        Preferences.addPhotoTaking(take);
+        proc(take, file);
+      });
+      open();
+    }
   }
 }
