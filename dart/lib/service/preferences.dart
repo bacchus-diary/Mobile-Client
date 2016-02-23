@@ -23,6 +23,9 @@ class Preferences {
   static Future<Null> setPhotoAlwaysTake(bool value) async {
     final p = await CognitoSync.getDataset(DATASET_PHOTO);
     await p.put(KEY_PHOTO_ALWAYSTAKE, value.toString());
+    if (!value) {
+      await p.put(KEY_PHOTO_TAKINGCOUNT, '0');
+    }
   }
 
   static Future<Null> addPhotoTaking(bool value) async {
