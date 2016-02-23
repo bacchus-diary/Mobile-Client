@@ -129,32 +129,36 @@ class CognitoIdentity {
     if (proc != null) proc();
     _credentials['expired'] = true;
 
-    return RETRYER.loop(_onCredential, () {
-      final result = new Completer<CognitoIdentity>();
-      _credentials.callMethod('get', [
-        (error) async {
-          if (error == null) {
-            final cred = new CognitoIdentity();
+    try {
+      _onCredential.complete(await RETRYER.loop(() {
+        final result = new Completer<CognitoIdentity>();
+        _credentials.callMethod('get', [
+          (error) async {
+            if (error == null) {
+              final cred = new CognitoIdentity();
 
-            if (hooks != null && old.id != cred.id) {
-              _logger.fine(() => "Starting hooks on changing coginito id: ${old.id} -> ${cred.id}");
-              await Future.wait(hooks.map((hook) {
-                try {
-                  return hook(old.id, cred.id);
-                } catch (ex) {
-                  result.completeError(ex);
-                }
-              }));
+              if (hooks != null && old.id != cred.id) {
+                _logger.fine(() => "Starting hooks on changing coginito id: ${old.id} -> ${cred.id}");
+                await Future.wait(hooks.map((hook) {
+                  try {
+                    return hook(old.id, cred.id);
+                  } catch (ex) {
+                    result.completeError(ex);
+                  }
+                }));
+              }
+              result.complete(cred);
+            } else {
+              _logger.fine("Cognito Error: ${error}");
+              result.completeError(error);
             }
-            result.complete(cred);
-          } else {
-            _logger.fine("Cognito Error: ${error}");
-            result.completeError(error);
           }
-        }
-      ]);
-      return result.future;
-    });
+        ]);
+        return result.future;
+      }));
+    } catch (ex) {
+      _onCredential.completeError(ex);
+    }
   }
 
   static Future<Null> joinFacebook(String token) async => _setToken(PROVIDER_KEY_FACEBOOK, token);
@@ -200,7 +204,7 @@ class CognitoSync {
     return new JsObject(context['AWS']['CognitoSyncManager'], []);
   }
 
-  static Future<JsObject> _invoke(JsObject target, String methodName, List params) => RETRYER.loop(new Completer(), () {
+  static Future<JsObject> _invoke(JsObject target, String methodName, List params) => RETRYER.loop(() {
         final result = new Completer();
         target.callMethod(
             methodName,

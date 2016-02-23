@@ -13,20 +13,19 @@ class Retry<T> {
 
   const Retry(this.name, this.limitRetry, this.durRetry);
 
-  loop(Completer<T> result, Future<T> proc(), [bool isRetryable()]) {
-    doit(int count) async {
+  loop(Future<T> proc(), [bool isRetryable()]) {
+    Future<T> doit(int count) async {
       try {
         _logger.fine(() => "(${count}/${limitRetry}) ${name}");
-        result.complete(await proc());
+        return await proc();
       } catch (ex) {
         if ((isRetryable == null || isRetryable()) && count < limitRetry) {
-          new Future.delayed(durRetry, () => doit(count + 1));
+          return new Future.delayed(durRetry, () => doit(count + 1));
         } else {
-          result.completeError(ex);
+          throw ex;
         }
       }
     }
-    new Future(() => doit(1));
-    return result.future;
+    return doit(1);
   }
 }
