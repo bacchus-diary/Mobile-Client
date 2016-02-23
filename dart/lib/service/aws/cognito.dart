@@ -130,7 +130,7 @@ class CognitoIdentity {
     _credentials['expired'] = true;
 
     try {
-      _onCredential.complete(await RETRYER.loop(() {
+      _onCredential.complete(await RETRYER.loop((count) {
         final result = new Completer<CognitoIdentity>();
         _credentials.callMethod('get', [
           (error) async {
@@ -205,7 +205,7 @@ class CognitoSync {
     return new JsObject(context['AWS']['CognitoSyncManager'], []);
   }
 
-  static Future<JsObject> _invoke(JsObject target, String methodName, List params) => RETRYER.loop(() {
+  static Future<JsObject> _invoke(JsObject target, String methodName, List params) => RETRYER.loop((count) {
         final result = new Completer();
         target.callMethod(
             methodName,

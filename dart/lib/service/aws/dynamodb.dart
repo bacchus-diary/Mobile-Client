@@ -66,7 +66,7 @@ class DynamoDB_Table<T extends DBRecord> {
   Future<JsObject> _invoke(String methodName, Map param) async {
     param['TableName'] = await fullName;
 
-    return RETRYER.loop(() {
+    return RETRYER.loop((count) {
       final result = new Completer();
       DynamoDB.client.callMethod(methodName, [
         new JsObject.jsify(param),

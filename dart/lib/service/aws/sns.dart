@@ -36,7 +36,7 @@ class SNS {
     _logger.finest(() => "Creating Endpoint: ${params}");
 
     final sns = new JsObject(context['AWS']['SNS'], []);
-    return RETRYER.loop(() {
+    return RETRYER.loop((count) {
       final Completer<String> result = new Completer();
       sns.callMethod('createPlatformEndpoint', [
         new JsObject.jsify(params),

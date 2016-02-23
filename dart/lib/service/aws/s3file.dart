@@ -24,7 +24,7 @@ class S3File {
     arging.add(new JsObject.jsify(params));
     final args = new List.unmodifiable(arging);
 
-    return RETRYER.loop(() {
+    return RETRYER.loop((count) {
       final result = new Completer();
       try {
         _s3.callMethod(
