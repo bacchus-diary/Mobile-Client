@@ -9,12 +9,10 @@ import 'package:logging/logging.dart';
 import 'package:yaml/yaml.dart';
 
 import 'package:bacchus_diary/util/fabric.dart';
+import 'package:bacchus_diary/util/withjs.dart';
 import 'package:bacchus_diary/service/facebook.dart';
 
 final _logger = new Logger('Cognito');
-
-String _stringify(JsObject obj) => context['JSON'].callMethod('stringify', [obj]);
-Map _jsmap(JsObject obj) => obj == null ? {} : JSON.decode(_stringify(obj));
 
 Future<String> get cognitoId async => (await CognitoIdentity.credential).id;
 
@@ -36,7 +34,7 @@ class CognitoIdentity {
   static JsObject get _credentials => context['AWS']['config']['credentials'];
   static set _credentials(JsObject obj) => context['AWS']['config']['credentials'] = obj;
 
-  static Map get _logins => _jsmap(_credentials['params']['Logins']);
+  static Map get _logins => jsmap(_credentials['params']['Logins']);
   static set _logins(Map map) => _credentials['params']['Logins'] = new JsObject.jsify(map);
 
   static clearIdentityId() => _credentials['params']['IdentityId'] = null;
