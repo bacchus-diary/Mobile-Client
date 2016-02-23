@@ -56,4 +56,11 @@ class PhotoWayDialog extends AbstractDialog implements ShadowRootAware {
     }
     return result.future;
   }
+
+  start(proc(bool takeValue, Blob fileValue)) async {
+    onClossing(() {
+      proc(take, file);
+    });
+    open();
+  }
 }
