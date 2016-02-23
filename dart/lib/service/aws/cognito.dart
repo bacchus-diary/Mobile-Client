@@ -9,6 +9,7 @@ import 'package:logging/logging.dart';
 import 'package:yaml/yaml.dart';
 
 import 'package:bacchus_diary/util/fabric.dart';
+import 'package:bacchus_diary/util/retry_routin.dart';
 import 'package:bacchus_diary/util/withjs.dart';
 import 'package:bacchus_diary/service/facebook.dart';
 
@@ -31,6 +32,8 @@ class CognitoSettings {
 }
 
 class CognitoIdentity {
+  static const RETRYER = const Retry<CognitoIdentity>("Getting credentials", 3, const Duration(seconds: 3));
+
   static JsObject get _credentials => context['AWS']['config']['credentials'];
   static set _credentials(JsObject obj) => context['AWS']['config']['credentials'] = obj;
 
@@ -126,29 +129,36 @@ class CognitoIdentity {
     if (proc != null) proc();
     _credentials['expired'] = true;
 
-    _logger.fine("Getting credentials");
-    _credentials.callMethod('get', [
-      (error) async {
-        if (error == null) {
-          final cred = new CognitoIdentity();
+    try {
+      _onCredential.complete(await RETRYER.loop((count) {
+        final result = new Completer<CognitoIdentity>();
+        _credentials.callMethod('get', [
+          (error) async {
+            if (error == null) {
+              final cred = new CognitoIdentity();
 
-          if (hooks != null && old.id != cred.id) {
-            _logger.fine(() => "Starting hooks on changing coginito id: ${old.id} -> ${cred.id}");
-            await Future.wait(hooks.map((hook) {
-              try {
-                return hook(old.id, cred.id);
-              } catch (ex) {
-                _onCredential.completeError(ex);
+              if (hooks != null && old.id != cred.id) {
+                _logger.fine(() => "Starting hooks on changing coginito id: ${old.id} -> ${cred.id}");
+                await Future.wait(hooks.map((hook) {
+                  try {
+                    return hook(old.id, cred.id);
+                  } catch (ex) {
+                    result.completeError(ex);
+                  }
+                }));
               }
-            }));
+              result.complete(cred);
+            } else {
+              _logger.fine("Cognito Error: ${error}");
+              result.completeError(error);
+            }
           }
-          _onCredential.complete(cred);
-        } else {
-          _logger.fine("Cognito Error: ${error}");
-          _onCredential.completeError(error);
-        }
-      }
-    ]);
+        ]);
+        return result.future;
+      }));
+    } catch (ex) {
+      _onCredential.completeError(ex);
+    }
     await _onCredential.future;
   }
 
@@ -187,6 +197,7 @@ class _ConnectedServices {
 }
 
 class CognitoSync {
+  static const RETRYER = const Retry<CognitoIdentity>("Invoking CognitoSync", 2, const Duration(seconds: 3));
   static final _logger = new Logger('CognitoSync');
 
   static Future<JsObject> get _client async {
@@ -194,26 +205,22 @@ class CognitoSync {
     return new JsObject(context['AWS']['CognitoSyncManager'], []);
   }
 
-  static Future<JsObject> _invoke(JsObject target, String methodName, List params) async {
-    final result = new Completer();
-    try {
-      target.callMethod(
-          methodName,
-          params
-            ..add((error, data) {
-              if (error != null) {
-                _logger.warning("Error on '${methodName}(${params})': ${error}");
-                result.completeError(error);
-              } else {
-                _logger.finest(() => "Result of '${methodName}(${params})': ${data}");
-                result.complete(data);
-              }
-            }));
-    } catch (ex) {
-      result.completeError(ex);
-    }
-    return result.future;
-  }
+  static Future<JsObject> _invoke(JsObject target, String methodName, List params) => RETRYER.loop((count) {
+        final result = new Completer();
+        target.callMethod(
+            methodName,
+            params
+              ..add((error, data) {
+                if (error != null) {
+                  _logger.warning("Error on '${methodName}(${params})': ${error}");
+                  result.completeError(error);
+                } else {
+                  _logger.finest(() => "Result of '${methodName}(${params})': ${data}");
+                  result.complete(data);
+                }
+              }));
+        return result.future;
+      });
 
   static Future<CognitoSync> getDataset(String name) async {
     final dataset = await _invoke(await _client, 'openOrCreateDataset', [name]);
