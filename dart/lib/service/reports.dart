@@ -41,6 +41,9 @@ class Reports {
 
   static Report _onCache(String id) => _cachedList.firstWhere((r) => r.id == id, orElse: () => null);
 
+  static Future<List<Leaf>> _findLeaves(String reportId) async => TABLE_LEAF
+      .query("COGNITO_ID-REPORT_ID-index", {DynamoDB.COGNITO_ID: await cognitoId, TABLE_REPORT.ID_COLUMN: reportId});
+
   static Future<Null> loadLeaves(Report report) async {
     final found = _onCache(report.id);
     if (found != null) {
@@ -56,8 +59,7 @@ class Reports {
       return;
     }
 
-    final list = await TABLE_LEAF
-        .query("COGNITO_ID-REPORT_ID-index", {DynamoDB.COGNITO_ID: await cognitoId, TABLE_REPORT.ID_COLUMN: report.id});
+    final list = await _findLeaves(report.id);
 
     final List<Leaf> leaves = [];
     indexes?.forEach((leafId) {
@@ -72,6 +74,11 @@ class Reports {
     report.leaves
       ..clear()
       ..addAll(leaves);
+  }
+
+  static Future<Null> _removeLeaf(Leaf leaf) async {
+    leaf.photo.delete();
+    await TABLE_LEAF.delete(leaf.id);
   }
 
   static Future<Report> get(String id) async {
@@ -90,8 +97,11 @@ class Reports {
   static Future<Null> remove(Report report) async {
     _logger.fine("Removing report: ${report}");
     _cachedList.removeWhere((r) => r.id == report.id);
-    await TABLE_REPORT.delete(report.id);
-    await Future.wait(report.leaves.map((x) => TABLE_LEAF.delete(x.id)));
+    final deleting = TABLE_REPORT.delete(report.id);
+    await Future.wait(report.leaves.map(_removeLeaf));
+    // 念のためデータベース上のすべての Leaf を削除
+    await Future.wait((await _findLeaves(report.id)).map(_removeLeaf));
+    await deleting;
   }
 
   static Future<Null> update(Report newReport) async {
@@ -110,7 +120,7 @@ class Reports {
     Future adding() => Future.wait(distinct(newReport.leaves, oldReport.leaves).map(TABLE_LEAF.put));
 
     // On old, No new
-    Future deleting() => Future.wait(distinct(oldReport.leaves, newReport.leaves).map((o) => TABLE_LEAF.delete(o.id)));
+    Future deleting() => Future.wait(distinct(oldReport.leaves, newReport.leaves).map(_removeLeaf));
 
     // On old, On new
     Future marging() => Future.wait(newReport.leaves.where((newOne) {

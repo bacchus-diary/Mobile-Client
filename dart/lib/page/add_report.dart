@@ -28,7 +28,7 @@ final Logger _logger = new Logger('AddReportPage');
 class AddReportPage extends SubPage {
   Report report;
 
-  final FuturedValue<ShowcaseElement> showcase = new FuturedValue();
+  final Getter<ShowcaseElement> showcase = new PipeValue();
   final Getter<ConfirmDialog> confirmDialog = new PipeValue();
   final Getter<AlertDialog> alertDialog = new PipeValue();
 
@@ -56,7 +56,8 @@ class AddReportPage extends SubPage {
     }
   }
 
-  bool get isSubmittable => report?.rating != null && (report?.leaves?.isNotEmpty ?? false);
+  bool get isSubmittable =>
+      !(showcase.value?.isProcessing ?? true) && report?.rating != null && (report?.leaves?.isNotEmpty ?? false);
   bool _isSubmitted = false;
   bool isSubmitting = false;
   DivElement get divSubmit => root.querySelector('core-toolbar div#submit');

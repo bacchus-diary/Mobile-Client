@@ -7,54 +7,42 @@ import 'dart:html';
 import 'package:logging/logging.dart';
 
 import 'package:bacchus_diary/settings.dart';
-import 'package:bacchus_diary/util/file_reader.dart';
+import 'package:bacchus_diary/util/retry_routin.dart';
 
 final Logger _logger = new Logger('CVision');
 
 class CVision {
   static const urlGCV = "https://vision.googleapis.com/v1/images:annotate";
+  static const RETRYER = const Retry<String>("CVision Requesting", 3, const Duration(seconds: 3));
 
   static Future<Map> request(String base64data, Map<String, int> featuresMap) async {
-    final result = new Completer<Map>();
-
     final settings = await Settings;
     final url = "${urlGCV}?key=${settings.googleKey}";
 
-    try {
-      final features = [];
-      featuresMap.forEach((name, max) => features.add({'type': name, 'maxResults': max}));
+    final features = [];
+    featuresMap.forEach((name, max) => features.add({'type': name, 'maxResults': max}));
 
-      final dataMap = {
-        'requests': [
-          {
-            'image': {'content': base64data},
-            'features': features
-          }
-        ]
-      };
+    final requestData = JSON.encode({
+      'requests': [
+        {
+          'image': {'content': base64data},
+          'features': features
+        }
+      ]
+    });
 
-      _logger.info(() => "Requesting: ${featuresMap}");
+    final text = await RETRYER.loop((count) {
+      final result = new Completer<String>();
       final req = new HttpRequest()
         ..open('POST', url)
         ..setRequestHeader('Content-Type', 'application/json')
-        ..send(JSON.encode(dataMap));
+        ..send(requestData);
 
       req.onLoadEnd.listen((event) {
         final text = req.responseText;
         _logger.fine(() => "Response: (Status:${req.status}) ${text}");
         if (req.status == 200) {
-          try {
-            final map = JSON.decode(text);
-            final resList = map['responses'] as List;
-            if (resList.isNotEmpty) {
-              result.complete(resList.first);
-            } else {
-              result.completeError("Result is empty");
-            }
-          } catch (ex) {
-            _logger.warning(() => "Could not parse as json: ${text}");
-            result.completeError(ex);
-          }
+          result.complete(text);
         } else {
           _logger.warning(() => "Response status ${req.status}: ${text}");
           result.completeError(text);
@@ -68,12 +56,16 @@ class CVision {
         _logger.warning(() => "Timeout to request: ${event}");
         result.completeError(event);
       });
-    } catch (ex) {
-      _logger.warning(() => "Failed to request: ${ex}");
-      result.completeError(ex);
-    }
+      return result.future;
+    });
 
-    return result.future;
+    final map = JSON.decode(text);
+    final resList = map['responses'] as List;
+    if (resList.isNotEmpty) {
+      return resList.first;
+    } else {
+      throw "Result is empty";
+    }
   }
 
   static const FEATURES = const {
@@ -119,4 +111,31 @@ class CVision {
 
   Future<String> findLogo() async =>
       _singleRequest('LOGO_DETECTION', 'logoAnnotations', (list) => list.first['description']);
+
+  Future<SafeSearch> safeLevel() async {
+    final result = (await resutsMap)['safeSearchAnnotation'];
+    return new SafeSearch(result);
+  }
+}
+
+class SafeSearch {
+  static const LIKELIHOOD = const {
+    'UNKNOWN': 0,
+    'VERY_UNLIKELY': 1,
+    'UNLIKELY': 2,
+    'POSSIBLE': 3,
+    'LIKELY': 4,
+    'VERY_LIKELY': 5
+  };
+
+  final Map<String, String> _map;
+
+  SafeSearch(this._map);
+
+  int get adult => LIKELIHOOD[_map['adult']];
+  int get spoof => LIKELIHOOD[_map['spoof']];
+  int get medical => LIKELIHOOD[_map['medical']];
+  int get violence => LIKELIHOOD[_map['violence']];
+
+  bool isAllUnder(int level) => adult < level && spoof < level && medical < level && violence < level;
 }

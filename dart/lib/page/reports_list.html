@@ -49,12 +49,12 @@
         		                		<p>{{ report.dateAt | date:"yyyy-MM-dd" }}</p>
         		                	</div>
         			                <div class="description">
-                                        <p>{{ report.leaves.first.description }}</p>
+                                        <p class="long">{{ report.leaves.first.description }}</p>
                                     </div>
                                 </div>
         	                </div>
         	                <div class="comment">
-        	                	<p>{{ report.comment }}</p>
+        	                	<p class="long">{{ report.comment }}</p>
         	                </div>
                             
                             <paper-ripple fit ng-click="goReport($event, report)"></paper-ripple>

@@ -1,7 +1,6 @@
 library bacchus_diary.service.aws.dynamodb;
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:js';
 import 'dart:math';
 
@@ -10,10 +9,10 @@ import 'package:logging/logging.dart';
 import 'package:bacchus_diary/service/aws/cognito.dart';
 import 'package:bacchus_diary/settings.dart';
 import 'package:bacchus_diary/util/pager.dart';
+import 'package:bacchus_diary/util/retry_routin.dart';
+import 'package:bacchus_diary/util/withjs.dart';
 
 final _logger = new Logger('DynamoDB');
-
-String _stringify(JsObject obj) => context['JSON'].callMethod('stringify', [obj]);
 
 typedef T _RecordReader<T>(Map map);
 typedef Map _RecordWriter<T>(T obj);
@@ -44,6 +43,8 @@ class DynamoDB {
 }
 
 class DynamoDB_Table<T extends DBRecord> {
+  static const RETRYER = const Retry("Invoking DynamoDB", 3, const Duration(seconds: 2));
+
   final String tableName;
   final String ID_COLUMN;
   final _RecordReader<T> reader;
@@ -64,30 +65,23 @@ class DynamoDB_Table<T extends DBRecord> {
 
   Future<JsObject> _invoke(String methodName, Map param) async {
     param['TableName'] = await fullName;
-    final result = new Completer();
 
-    final maxCount = 3;
-    retryCall(int count) {
-      _logger.finest(() => "Invoking '${methodName}'(retry=${count}/${maxCount}): ${param}");
+    return RETRYER.loop((count) {
+      final result = new Completer();
       DynamoDB.client.callMethod(methodName, [
         new JsObject.jsify(param),
         (error, data) {
           if (error != null) {
             _logger.warning("Failed to '${methodName}': ${error}");
-            if (count < maxCount) {
-              retryCall(count + 1);
-            } else {
-              result.completeError(error);
-            }
+            result.completeError(error);
           } else {
-            _logger.finest("Result(${methodName}): ${_stringify(data)}");
+            _logger.finest("Result(${methodName}): ${stringify(data)}");
             result.complete(data);
           }
         }
       ]);
-    }
-    retryCall(0);
-    return result.future;
+      return result.future;
+    });
   }
 
   Future<Map<String, Map<String, String>>> _makeKey(String id, [String currentCognitoId = null]) async {
@@ -193,7 +187,7 @@ class LastEvaluatedKey {
 
   void loadFromResult(JsObject data) {
     final obj = data['LastEvaluatedKey'];
-    _value = (obj == null) ? const {} : JSON.decode(_stringify(obj));
+    _value = jsmap(obj);
     _logger.finer("LastEvaluatedKey loaded: ${_value}");
   }
 
@@ -266,7 +260,7 @@ class _ContentDecoder {
   }
 
   static Map fromDynamoMap(dmap) {
-    if (dmap is JsObject) return fromDynamoMap(JSON.decode(_stringify(dmap)));
+    if (dmap is JsObject) return fromDynamoMap(jsmap(dmap));
 
     final result = {};
     dmap.forEach((key, Map valueMap) {

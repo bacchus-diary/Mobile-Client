@@ -1,6 +1,5 @@
 library bacchus_diary.page.acceptance;
 
-import 'dart:convert';
 import 'dart:html';
 import 'dart:js';
 
@@ -12,8 +11,6 @@ import 'package:bacchus_diary/util/cordova.dart';
 final Logger _logger = new Logger('AcceptancePage');
 
 const gistId = '23ac8b82bab0b512f8a4';
-
-String _stringify(JsObject obj) => context['JSON'].callMethod('stringify', [obj]);
 
 @Component(
     selector: 'acceptance',
@@ -42,7 +39,6 @@ class AcceptancePage implements ShadowRootAware {
 
     final callbackName = 'gistCallback';
     context[callbackName] = (res) {
-      _logger.finest(() => "Callback response: ${_stringify(res)}");
       final divString = res['div'];
       if (divString != null) {
         String toHref(String styleString) {

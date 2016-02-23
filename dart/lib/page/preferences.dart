@@ -9,6 +9,7 @@ import 'package:paper_elements/paper_toggle_button.dart';
 
 import 'package:bacchus_diary/service/aws/cognito.dart';
 import 'package:bacchus_diary/service/facebook.dart';
+import 'package:bacchus_diary/service/preferences.dart';
 import 'package:bacchus_diary/util/fabric.dart';
 import 'package:bacchus_diary/util/main_frame.dart';
 
@@ -32,12 +33,12 @@ class PreferencesPage extends MainPage {
     super.onShadowRoot(sr);
     FabricAnswers.eventContentView(contentName: "PreferencesPage");
 
-    toggleButton(String parent) => root.querySelector("${parent} paper-toggle-button") as PaperToggleButton;
+    toggleButton(String parent, Future<bool> getValue()) async =>
+        root.querySelector("${parent} paper-toggle-button") as PaperToggleButton..checked = await getValue();
 
-    CognitoIdentity.credential.then((cred) {
-      new Future.delayed(new Duration(milliseconds: 10), () {
-        toggleButton('#social #connection').checked = cred.hasFacebook();
-      });
+    new Future.delayed(new Duration(milliseconds: 10), () async {
+      toggleButton('#social #connection', () async => (await CognitoIdentity.credential).hasFacebook());
+      toggleButton('#photo #taking', Preferences.getPhotoAlwaysTake);
     });
   }
 
@@ -61,5 +62,11 @@ class PreferencesPage extends MainPage {
       _logger.warning(() => "Error: ${ex}");
     }
     toggle.checked = (await CognitoIdentity.credential).hasFacebook();
+  }
+
+  changeTaking(event) async {
+    final toggle = event.target as PaperToggleButton;
+    _logger.fine(() => "Toggle AlwaysTAKE: ${toggle.checked}");
+    await Preferences.setPhotoAlwaysTake(toggle.checked);
   }
 }
