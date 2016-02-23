@@ -129,7 +129,7 @@ class CognitoIdentity {
     if (proc != null) proc();
     _credentials['expired'] = true;
 
-    RETRYER.loop(_onCredential, () {
+    return RETRYER.loop(_onCredential, () {
       final result = new Completer<CognitoIdentity>();
       _credentials.callMethod('get', [
         (error) async {
@@ -155,8 +155,6 @@ class CognitoIdentity {
       ]);
       return result.future;
     });
-
-    await _onCredential.future;
   }
 
   static Future<Null> joinFacebook(String token) async => _setToken(PROVIDER_KEY_FACEBOOK, token);
@@ -194,6 +192,7 @@ class _ConnectedServices {
 }
 
 class CognitoSync {
+  static const RETRYER = const Retry<CognitoIdentity>("Invoke CognitoSync", 2, const Duration(seconds: 3));
   static final _logger = new Logger('CognitoSync');
 
   static Future<JsObject> get _client async {
@@ -201,26 +200,22 @@ class CognitoSync {
     return new JsObject(context['AWS']['CognitoSyncManager'], []);
   }
 
-  static Future<JsObject> _invoke(JsObject target, String methodName, List params) async {
-    final result = new Completer();
-    try {
-      target.callMethod(
-          methodName,
-          params
-            ..add((error, data) {
-              if (error != null) {
-                _logger.warning("Error on '${methodName}(${params})': ${error}");
-                result.completeError(error);
-              } else {
-                _logger.finest(() => "Result of '${methodName}(${params})': ${data}");
-                result.complete(data);
-              }
-            }));
-    } catch (ex) {
-      result.completeError(ex);
-    }
-    return result.future;
-  }
+  static Future<JsObject> _invoke(JsObject target, String methodName, List params) => RETRYER.loop(new Completer(), () {
+        final result = new Completer();
+        target.callMethod(
+            methodName,
+            params
+              ..add((error, data) {
+                if (error != null) {
+                  _logger.warning("Error on '${methodName}(${params})': ${error}");
+                  result.completeError(error);
+                } else {
+                  _logger.finest(() => "Result of '${methodName}(${params})': ${data}");
+                  result.complete(data);
+                }
+              }));
+        return result.future;
+      });
 
   static Future<CognitoSync> getDataset(String name) async {
     final dataset = await _invoke(await _client, 'openOrCreateDataset', [name]);

@@ -26,6 +26,7 @@ class Retry<T> {
         }
       }
     }
-    doit(1);
+    new Future(() => doit(1));
+    return result.future;
   }
 }
