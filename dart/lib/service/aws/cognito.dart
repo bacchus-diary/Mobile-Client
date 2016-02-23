@@ -31,6 +31,9 @@ class CognitoSettings {
 }
 
 class CognitoIdentity {
+  static const RETRY_LIMIT = 3;
+  static const RETRY_DURATION = const Duration(seconds: 3);
+
   static JsObject get _credentials => context['AWS']['config']['credentials'];
   static set _credentials(JsObject obj) => context['AWS']['config']['credentials'] = obj;
 
@@ -126,29 +129,46 @@ class CognitoIdentity {
     if (proc != null) proc();
     _credentials['expired'] = true;
 
-    _logger.fine("Getting credentials");
-    _credentials.callMethod('get', [
-      (error) async {
-        if (error == null) {
-          final cred = new CognitoIdentity();
+    doget() {
+      final result = new Completer<CognitoIdentity>();
+      _credentials.callMethod('get', [
+        (error) async {
+          if (error == null) {
+            final cred = new CognitoIdentity();
 
-          if (hooks != null && old.id != cred.id) {
-            _logger.fine(() => "Starting hooks on changing coginito id: ${old.id} -> ${cred.id}");
-            await Future.wait(hooks.map((hook) {
-              try {
-                return hook(old.id, cred.id);
-              } catch (ex) {
-                _onCredential.completeError(ex);
-              }
-            }));
+            if (hooks != null && old.id != cred.id) {
+              _logger.fine(() => "Starting hooks on changing coginito id: ${old.id} -> ${cred.id}");
+              await Future.wait(hooks.map((hook) {
+                try {
+                  return hook(old.id, cred.id);
+                } catch (ex) {
+                  result.completeError(ex);
+                }
+              }));
+            }
+            result.complete(cred);
+          } else {
+            _logger.fine("Cognito Error: ${error}");
+            result.completeError(error);
           }
-          _onCredential.complete(cred);
+        }
+      ]);
+      return result.future;
+    }
+
+    loop(final int retryCount) async {
+      try {
+        _logger.fine(() => "Getting credentials (retry: ${retryCount}/${RETRY_LIMIT})");
+        _onCredential.complete(await doget());
+      } catch (ex) {
+        if (retryCount < RETRY_LIMIT) {
+          new Future.delayed(RETRY_DURATION, () => loop(retryCount + 1));
         } else {
-          _logger.fine("Cognito Error: ${error}");
-          _onCredential.completeError(error);
+          _onCredential.completeError(ex);
         }
       }
-    ]);
+    }
+    loop(1);
     await _onCredential.future;
   }
 
