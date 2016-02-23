@@ -6,6 +6,7 @@ import 'dart:js';
 import 'package:logging/logging.dart';
 
 import 'package:bacchus_diary/settings.dart';
+import 'package:bacchus_diary/util/withjs.dart';
 
 final _logger = new Logger('SNS');
 
@@ -43,7 +44,7 @@ class SNS {
           _logger.warning(() => "Error on creating Endpoint: ${error}");
           result.completeError(error);
         } else {
-          _logger.info(() => "Created Endpoint: ${_stringify(data)}");
+          _logger.info(() => "Created Endpoint: ${stringify(data)}");
           result.complete(data['EndpointArn']);
         }
       }
@@ -77,7 +78,7 @@ class _PushPlugin {
     push.callMethod('on', [
       'notification',
       (data) {
-        _logger.finest(() => "Received notification (raw): ${_stringify(data)}");
+        _logger.finest(() => "Received notification (raw): ${stringify(data)}");
         final map = {
           "title": data['title'],
           "message": data['message'],
