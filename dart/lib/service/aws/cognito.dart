@@ -196,7 +196,7 @@ class _ConnectedServices {
 }
 
 class CognitoSync {
-  static const RETRYER = const Retry<CognitoIdentity>("Invoke CognitoSync", 2, const Duration(seconds: 3));
+  static const RETRYER = const Retry<CognitoIdentity>("Invoking CognitoSync", 2, const Duration(seconds: 3));
   static final _logger = new Logger('CognitoSync');
 
   static Future<JsObject> get _client async {

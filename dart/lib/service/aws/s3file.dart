@@ -7,37 +7,44 @@ import 'dart:js';
 import 'package:logging/logging.dart';
 
 import 'package:bacchus_diary/settings.dart';
+import 'package:bacchus_diary/util/retry_routin.dart';
 
 final _logger = new Logger('S3File');
 
 class S3File {
+  static const RETRYER = const Retry("Invoke S3File", 2, const Duration(seconds: 3));
   static final _s3 = new JsObject(context['AWS']['S3'], []);
 
   static Future _call(String methodName, Map params, [List opts = null]) async {
-    final result = new Completer();
-    try {
-      final args = opts ?? [];
-      if (params['Bucket'] == null) {
-        params['Bucket'] = (await Settings).s3Bucket;
-      }
-      _logger.fine(() => "Invoking S3.${methodName}: ${args}, ${params}");
-
-      args.add(new JsObject.jsify(params));
-      args.add((error, data) {
-        if (error == null) {
-          _logger.fine(() => "Success on S3.${methodName}");
-          result.complete(data);
-        } else {
-          _logger.warning(() => "Error on S3.${methodName}: ${error}");
-          result.completeError(error);
-        }
-      });
-      _s3.callMethod(methodName, args);
-    } catch (ex) {
-      _logger.warning(() => "Failed to call ${methodName}: ${ex}");
-      result.completeError(ex);
+    final arging = opts ?? [];
+    if (params['Bucket'] == null) {
+      params['Bucket'] = (await Settings).s3Bucket;
     }
-    return result.future;
+    _logger.fine(() => "Invoking S3.${methodName}: ${arging}, ${params}");
+    arging.add(new JsObject.jsify(params));
+    final args = new List.unmodifiable(arging);
+
+    return RETRYER.loop(() {
+      final result = new Completer();
+      try {
+        _s3.callMethod(
+            methodName,
+            new List.from(args)
+              ..add((error, data) {
+                if (error == null) {
+                  _logger.fine(() => "Success on S3.${methodName}");
+                  result.complete(data);
+                } else {
+                  _logger.warning(() => "Error on S3.${methodName}: ${error}");
+                  result.completeError(error);
+                }
+              }));
+      } catch (ex) {
+        _logger.warning(() => "Failed to call ${methodName}: ${ex}");
+        result.completeError(ex);
+      }
+      return result.future;
+    });
   }
 
   static Future<String> url(String path) async {
