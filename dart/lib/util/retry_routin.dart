@@ -13,7 +13,7 @@ class Retry<T> {
 
   const Retry(this.name, this.limitRetry, this.durRetry);
 
-  loop(Future<T> proc(int count), [bool isRetryable()]) {
+  Future<T> loop(Future<T> proc(int count), [bool isRetryable()]) {
     Future<T> doit(int count) async {
       try {
         _logger.fine(() => "(${count}/${limitRetry}) ${name}");
