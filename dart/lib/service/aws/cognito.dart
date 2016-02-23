@@ -159,6 +159,7 @@ class CognitoIdentity {
     } catch (ex) {
       _onCredential.completeError(ex);
     }
+    await _onCredential.future;
   }
 
   static Future<Null> joinFacebook(String token) async => _setToken(PROVIDER_KEY_FACEBOOK, token);
