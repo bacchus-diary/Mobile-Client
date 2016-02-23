@@ -31,6 +31,7 @@ class PhotoWayDialog extends AbstractDialog implements ShadowRootAware {
   void onShadowRoot(ShadowRoot sr) {
     _root = sr;
     _dialog = new CachedValue(() => _root.querySelector('paper-dialog'));
+    Preferences.getPhotoAlwaysTake().then((v) => _logger.finest(() => "Always TAKE: ${v}"));
   }
 
   done(bool v) {
