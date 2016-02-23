@@ -1,7 +1,6 @@
 library bacchus_diary.service.aws.dynamodb;
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:js';
 import 'dart:math';
 
@@ -10,10 +9,9 @@ import 'package:logging/logging.dart';
 import 'package:bacchus_diary/service/aws/cognito.dart';
 import 'package:bacchus_diary/settings.dart';
 import 'package:bacchus_diary/util/pager.dart';
+import 'package:bacchus_diary/util/withjs.dart';
 
 final _logger = new Logger('DynamoDB');
-
-String _stringify(JsObject obj) => context['JSON'].callMethod('stringify', [obj]);
 
 typedef T _RecordReader<T>(Map map);
 typedef Map _RecordWriter<T>(T obj);
@@ -80,7 +78,7 @@ class DynamoDB_Table<T extends DBRecord> {
               result.completeError(error);
             }
           } else {
-            _logger.finest("Result(${methodName}): ${_stringify(data)}");
+            _logger.finest("Result(${methodName}): ${stringify(data)}");
             result.complete(data);
           }
         }
@@ -193,7 +191,7 @@ class LastEvaluatedKey {
 
   void loadFromResult(JsObject data) {
     final obj = data['LastEvaluatedKey'];
-    _value = (obj == null) ? const {} : JSON.decode(_stringify(obj));
+    _value = jsmap(obj);
     _logger.finer("LastEvaluatedKey loaded: ${_value}");
   }
 
@@ -266,7 +264,7 @@ class _ContentDecoder {
   }
 
   static Map fromDynamoMap(dmap) {
-    if (dmap is JsObject) return fromDynamoMap(JSON.decode(_stringify(dmap)));
+    if (dmap is JsObject) return fromDynamoMap(jsmap(dmap));
 
     final result = {};
     dmap.forEach((key, Map valueMap) {
