@@ -64,7 +64,7 @@ class PreferencesPage extends MainPage {
     toggle.checked = (await CognitoIdentity.credential).hasFacebook();
   }
 
-  changeTacking(event) async {
+  changeTaking(event) async {
     final toggle = event.target as PaperToggleButton;
     _logger.fine(() => "Toggle AlwaysTAKE: ${toggle.checked}");
     await Preferences.setPhotoAlwaysTake(toggle.checked);
