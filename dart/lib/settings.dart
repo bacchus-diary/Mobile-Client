@@ -79,12 +79,6 @@ class _Settings {
     if (_photo == null) _photo = new _Photo(_map['photo']);
     return _photo;
   }
-
-  _ServerApiMap _server;
-  _ServerApiMap get server {
-    if (_server == null) _server = new _ServerApiMap(_map['api']);
-    return _server;
-  }
 }
 
 class _Photo {
@@ -92,24 +86,4 @@ class _Photo {
   final Map _map;
 
   Duration get urlTimeout => new Duration(seconds: _map['urlTimeout']);
-}
-
-class _ServerApiMap {
-  static _api(Map config, String name) => new ApiInfo("${config['base_url']}/${config['gateways'][name]}",
-      config['key'], config['retry_limit'], config['retry_duration']);
-
-  final ApiInfo moon, weather;
-
-  _ServerApiMap(Map map)
-      : moon = _api(map, 'moon'),
-        weather = _api(map, 'weather');
-}
-
-class ApiInfo {
-  final String url;
-  final String key;
-  final int retryLimit;
-  final Duration retryDur;
-
-  ApiInfo(this.url, this.key, this.retryLimit, int dur) : retryDur = new Duration(milliseconds: dur);
 }
