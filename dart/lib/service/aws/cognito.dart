@@ -9,6 +9,7 @@ import 'package:logging/logging.dart';
 import 'package:yaml/yaml.dart';
 
 import 'package:bacchus_diary/util/fabric.dart';
+import 'package:bacchus_diary/util/retry_routin.dart';
 import 'package:bacchus_diary/util/withjs.dart';
 import 'package:bacchus_diary/service/facebook.dart';
 
@@ -31,8 +32,7 @@ class CognitoSettings {
 }
 
 class CognitoIdentity {
-  static const RETRY_LIMIT = 3;
-  static const RETRY_DURATION = const Duration(seconds: 3);
+  static const RETRYER = const Retry<CognitoIdentity>("Getting credentials", 3, const Duration(seconds: 3));
 
   static JsObject get _credentials => context['AWS']['config']['credentials'];
   static set _credentials(JsObject obj) => context['AWS']['config']['credentials'] = obj;
@@ -129,7 +129,7 @@ class CognitoIdentity {
     if (proc != null) proc();
     _credentials['expired'] = true;
 
-    doget() {
+    RETRYER.loop(_onCredential, () {
       final result = new Completer<CognitoIdentity>();
       _credentials.callMethod('get', [
         (error) async {
@@ -154,21 +154,8 @@ class CognitoIdentity {
         }
       ]);
       return result.future;
-    }
+    });
 
-    loop(final int retryCount) async {
-      try {
-        _logger.fine(() => "Getting credentials (retry: ${retryCount}/${RETRY_LIMIT})");
-        _onCredential.complete(await doget());
-      } catch (ex) {
-        if (retryCount < RETRY_LIMIT) {
-          new Future.delayed(RETRY_DURATION, () => loop(retryCount + 1));
-        } else {
-          _onCredential.completeError(ex);
-        }
-      }
-    }
-    loop(1);
     await _onCredential.future;
   }
 
