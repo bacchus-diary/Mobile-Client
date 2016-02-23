@@ -87,6 +87,8 @@ class Reports {
       return found.clone();
     } else {
       final report = await TABLE_REPORT.get(id);
+      if (report == null) return null;
+
       final loading = loadLeaves(report);
       _addToCache(report);
       await loading;
