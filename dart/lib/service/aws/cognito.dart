@@ -202,10 +202,10 @@ class CognitoSync {
           params
             ..add((error, data) {
               if (error != null) {
-                _logger.warning("Error on '${methodName}': ${error}");
+                _logger.warning("Error on '${methodName}(${params})': ${error}");
                 result.completeError(error);
               } else {
-                _logger.finest(() => "Result of '${methodName}': ${data}");
+                _logger.finest(() => "Result of '${methodName}(${params})': ${data}");
                 result.complete(data);
               }
             }));
