@@ -29,7 +29,7 @@ class Preferences {
     final p = await CognitoSync.getDataset(DATASET_PHOTO);
     getValue() async {
       if (value) {
-        final pre = await p.get(KEY_PHOTO_TAKINGCOUNT);
+        final pre = await p.get(KEY_PHOTO_TAKINGCOUNT) ?? '0';
         return int.parse(pre) + 1;
       } else {
         return 0;
