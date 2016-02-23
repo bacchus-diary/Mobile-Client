@@ -24,7 +24,7 @@ final _logger = new Logger('ReportsListPage');
     cssUrl: 'packages/bacchus_diary/page/reports_list.css',
     useShadowDom: true)
 class ReportsListPage extends MainPage {
-  static clearSearchResult() => _Search._results.reset();
+  static clearSearchResult() => _Search._results?.reset();
 
   final pageSize = 20;
 
