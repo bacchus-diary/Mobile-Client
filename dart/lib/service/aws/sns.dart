@@ -6,13 +6,14 @@ import 'dart:js';
 import 'package:logging/logging.dart';
 
 import 'package:bacchus_diary/settings.dart';
+import 'package:bacchus_diary/util/retry_routin.dart';
 import 'package:bacchus_diary/util/withjs.dart';
 
 final _logger = new Logger('SNS');
 
-String _stringify(JsObject obj) => context['JSON'].callMethod('stringify', [obj]);
-
 class SNS {
+  static const RETRYER = const Retry("Invoke SNS", 2, const Duration(seconds: 3));
+
   static Completer<String> _onInit = null;
   static Future<String> get endpointArn async => _onInit?.future;
   static Future<String> init() async {
@@ -31,25 +32,26 @@ class SNS {
   }
 
   static Future<String> _registerEndpoint(final String regId) async {
-    final Completer<String> result = new Completer();
-
     final params = {'PlatformApplicationArn': (await Settings).snsPlatformArn, 'Token': regId};
     _logger.finest(() => "Creating Endpoint: ${params}");
 
     final sns = new JsObject(context['AWS']['SNS'], []);
-    sns.callMethod('createPlatformEndpoint', [
-      new JsObject.jsify(params),
-      (error, data) {
-        if (error != null) {
-          _logger.warning(() => "Error on creating Endpoint: ${error}");
-          result.completeError(error);
-        } else {
-          _logger.info(() => "Created Endpoint: ${stringify(data)}");
-          result.complete(data['EndpointArn']);
+    return RETRYER.loop(() {
+      final Completer<String> result = new Completer();
+      sns.callMethod('createPlatformEndpoint', [
+        new JsObject.jsify(params),
+        (error, data) {
+          if (error != null) {
+            _logger.warning(() => "Error on creating Endpoint: ${error}");
+            result.completeError(error);
+          } else {
+            _logger.info(() => "Created Endpoint: ${stringify(data)}");
+            result.complete(data['EndpointArn']);
+          }
         }
-      }
-    ]);
-    return result.future;
+      ]);
+      return result.future;
+    });
   }
 }
 
