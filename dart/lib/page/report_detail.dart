@@ -20,28 +20,14 @@ import 'package:bacchus_diary/util/main_frame.dart';
 
 final Logger _logger = new Logger('ReportDetailPage');
 
-const String editFlip = "create";
-const String editFlop = "done";
-
-const Duration blinkDuration = const Duration(seconds: 2);
-const Duration blinkDownDuration = const Duration(milliseconds: 300);
-const frameBackground = const [
-  const {'background': "#fffcfc"},
-  const {'background': "#fee"}
-];
-const frameBackgroundDown = const [
-  const {'background': "#fee"},
-  const {'background': "white"}
-];
-
-const submitDuration = const Duration(minutes: 1);
-
 @Component(
     selector: 'report-detail',
     templateUrl: 'packages/bacchus_diary/page/report_detail.html',
     cssUrl: 'packages/bacchus_diary/page/report_detail.css',
     useShadowDom: true)
 class ReportDetailPage extends SubPage {
+  static const submitDuration = const Duration(minutes: 1);
+
   final Future<Report> _report;
 
   ReportDetailPage(RouteProvider rp) : this._report = Reports.get(rp.parameters['reportId']);
