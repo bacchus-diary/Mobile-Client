@@ -63,7 +63,7 @@ class PhotoWayDialog extends AbstractDialog implements ShadowRootAware {
       proc(true, null);
     } else {
       onClossing(() {
-        Preferences.addPhotoTaking(take);
+        new Future(() => Preferences.addPhotoTaking(take));
         proc(take, file);
       });
       open();
