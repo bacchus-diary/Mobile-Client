@@ -243,21 +243,19 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
   Future<String> _pickPhoto() async {
     final result = new Completer<String>();
 
-    final dialog = await photoWayDialog.future;
-    dialog.onClosed(() async {
-      try {
-        final take = dialog.take;
-        if (take != null) {
-          result.complete(await PhotoShop.photo(take));
-        } else if (dialog.file != null) {
-          result.complete(await PhotoShop.encodeBase64(dialog.file));
+    await photoWayDialog.future
+      ..start((take, file) async {
+        try {
+          if (file != null) {
+            result.complete(await PhotoShop.encodeBase64(file));
+          } else {
+            result.complete(await PhotoShop.photo(take));
+          }
+        } catch (ex) {
+          _logger.warning(() => "Could not pick photo: ${ex}");
+          result.completeError(ex);
         }
-      } catch (ex) {
-        _logger.warning(() => "Could not pick photo: ${ex}");
-        result.completeError(ex);
-      }
-    });
-    dialog.open();
+      });
 
     return result.future;
   }
