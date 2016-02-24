@@ -28,7 +28,7 @@ class AdMod {
     }
   }
 
-  static position(String name) => context['AdMob']['AD_POSITION'][name];
+  static position(String name) => context['AdMob'] == null ? null : context['AdMob']['AD_POSITION'][name];
 
   final Map<String, Map<String, dynamic>> _src;
   AdMod(this._src) {
@@ -38,7 +38,7 @@ class AdMod {
 
   _invoke(String name, [Map params = const {}]) {
     _logger.info(() => "Invoking ${name}: ${params}");
-    context['AdMod'].callMethod(name, new JsObject.jsify(params));
+    context['AdMod']?.callMethod(name, new JsObject.jsify(params));
   }
 
   Map<String, String> get _banner => _src['banner'];
