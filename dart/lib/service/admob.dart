@@ -1,6 +1,7 @@
 library bacchus_diary.service.admob;
 
 import 'dart:async';
+import 'dart:html';
 import 'dart:js';
 
 import 'package:logging/logging.dart';
@@ -11,36 +12,55 @@ final Logger _logger = new Logger('AdMob');
 
 class AdMob {
   static Completer<AdMob> _initialized;
+  static Future<AdMob> get _singleton => _initialized?.future;
 
-  static Future<AdMob> initialize() async {
+  static Future<Null> initialize() async {
     if (_initialized == null) {
       _initialized = new Completer();
       final map = (await Settings).advertisement.admod;
       _initialized.complete(new AdMob(map));
     }
-    return _initialized.future;
-  }
-
-  static showInterstitial(String timing) async {
-    final admod = await initialize();
-    if (admod.interstitialTimings.contains(timing)) {
-      admod._invoke('showInterstitial');
-    }
+    await _initialized.future;
   }
 
   static get plugin => context['AdMob'];
 
   static position(String name) => plugin == null ? null : plugin['AD_POSITION'][name];
 
+  static showInterstitial(String timing) async => (await _singleton)?._showInterstitial(timing);
+  static showBanner() async => (await _singleton)?._showBanner();
+  static hideBanner() async => (await _singleton)?._hideBanner();
+
   final Map<String, Map<String, dynamic>> _src;
   AdMob(this._src) {
-    _invoke('createBanner', {'adId': bannerId, 'position': position(bannerPos), 'autoShow': true});
+    _invoke('setOptions', {'adSize': 'SMART_BANNER', 'position': position(bannerPos), 'overlap': false});
+    _invoke('createBanner', {'adId': bannerId, 'autoShow': true});
     _invoke('prepareInterstitial', {'adId': interstitialId, 'autoShow': false});
+
+    document.addEventListener('onAdDismiss', (event) {
+      _logger.fine(() => "Advertisement Closed");
+      if (_isInterstitialShown) {
+        _isInterstitialShown = false;
+        showBanner();
+      }
+    });
   }
+
+  bool _isInterstitialShown = false;
+
+  _showInterstitial(String timing) {
+    if (interstitialTimings.contains(timing)) {
+      _invoke('showInterstitial');
+      _isInterstitialShown = true;
+    }
+  }
+
+  _showBanner() => _invoke('showBanner');
+  _hideBanner() => _invoke('hideBanner');
 
   _invoke(String name, [Map params = const {}]) {
     _logger.info(() => "Invoking ${name}: ${params}");
-    plugin?.callMethod(name, new JsObject.jsify(params));
+    plugin?.callMethod(name, [new JsObject.jsify(params)]);
   }
 
   Map<String, String> get _banner => _src['banner'];
