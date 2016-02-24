@@ -8,6 +8,7 @@ import 'package:logging/logging.dart';
 import 'package:paper_elements/paper_dialog.dart';
 import 'package:core_elements/core_drawer_panel.dart';
 
+import 'package:bacchus_diary/service/admob.dart';
 import 'package:bacchus_diary/util/cordova.dart';
 
 final Logger _logger = new Logger('MainFrame');
@@ -62,8 +63,17 @@ abstract class _AbstractPage extends Backable implements ShadowRootAware, Attach
     _root = sr;
   }
 
-  void attach() => pushMe();
-  void detach() => popMe();
+  String get title;
+
+  void attach() {
+    AdMob.showInterstitial("Entering ${title}");
+    pushMe();
+  }
+
+  void detach() {
+    AdMob.showInterstitial("Leaving ${title}");
+    popMe();
+  }
 
   rippling(proc()) => afterRippling(proc);
 }

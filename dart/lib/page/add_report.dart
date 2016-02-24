@@ -13,7 +13,6 @@ import 'package:bacchus_diary/dialog/alert.dart';
 import 'package:bacchus_diary/dialog/confirm.dart';
 import 'package:bacchus_diary/model/report.dart';
 import 'package:bacchus_diary/page/reports_list.dart';
-import 'package:bacchus_diary/service/admob.dart';
 import 'package:bacchus_diary/service/facebook.dart';
 import 'package:bacchus_diary/service/reports.dart';
 import 'package:bacchus_diary/util/fabric.dart';
@@ -28,6 +27,8 @@ final Logger _logger = new Logger('AddReportPage');
     cssUrl: 'packages/bacchus_diary/page/add_report.css',
     useShadowDom: true)
 class AddReportPage extends SubPage {
+  final String title = "AddReport";
+
   Report report;
 
   final Getter<ShowcaseElement> showcase = new PipeValue();
@@ -125,7 +126,6 @@ class AddReportPage extends SubPage {
           isSubmitting = false;
           if (_isSubmitted) {
             ReportsListPage.clearSearchResult();
-            AdMob.showInterstitial('AFTER_ADD');
             back();
           }
         }
