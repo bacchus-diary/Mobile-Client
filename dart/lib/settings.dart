@@ -9,6 +9,7 @@ import 'package:yaml/yaml.dart';
 import 'package:bacchus_diary/service/aws/cognito.dart';
 import 'package:bacchus_diary/service/aws/s3file.dart';
 import 'package:bacchus_diary/service/aws/sns.dart';
+import 'package:bacchus_diary/service/admob.dart';
 import 'package:bacchus_diary/util/cordova.dart';
 
 final Logger _logger = new Logger('Settings');
@@ -30,7 +31,6 @@ Future<_Settings> _initialize() async {
         final map = new Map.from(server);
         _logger.config("Initializing...");
         _initializing.complete(new _Settings(local, map));
-        SNS.init();
       } catch (ex) {
         _logger.warning("Failed to read settings file: ${ex}");
         if ("$ex".contains("RequestTimeTooSkewed")) {
@@ -46,6 +46,9 @@ Future<_Settings> _initialize() async {
           _initializing.completeError(ex);
         }
       }
+      // Start background services
+      SNS.init();
+      AdMob.initialize();
     }
     getting();
   }

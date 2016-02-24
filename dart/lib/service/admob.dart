@@ -1,4 +1,4 @@
-library bacchus_diary.service.admod;
+library bacchus_diary.service.admob;
 
 import 'dart:async';
 import 'dart:js';
@@ -7,16 +7,16 @@ import 'package:logging/logging.dart';
 
 import 'package:bacchus_diary/settings.dart';
 
-final Logger _logger = new Logger('AdMod');
+final Logger _logger = new Logger('AdMob');
 
-class AdMod {
-  static Completer<AdMod> _initialized;
+class AdMob {
+  static Completer<AdMob> _initialized;
 
-  static Future<AdMod> initialize() async {
+  static Future<AdMob> initialize() async {
     if (_initialized == null) {
       _initialized = new Completer();
       final map = (await Settings).advertisement.admod;
-      _initialized.complete(new AdMod(map));
+      _initialized.complete(new AdMob(map));
     }
     return _initialized.future;
   }
@@ -28,17 +28,19 @@ class AdMod {
     }
   }
 
-  static position(String name) => context['AdMob'] == null ? null : context['AdMob']['AD_POSITION'][name];
+  static get admob => context['AdMob'];
+
+  static position(String name) => admob == null ? null : admob['AD_POSITION'][name];
 
   final Map<String, Map<String, dynamic>> _src;
-  AdMod(this._src) {
+  AdMob(this._src) {
     _invoke('createBanner', {'adId': idBanner, 'position': position(posBanner), 'autoShow': true});
     _invoke('prepareInterstitial', {'adId': idInterstitial, 'autoShow': false});
   }
 
   _invoke(String name, [Map params = const {}]) {
     _logger.info(() => "Invoking ${name}: ${params}");
-    context['AdMod']?.callMethod(name, new JsObject.jsify(params));
+    admob?.callMethod(name, new JsObject.jsify(params));
   }
 
   Map<String, String> get _banner => _src['banner'];
