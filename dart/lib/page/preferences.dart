@@ -21,8 +21,6 @@ final _logger = new Logger('PreferencesPage');
     cssUrl: 'packages/bacchus_diary/page/preferences.css',
     useShadowDom: true)
 class PreferencesPage extends MainPage {
-  static const submitDuration = const Duration(seconds: 20);
-
   Timer _submitTimer;
 
   bool get isReady => true;

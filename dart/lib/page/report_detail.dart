@@ -12,6 +12,7 @@ import 'package:paper_elements/paper_toast.dart';
 import 'package:bacchus_diary/element/showcase.dart';
 import 'package:bacchus_diary/dialog/confirm.dart';
 import 'package:bacchus_diary/model/report.dart';
+import 'package:bacchus_diary/page/reports_list.dart';
 import 'package:bacchus_diary/service/reports.dart';
 import 'package:bacchus_diary/service/facebook.dart';
 import 'package:bacchus_diary/util/fabric.dart';
@@ -20,28 +21,14 @@ import 'package:bacchus_diary/util/main_frame.dart';
 
 final Logger _logger = new Logger('ReportDetailPage');
 
-const String editFlip = "create";
-const String editFlop = "done";
-
-const Duration blinkDuration = const Duration(seconds: 2);
-const Duration blinkDownDuration = const Duration(milliseconds: 300);
-const frameBackground = const [
-  const {'background': "#fffcfc"},
-  const {'background': "#fee"}
-];
-const frameBackgroundDown = const [
-  const {'background': "#fee"},
-  const {'background': "white"}
-];
-
-const submitDuration = const Duration(minutes: 1);
-
 @Component(
     selector: 'report-detail',
     templateUrl: 'packages/bacchus_diary/page/report_detail.html',
     cssUrl: 'packages/bacchus_diary/page/report_detail.css',
     useShadowDom: true)
 class ReportDetailPage extends SubPage {
+  static const submitDuration = const Duration(minutes: 1);
+
   final Future<Report> _report;
 
   ReportDetailPage(RouteProvider rp) : this._report = Reports.get(rp.parameters['reportId']);
@@ -66,8 +53,15 @@ class ReportDetailPage extends SubPage {
     super.onShadowRoot(sr);
     FabricAnswers.eventContentView(contentName: "ReportDetailPage");
 
-    _report.then((v) {
-      report = v;
+    _init();
+  }
+
+  _init() async {
+    report = await _report;
+    if (report == null) {
+      _logger.finest(() => "Could not find report. back to list page...");
+      back();
+    } else {
       moreMenu = new _MoreMenu(root, report, onChanged, _remove);
 
       new Future.delayed(_durUpdateTextarea, () {
@@ -78,15 +72,15 @@ class ReportDetailPage extends SubPage {
           });
         });
       });
-    });
+    }
   }
 
   static const _durUpdateTextarea = const Duration(milliseconds: 200);
 
   back() async {
-    if (showcase.value?.isProcessing ?? true) return;
+    if (showcase.value?.isProcessing ?? false) return;
 
-    if (report.leaves.isEmpty) {
+    if (report != null && report.leaves.isEmpty) {
       if (await moreMenu.confirm("No photo on this report. Delete this report ?")) {
         _remove();
       }
@@ -125,6 +119,7 @@ class ReportDetailPage extends SubPage {
   _remove() async {
     if (_submitTimer != null && _submitTimer.isActive) _submitTimer.cancel();
     await Reports.remove(report);
+    ReportsListPage.clearSearchResult();
     super.back();
   }
 }
