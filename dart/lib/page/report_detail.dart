@@ -53,8 +53,15 @@ class ReportDetailPage extends SubPage {
     super.onShadowRoot(sr);
     FabricAnswers.eventContentView(contentName: "ReportDetailPage");
 
-    _report.then((v) {
-      report = v;
+    _init();
+  }
+
+  _init() async {
+    report = await _report;
+    if (report == null) {
+      _logger.finest(() => "Could not find report. back to list page...");
+      back();
+    } else {
       moreMenu = new _MoreMenu(root, report, onChanged, _remove);
 
       new Future.delayed(_durUpdateTextarea, () {
@@ -65,15 +72,15 @@ class ReportDetailPage extends SubPage {
           });
         });
       });
-    });
+    }
   }
 
   static const _durUpdateTextarea = const Duration(milliseconds: 200);
 
   back() async {
-    if (showcase.value?.isProcessing ?? true) return;
+    if (showcase.value?.isProcessing ?? false) return;
 
-    if (report.leaves.isEmpty) {
+    if (report != null && report.leaves.isEmpty) {
       if (await moreMenu.confirm("No photo on this report. Delete this report ?")) {
         _remove();
       }
