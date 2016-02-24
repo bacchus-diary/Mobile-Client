@@ -21,6 +21,8 @@ final _logger = new Logger('PreferencesPage');
     cssUrl: 'packages/bacchus_diary/page/preferences.css',
     useShadowDom: true)
 class PreferencesPage extends MainPage {
+  final String title = "Preferences";
+
   Timer _submitTimer;
 
   bool get isReady => true;

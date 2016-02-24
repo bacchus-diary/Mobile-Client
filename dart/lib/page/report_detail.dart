@@ -29,6 +29,8 @@ final Logger _logger = new Logger('ReportDetailPage');
 class ReportDetailPage extends SubPage {
   static const submitDuration = const Duration(minutes: 1);
 
+  final String title = "ReportDetail";
+
   final Future<Report> _report;
 
   ReportDetailPage(RouteProvider rp) : this._report = Reports.get(rp.parameters['reportId']);

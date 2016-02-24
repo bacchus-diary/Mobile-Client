@@ -27,6 +27,8 @@ final Logger _logger = new Logger('AddReportPage');
     cssUrl: 'packages/bacchus_diary/page/add_report.css',
     useShadowDom: true)
 class AddReportPage extends SubPage {
+  final String title = "AddReport";
+
   Report report;
 
   final Getter<ShowcaseElement> showcase = new PipeValue();
