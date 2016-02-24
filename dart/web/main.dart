@@ -17,6 +17,7 @@ import 'package:bacchus_diary/page/add_report.dart';
 import 'package:bacchus_diary/page/reports_list.dart';
 import 'package:bacchus_diary/page/report_detail.dart';
 import 'package:bacchus_diary/page/preferences.dart';
+import 'package:bacchus_diary/service/admod.dart';
 import 'package:bacchus_diary/util/fabric.dart';
 import 'package:bacchus_diary/util/cordova.dart';
 import 'package:bacchus_diary/util/resource_url_resolver_cordova.dart';
@@ -117,6 +118,7 @@ void main() {
             Polymer.onReady.then((_) {
               applicationFactory().addModule(new AppModule()).run();
               document.querySelector('#app-loading').style.display = 'none';
+              AdMod.initialize();
             });
           });
         });
