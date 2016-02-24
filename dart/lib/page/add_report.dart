@@ -12,6 +12,7 @@ import 'package:bacchus_diary/element/showcase.dart';
 import 'package:bacchus_diary/dialog/alert.dart';
 import 'package:bacchus_diary/dialog/confirm.dart';
 import 'package:bacchus_diary/model/report.dart';
+import 'package:bacchus_diary/page/reports_list.dart';
 import 'package:bacchus_diary/service/facebook.dart';
 import 'package:bacchus_diary/service/reports.dart';
 import 'package:bacchus_diary/util/fabric.dart';
@@ -121,7 +122,10 @@ class AddReportPage extends SubPage {
           _logger.warning(() => "Error on submitting: ${ex}");
         } finally {
           isSubmitting = false;
-          if (_isSubmitted) back();
+          if (_isSubmitted) {
+            ReportsListPage.clearSearchResult();
+            back();
+          }
         }
       });
 }
