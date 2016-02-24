@@ -48,9 +48,10 @@ class AdMob {
 
   bool _isInterstitialShown = false;
 
-  _showInterstitial(String timing) {
+  _showInterstitial(String timing) async {
+    _logger.finest(() => "Checking interstitial: ${timing}");
     if (interstitialTimings.contains(timing)) {
-      _invoke('showInterstitial');
+      await _invoke('showInterstitial');
       _isInterstitialShown = true;
     }
   }
@@ -58,9 +59,21 @@ class AdMob {
   _showBanner() => _invoke('showBanner');
   _hideBanner() => _invoke('hideBanner');
 
-  _invoke(String name, [Map params = const {}]) {
+  Future<Null> _invoke(String name, [Map params = const {}]) {
+    final result = new Completer();
     _logger.info(() => "Invoking ${name}: ${params}");
-    plugin?.callMethod(name, [new JsObject.jsify(params)]);
+    plugin?.callMethod(name, [
+      new JsObject.jsify(params),
+      (success) {
+        _logger.info(() => "Result of ${name}: ${success}");
+        result.complete();
+      },
+      (error) {
+        _logger.warning(() => "Error on ${name}: ${error}");
+        result.completeError(error);
+      }
+    ]);
+    return result.future;
   }
 
   Map<String, String> get _banner => _src['banner'];
