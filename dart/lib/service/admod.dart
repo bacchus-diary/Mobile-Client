@@ -12,7 +12,7 @@ final Logger _logger = new Logger('AdMod');
 class AdMod {
   static Completer<AdMod> _initialized;
 
-  static initialize() async {
+  static Future<AdMod> initialize() async {
     if (_initialized == null) {
       _initialized = new Completer();
       final map = (await Settings).advertisement.admod;
@@ -21,7 +21,12 @@ class AdMod {
     return _initialized.future;
   }
 
-  static showInterstitial() async => (await initialize())._invoke('showInterstitial');
+  static showInterstitial(String timing) async {
+    final admod = await initialize();
+    if (admod.timingInterstitial.contains(timing)) {
+      admod._invoke('showInterstitial');
+    }
+  }
 
   static position(String name) => context['AdMob']['AD_POSITION'][name];
 
