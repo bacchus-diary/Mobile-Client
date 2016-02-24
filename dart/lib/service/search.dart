@@ -64,14 +64,23 @@ class Search implements Pager<Report> {
       final leaves = await _pagerLeaves.more(((pageSize - result.length) / 2).ceil());
       await Future.wait(leaves.map((leaf) async {
         if (!result.containsKey(leaf.reportId)) {
-          result[leaf.reportId] = await Reports.get(leaf.reportId);
+          try {
+            final report = await Reports.get(leaf.reportId);
+            if (report != null) result[leaf.reportId] = report;
+          } catch (ex) {
+            _logger.warning(() => "Failed to get report: ${leaf.reportId}");
+          }
         }
       }));
       final reports = await _pagerReports.more(pageSize - result.length);
       await Future.wait(reports.map((report) async {
         if (!result.containsKey(report.id)) {
-          await Reports.loadLeaves(report);
-          result[report.id] = report;
+          try {
+            await Reports.loadLeaves(report);
+            if (report.leaves?.isNotEmpty ?? false) result[report.id] = report;
+          } catch (ex) {
+            _logger.warning(() => "Failed to get leaves: ${report.id}");
+          }
         }
       }));
     }
