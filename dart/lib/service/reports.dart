@@ -89,9 +89,10 @@ class Reports {
       final report = await TABLE_REPORT.get(id);
       if (report == null) return null;
 
-      final loading = loadLeaves(report);
+      await loadLeaves(report);
+      if (report.leaves.isEmpty) return null;
+
       _addToCache(report);
-      await loading;
       return report.clone();
     }
   }
@@ -200,8 +201,9 @@ class _PagerReports implements Pager<Report> {
       final cached = Reports._cachedList;
       final list = (await _db.more(pageSize)).where((r) => cached.every((c) => c.id != r.id));
       await Future.wait(list.map(Reports.loadLeaves));
-      _logger.finer(() => "Loaded reports: ${list}");
-      return list;
+      final filtered = list.where((x) => x.leaves.isNotEmpty);
+      _logger.finer(() => "Loaded reports: ${filtered}");
+      return filtered;
     } catch (ex) {
       if (ex != changedEx) throw ex;
       return [];
