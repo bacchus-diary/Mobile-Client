@@ -213,10 +213,11 @@ abstract class _PagingDB<T extends DBRecord> implements Pager<T> {
 
   Future<List<T>> more(int pageSize) async {
     if (pageSize < 1 || !hasMore) return [];
-    if (_asking?.isCompleted ?? true) {
-      _asking = new Completer();
-      _asking.complete(await _doMore(pageSize));
+    if (_asking != null) {
+      await _asking.future;
     }
+    _asking = new Completer();
+    _asking.complete(await _doMore(pageSize));
     return _asking.future;
   }
 }
