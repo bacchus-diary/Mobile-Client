@@ -23,31 +23,31 @@ class AdMob {
 
   static showInterstitial(String timing) async {
     final admod = await initialize();
-    if (admod.timingInterstitial.contains(timing)) {
+    if (admod.interstitialTimings.contains(timing)) {
       admod._invoke('showInterstitial');
     }
   }
 
-  static get admob => context['AdMob'];
+  static get plugin => context['AdMob'];
 
-  static position(String name) => admob == null ? null : admob['AD_POSITION'][name];
+  static position(String name) => plugin == null ? null : plugin['AD_POSITION'][name];
 
   final Map<String, Map<String, dynamic>> _src;
   AdMob(this._src) {
-    _invoke('createBanner', {'adId': idBanner, 'position': position(posBanner), 'autoShow': true});
-    _invoke('prepareInterstitial', {'adId': idInterstitial, 'autoShow': false});
+    _invoke('createBanner', {'adId': bannerId, 'position': position(bannerPos), 'autoShow': true});
+    _invoke('prepareInterstitial', {'adId': interstitialId, 'autoShow': false});
   }
 
   _invoke(String name, [Map params = const {}]) {
     _logger.info(() => "Invoking ${name}: ${params}");
-    admob?.callMethod(name, new JsObject.jsify(params));
+    plugin?.callMethod(name, new JsObject.jsify(params));
   }
 
   Map<String, String> get _banner => _src['banner'];
-  String get idBanner => _banner['id'];
-  String get posBanner => _banner['position'];
+  String get bannerId => _banner['id'];
+  String get bannerPos => _banner['position'];
 
   Map<String, dynamic> get _interstitial => _src['interstitial'];
-  String get idInterstitial => _interstitial['id'];
-  List<String> get timingInterstitial => _interstitial['timings'];
+  String get interstitialId => _interstitial['id'];
+  List<String> get interstitialTimings => _interstitial['timings'];
 }
