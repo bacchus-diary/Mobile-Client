@@ -26,6 +26,8 @@ final _logger = new Logger('ReportsListPage');
 class ReportsListPage extends MainPage {
   static clearSearchResult() => _Search._results?.reset();
 
+  final String title = "ReportsList";
+
   final pageSize = 20;
 
   _Search search;

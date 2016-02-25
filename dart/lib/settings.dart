@@ -9,6 +9,7 @@ import 'package:yaml/yaml.dart';
 import 'package:bacchus_diary/service/aws/cognito.dart';
 import 'package:bacchus_diary/service/aws/s3file.dart';
 import 'package:bacchus_diary/service/aws/sns.dart';
+import 'package:bacchus_diary/service/admob.dart';
 import 'package:bacchus_diary/util/cordova.dart';
 
 final Logger _logger = new Logger('Settings');
@@ -30,7 +31,6 @@ Future<_Settings> _initialize() async {
         final map = new Map.from(server);
         _logger.config("Initializing...");
         _initializing.complete(new _Settings(local, map));
-        SNS.init();
       } catch (ex) {
         _logger.warning("Failed to read settings file: ${ex}");
         if ("$ex".contains("RequestTimeTooSkewed")) {
@@ -46,6 +46,9 @@ Future<_Settings> _initialize() async {
           _initializing.completeError(ex);
         }
       }
+      // Start background services
+      SNS.init();
+      AdMob.initialize();
     }
     getting();
   }
@@ -79,6 +82,12 @@ class _Settings {
     if (_photo == null) _photo = new _Photo(_map['photo']);
     return _photo;
   }
+
+  _Advertisement _advertisement;
+  _Advertisement get advertisement {
+    if (_advertisement == null) _advertisement = new _Advertisement(_map['advertisement']);
+    return _advertisement;
+  }
 }
 
 class _Photo {
@@ -86,4 +95,11 @@ class _Photo {
   final Map _map;
 
   Duration get urlTimeout => new Duration(seconds: _map['urlTimeout']);
+}
+
+class _Advertisement {
+  final Map _map;
+  _Advertisement(Map map) : this._map = new Map.unmodifiable(map);
+
+  Map get admod => _map['AdMod'];
 }
