@@ -88,6 +88,12 @@ class _Settings {
     if (_advertisement == null) _advertisement = new _Advertisement(_map['advertisement']);
     return _advertisement;
   }
+
+  _Amazon _amazon;
+  _Amazon get amazon {
+    if (_amazon == null) _amazon = new _Amazon(_map['amazon']);
+    return _amazon;
+  }
 }
 
 class _Photo {
@@ -102,4 +108,13 @@ class _Advertisement {
   _Advertisement(Map map) : this._map = new Map.unmodifiable(map);
 
   Map get admod => _map['AdMod'];
+}
+
+class _Amazon {
+  final Map _map;
+  _Amazon(this._map);
+
+  String get accessKey => _map['AWSAccessKeyId'];
+  String get secretKey => _map['AWSSecretKey'];
+  String get associateTag => _map['AssociatesID'];
 }

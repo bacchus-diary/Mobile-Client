@@ -1,16 +1,87 @@
 library bacchus_diary.service.aws.paa;
 
 import 'dart:async';
+import 'dart:convert' as convert;
+import 'dart:html';
 import 'dart:js';
 
+import 'package:crypto/crypto.dart';
 import 'package:logging/logging.dart';
 
+import 'package:bacchus_diary/util/pager.dart';
 import 'package:bacchus_diary/util/retry_routin.dart';
+import 'package:bacchus_diary/settings.dart';
 
 final _logger = new Logger('ProductAdvertisingAPI');
 
 class PAA {
   static const RETRYER = const Retry<Map>("ProductAdvertisingAPI", 3, const Duration(seconds: 3));
+
+  static Future<Pager<Item>> findByWords(String text) {
+    final words = text.split("\n").where((x) => x.length > 2);
+    final pagers = words.map((word) => new _SearchPager(word));
+  }
+
+  static String query(Map<String, dynamic> params) {
+    params.forEach((key, value) {
+      params[key] = Uri.encodeQueryComponent(value);
+    });
+    return params.keys.map((key) => "${key}=${params[key]}").join('&');
+  }
+
+  static String signature(String secret, Uri endpoint, String queryString) {
+    final tosign = ['GET', endpoint.host, endpoint.path, queryString].join('\n');
+
+    final hmac = new HMAC(new SHA256(), convert.UTF8.encode(secret));
+    hmac.add(convert.UTF8.encode(tosign));
+
+    final sig = BASE64.encode(hmac.close());
+    return Uri.encodeQueryComponent(sig);
+  }
+}
+
+class Item {
+  String image;
+  String title;
+  String description;
+  String price;
+}
+
+class _SearchPager extends Pager<Item> {
+  final String word;
+
+  _SearchPager(this.word);
+
+  int pageIndex;
+
+  bool _hasMore = true;
+  bool get hasMore => _hasMore;
+
+  void reset() {
+    pageIndex = null;
+  }
+
+  Future<List<Item>> more(int pageSize) async {
+    final settings = (await Settings).amazon;
+    final endpoint = await Country.endpoint;
+    final params = {
+      'Service': 'AWSECommerceService',
+      'Operation': 'ItemSearch',
+      'AWSAccessKeyId': settings.accessKey,
+      'AssociateTag': settings.associateTag,
+      'SearchIndex': 'All',
+      'ResponseGroup': 'Images,ItemAttributes',
+      'Keywords': word,
+      'Timestamp': new DateTime.now().toIso8601String()
+    };
+    if (pageIndex != null) params['ItemPage'] = pageIndex;
+
+    final query = PAA.query(params);
+    final sig = PAA.signature(settings.secretKey, endpoint, query);
+    final url = "endpoint?${query}&Signature=${sig}";
+
+    final req = await HttpRequest.request(url);
+  }
 }
 
 class Country {
@@ -30,7 +101,7 @@ class Country {
   };
 
   static String _endpoint;
-  static Future<String> get endpoint async {
+  static Future<Uri> get endpoint async {
     if (_endpoint == null) {
       try {
         final code = await getCode();
@@ -39,13 +110,13 @@ class Country {
 
         if (_endpoint == null) {
           _endpoint = ENDPOINT['US'];
-          _logger.warning(() => "No match endpoint found. use 'US': ${_endpoint}");
+          _logger.warning(() => "No match endpoint found. Use 'US': ${_endpoint}");
         }
       } catch (ex) {
         _logger.warning(() => "Failed to get locale: ${ex}");
       }
     }
-    return _endpoint;
+    return Uri.parse(_endpoint);
   }
 
   static Future<String> getCode() async {
