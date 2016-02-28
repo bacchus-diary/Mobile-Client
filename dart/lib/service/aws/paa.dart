@@ -24,14 +24,14 @@ class PAA {
     return new MergedPager(pagers);
   }
 
-  static String query(Map<String, dynamic> params) {
+  static String _query(Map<String, dynamic> params) {
     params.forEach((key, value) {
       params[key] = Uri.encodeQueryComponent(value);
     });
     return params.keys.map((key) => "${key}=${params[key]}").join('&');
   }
 
-  static String signature(String secret, Uri endpoint, String queryString) {
+  static String _signature(String secret, Uri endpoint, String queryString) {
     final tosign = ['GET', endpoint.host, endpoint.path, queryString].join('\n');
 
     final hmac = new Crypto.HMAC(new Crypto.SHA256(), UTF8.encode(secret));
@@ -40,16 +40,43 @@ class PAA {
     final sig = BASE64.encode(hmac.close());
     return Uri.encodeQueryComponent(sig);
   }
+
+  static Future<XML.XmlDocument> request(Uri endpoint, Map<String, String> params) async {
+    final settings = (await Settings).amazon;
+
+    params['AWSAccessKeyId'] = settings.accessKey;
+    params['AssociateTag'] = settings.associateTag;
+
+    final query = _query(params);
+    final sig = _signature(settings.secretKey, endpoint, query);
+    final url = "endpoint?${query}&Signature=${sig}";
+
+    final req = await HttpRequest.request(url);
+    return XML.parse(req.responseText);
+  }
 }
 
 class Item {
   final XML.XmlElement _src;
   Item(this._src);
 
-  String image;
-  String title;
-  String description;
-  String price;
+  Map<String, String> _cache = {};
+  String _fromCache(String path) {
+    if (!_cache.containsKey(path)) {
+      String getElm(List<String> keys, XML.XmlElement parent) {
+        if (keys.isEmpty) return parent.text;
+        final el = parent.findAllElements(keys.first);
+        return el.isEmpty ? null : getElm(keys.sublist(1), el.first);
+      }
+      _cache[path] = getElm(path.split('/'), _src);
+    }
+    return _cache[path];
+  }
+
+  String get image => _fromCache('SmallImage/URL');
+  String get title => _fromCache('ItemAttributes/Title');
+  String get price => _fromCache('OfferSummary/LowestNewPrice/FormattedPrice');
+  String get url => _fromCache('DetailPageURL');
 }
 
 class _SearchPager extends Pager<Item> {
@@ -84,35 +111,25 @@ class _SearchPager extends Pager<Item> {
   Future<List<Item>> _getNextPage() async {
     final nextPageIndex = _pageIndex + 1;
 
-    final settings = (await Settings).amazon;
     final endpoint = await Country.endpoint;
     final params = {
       'Service': 'AWSECommerceService',
       'Version': '2013-08-01',
       'Operation': 'ItemSearch',
-      'AWSAccessKeyId': settings.accessKey,
-      'AssociateTag': settings.associateTag,
       'SearchIndex': 'All',
-      'ResponseGroup': 'Images,ItemAttributes',
+      'ResponseGroup': 'Images,ItemAttributes,OfferSummary',
       'Keywords': word,
       'ItemPage': nextPageIndex,
       'Timestamp': new DateTime.now().toUtc().toIso8601String()
     };
 
-    final query = PAA.query(params);
-    final sig = PAA.signature(settings.secretKey, endpoint, query);
-    final url = "endpoint?${query}&Signature=${sig}";
+    final xml = await PAA.request(endpoint, params);
 
-    return await PAA.RETRYER.loop((count) async {
-      final req = await HttpRequest.request(url);
-      final xml = XML.parse(req.responseText);
+    final totalPages = xml.findElements('TotalPages').first;
+    _pageTotal = int.parse(totalPages.text);
+    _pageIndex = nextPageIndex;
 
-      final totalPages = xml.findElements('TotalPages').first;
-      _pageTotal = int.parse(totalPages.text);
-      _pageIndex = nextPageIndex;
-
-      return xml.findElements('Item').map((x) => new Item(x));
-    });
+    return xml.findElements('Item').map((x) => new Item(x));
   }
 }
 
