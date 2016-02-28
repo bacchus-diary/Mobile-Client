@@ -88,6 +88,7 @@ class _SearchPager extends Pager<Item> {
     final endpoint = await Country.endpoint;
     final params = {
       'Service': 'AWSECommerceService',
+      'Version': '2013-08-01',
       'Operation': 'ItemSearch',
       'AWSAccessKeyId': settings.accessKey,
       'AssociateTag': settings.associateTag,
@@ -95,7 +96,7 @@ class _SearchPager extends Pager<Item> {
       'ResponseGroup': 'Images,ItemAttributes',
       'Keywords': word,
       'ItemPage': nextPageIndex,
-      'Timestamp': new DateTime.now().toIso8601String()
+      'Timestamp': new DateTime.now().toUtc().toIso8601String()
     };
 
     final query = PAA.query(params);
