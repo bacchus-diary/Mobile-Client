@@ -123,13 +123,17 @@ class _SearchPager extends Pager<Item> {
       'Timestamp': new DateTime.now().toUtc().toIso8601String()
     };
 
-    final xml = await PAA.request(endpoint, params);
+    return PAA.RETRYER.loop((count) async {
+      final xml = await PAA.request(endpoint, params);
+      final items = xml.findElements('Items');
+      if (items.isEmpty) return [];
 
-    final totalPages = xml.findElements('TotalPages').first;
-    _pageTotal = int.parse(totalPages.text);
-    _pageIndex = nextPageIndex;
+      final totalPages = xml.findElements('TotalPages').first;
+      _pageTotal = int.parse(totalPages.text);
+      _pageIndex = nextPageIndex;
 
-    return xml.findElements('Item').map((x) => new Item(x));
+      return items.first.findElements('Item').map((x) => new Item(x));
+    });
   }
 }
 
