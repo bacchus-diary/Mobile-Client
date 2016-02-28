@@ -31,3 +31,29 @@ class PagingList<T> implements Pager<T> {
     return a;
   }
 }
+
+class MergedPager<T> implements Pager<T> {
+  final List<Pager<T>> _pagers;
+
+  MergedPager(Iterable<Pager<T>> list) : this._pagers = new List.unmodifiable(list);
+
+  bool get hasMore => _pagers.any((x) => x.hasMore);
+
+  void reset() => _pagers.forEach((x) => x.reset());
+
+  Future<List<T>> more(int pageSize) {
+    Future<List<T>> pick(List<Pager<T>> list, List<T> result) async {
+      if (pageSize <= result.length || !hasMore) return result;
+
+      final pagers = list.where((x) => x.hasMore);
+      final left = pageSize - result.length;
+      final each = (left / pagers.length).ceil();
+      final adding = pagers.map((x) async {
+        result.addAll(await x.more(each));
+      });
+      await Future.wait(adding);
+      return pick(pagers, result);
+    }
+    return pick(_pagers, []);
+  }
+}

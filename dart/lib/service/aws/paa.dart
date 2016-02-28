@@ -1,12 +1,13 @@
 library bacchus_diary.service.aws.paa;
 
 import 'dart:async';
-import 'dart:convert' as convert;
+import 'dart:convert';
 import 'dart:html';
 import 'dart:js';
 
-import 'package:crypto/crypto.dart';
+import 'package:crypto/crypto.dart' as Crypto;
 import 'package:logging/logging.dart';
+import 'package:xml/xml.dart' as XML;
 
 import 'package:bacchus_diary/util/pager.dart';
 import 'package:bacchus_diary/util/retry_routin.dart';
@@ -15,11 +16,12 @@ import 'package:bacchus_diary/settings.dart';
 final _logger = new Logger('ProductAdvertisingAPI');
 
 class PAA {
-  static const RETRYER = const Retry<Map>("ProductAdvertisingAPI", 3, const Duration(seconds: 3));
+  static const RETRYER = const Retry<List<Item>>("ProductAdvertisingAPI", 3, const Duration(seconds: 3));
 
-  static Future<Pager<Item>> findByWords(String text) {
+  static Pager<Item> findByWords(String text) {
     final words = text.split("\n").where((x) => x.length > 2);
     final pagers = words.map((word) => new _SearchPager(word));
+    return new MergedPager(pagers);
   }
 
   static String query(Map<String, dynamic> params) {
@@ -32,8 +34,8 @@ class PAA {
   static String signature(String secret, Uri endpoint, String queryString) {
     final tosign = ['GET', endpoint.host, endpoint.path, queryString].join('\n');
 
-    final hmac = new HMAC(new SHA256(), convert.UTF8.encode(secret));
-    hmac.add(convert.UTF8.encode(tosign));
+    final hmac = new Crypto.HMAC(new Crypto.SHA256(), UTF8.encode(secret));
+    hmac.add(UTF8.encode(tosign));
 
     final sig = BASE64.encode(hmac.close());
     return Uri.encodeQueryComponent(sig);
@@ -41,6 +43,9 @@ class PAA {
 }
 
 class Item {
+  final XML.XmlElement _src;
+  Item(this._src);
+
   String image;
   String title;
   String description;
@@ -52,16 +57,33 @@ class _SearchPager extends Pager<Item> {
 
   _SearchPager(this.word);
 
-  int pageIndex;
+  int _pageIndex = 0;
+  int _pageTotal = 1;
+  List<Item> _stock = [];
 
-  bool _hasMore = true;
-  bool get hasMore => _hasMore;
+  bool get hasMore => _pageIndex < _pageTotal || _stock.isNotEmpty;
 
   void reset() {
-    pageIndex = null;
+    _pageIndex = 0;
   }
 
   Future<List<Item>> more(int pageSize) async {
+    Future<List<Item>> load(List<Item> result) async {
+      if (pageSize <= result.length || !hasMore) return result;
+
+      if (_stock.isEmpty) _stock = await _getNextPage();
+
+      result.addAll(_stock.take(pageSize - result.length));
+      _stock = _stock.length <= pageSize ? [] : _stock.sublist(pageSize);
+
+      return load(result);
+    }
+    return load([]);
+  }
+
+  Future<List<Item>> _getNextPage() async {
+    final nextPageIndex = _pageIndex + 1;
+
     final settings = (await Settings).amazon;
     final endpoint = await Country.endpoint;
     final params = {
@@ -72,15 +94,24 @@ class _SearchPager extends Pager<Item> {
       'SearchIndex': 'All',
       'ResponseGroup': 'Images,ItemAttributes',
       'Keywords': word,
+      'ItemPage': nextPageIndex,
       'Timestamp': new DateTime.now().toIso8601String()
     };
-    if (pageIndex != null) params['ItemPage'] = pageIndex;
 
     final query = PAA.query(params);
     final sig = PAA.signature(settings.secretKey, endpoint, query);
     final url = "endpoint?${query}&Signature=${sig}";
 
-    final req = await HttpRequest.request(url);
+    return await PAA.RETRYER.loop((count) async {
+      final req = await HttpRequest.request(url);
+      final xml = XML.parse(req.responseText);
+
+      final totalPages = xml.findElements('TotalPages').first;
+      _pageTotal = int.parse(totalPages.text);
+      _pageIndex = nextPageIndex;
+
+      return xml.findElements('Item').map((x) => new Item(x));
+    });
   }
 }
 
@@ -124,8 +155,8 @@ class Country {
       return await _code;
     } catch (ex) {
       final locale = await _locale;
-      final regex = new RegExp(r"[A-Z]{2}");
-      final parts = locale.split('-').where((x) => x.length == 2 && regex.stringMatch(x) != null);
+      final regex = new RegExp(r"^[A-Z]{2}$");
+      final parts = locale.split('-').map(regex.stringMatch).where((x) => x != null);
       if (parts.isEmpty) return null;
       return parts.first;
     }
