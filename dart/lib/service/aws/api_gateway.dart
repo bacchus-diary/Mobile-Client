@@ -6,6 +6,7 @@ import 'dart:html';
 
 import 'package:logging/logging.dart';
 
+import 'package:bacchus_diary/util/retry_routin.dart';
 import 'package:bacchus_diary/settings.dart';
 
 final _logger = new Logger('ApiGateway');
@@ -13,64 +14,42 @@ final _logger = new Logger('ApiGateway');
 typedef T _LoadResult<T>(String responseText);
 
 class ApiGateway<R> {
+  static const RETRYER = const Retry<String>("ApiGateway", 3, const Duration(seconds: 3));
+
   final ApiInfo info;
   final _LoadResult<R> _loader;
 
   ApiGateway(this.info, this._loader);
 
   Future<R> call(Map<String, String> dataMap) async {
-    final result = new Completer<R>();
-
     final url = info.url;
     final apiKey = info.key;
+    final params = JSON.encode(dataMap);
 
-    final name = url.split('/').last;
-    retry(final int count) {
-      final isRetryable = count < info.retryLimit;
-      bool isRetring = false;
-      next([bool p = true]) => (error) {
-            if (!isRetring) {
-              isRetring = true;
-              if (isRetryable && p) {
-                final next = count + 1;
-                _logger.warning(() => "retring(${next}) after ${info.retryDur}");
-                new Future.delayed(info.retryDur, () => retry(next));
-              } else {
-                result.completeError(error);
-              }
-            }
-          };
-      try {
-        _logger.finest(() => "Posting to ${name}: ${url}");
-        final req = new HttpRequest()
-          ..open('POST', url)
-          ..setRequestHeader('x-api-key', apiKey)
-          ..setRequestHeader('Content-Type', 'application/json')
-          ..send(JSON.encode(dataMap));
+    final text = await RETRYER.loop((count) {
+      final result = new Completer<String>();
 
-        req.onLoadEnd.listen((event) {
-          final text = req.responseText;
-          _logger.fine(() => "Response of ${name}(${url}): (Status:${req.status}) ${text}");
-          if (req.status == 200) {
-            try {
-              result.complete(_loader(text));
-            } catch (ex) {
-              next()(ex);
-            }
-          } else
-            next(500 <= req.status && req.status < 600)(req.responseText);
-        });
-        req.onError.listen((event) {
-          next(500 <= req.status && req.status < 600)(req.responseText);
-        });
-        req.onTimeout.listen((event) {
-          next()(event);
-        });
-      } catch (ex) {
-        next()(ex);
-      }
-    }
-    retry(0);
-    return result.future;
+      _logger.finest(() => "Posting to ${url}");
+      final req = new HttpRequest()
+        ..open('POST', url)
+        ..setRequestHeader('x-api-key', apiKey)
+        ..setRequestHeader('Content-Type', 'application/json')
+        ..send(params);
+
+      req.onLoadEnd.listen((event) {
+        final text = JSON.decode(req.responseText);
+        _logger.fine(() => "Response of ${url}: (Status:${req.status}) ${text}");
+        result.complete(req.responseText);
+      });
+      req.onError.listen((event) {
+        result.complete(req.responseText);
+      });
+      req.onTimeout.listen((event) {
+        result.completeError("Timeout");
+      });
+
+      return result.future;
+    });
+    return _loader(text);
   }
 }
