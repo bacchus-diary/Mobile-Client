@@ -139,18 +139,18 @@ class _SearchPager extends Pager<Item> {
 
 class Country {
   static const ENDPOINT = const {
-    "BR": "https://webservices.amazon.br/onca/soap",
-    "CA": "https://webservices.amazon.ca/onca/soap",
-    "CN": "https://webservices.amazon.cn/onca/soap",
-    "DE": "https://webservices.amazon.de/onca/soap",
-    "ES": "https://webservices.amazon.es/onca/soap",
-    "FR": "https://webservices.amazon.fr/onca/soap",
-    "IN": "https://webservices.amazon.in/onca/soap",
-    "IT": "https://webservices.amazon.it/onca/soap",
-    "JP": "https://webservices.amazon.co.jp/onca/soap",
-    "MX": "https://webservices.amazon.com.mx/onca/soap",
-    "UK": "https://webservices.amazon.co.uk/onca/soap",
-    "US": "https://webservices.amazon.com/onca/soap"
+    "BR": "https://webservices.amazon.br/onca/xml",
+    "CA": "https://webservices.amazon.ca/onca/xml",
+    "CN": "https://webservices.amazon.cn/onca/xml",
+    "DE": "https://webservices.amazon.de/onca/xml",
+    "ES": "https://webservices.amazon.es/onca/xml",
+    "FR": "https://webservices.amazon.fr/onca/xml",
+    "IN": "https://webservices.amazon.in/onca/xml",
+    "IT": "https://webservices.amazon.it/onca/xml",
+    "JP": "https://webservices.amazon.co.jp/onca/xml",
+    "MX": "https://webservices.amazon.com.mx/onca/xml",
+    "UK": "https://webservices.amazon.co.uk/onca/xml",
+    "US": "https://webservices.amazon.com/onca/xml"
   };
 
   static String _endpoint;
