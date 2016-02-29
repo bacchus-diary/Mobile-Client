@@ -1,14 +1,12 @@
 library bacchus_diary.service.aws.paa;
 
 import 'dart:async';
-import 'dart:convert';
-import 'dart:html';
 import 'dart:js';
 
-import 'package:crypto/crypto.dart' as Crypto;
 import 'package:logging/logging.dart';
 import 'package:xml/xml.dart' as XML;
 
+import 'package:bacchus_diary/service/aws/api_gateway.dart';
 import 'package:bacchus_diary/util/pager.dart';
 import 'package:bacchus_diary/util/retry_routin.dart';
 import 'package:bacchus_diary/settings.dart';
@@ -24,35 +22,12 @@ class PAA {
     return new MergedPager(pagers);
   }
 
-  static String _query(Map<String, dynamic> params) {
-    params.forEach((key, value) {
-      params[key] = Uri.encodeQueryComponent(value);
-    });
-    return params.keys.map((key) => "${key}=${params[key]}").join('&');
-  }
-
-  static String _signature(String secret, Uri endpoint, String queryString) {
-    final tosign = ['GET', endpoint.host, endpoint.path, queryString].join('\n');
-
-    final hmac = new Crypto.HMAC(new Crypto.SHA256(), UTF8.encode(secret));
-    hmac.add(UTF8.encode(tosign));
-
-    final sig = BASE64.encode(hmac.close());
-    return Uri.encodeQueryComponent(sig);
-  }
-
   static Future<XML.XmlDocument> request(Uri endpoint, Map<String, String> params) async {
-    final settings = (await Settings).amazon;
+    _logger.info(() => "Request to ${endpoint}: ${params}");
+    final settings = await Settings;
+    final api = new ApiGateway(settings.server.paa, XML.parse);
 
-    params['AWSAccessKeyId'] = settings.accessKey;
-    params['AssociateTag'] = settings.associateTag;
-
-    final query = _query(params);
-    final sig = _signature(settings.secretKey, endpoint, query);
-    final url = "endpoint?${query}&Signature=${sig}";
-
-    final req = await HttpRequest.request(url);
-    return XML.parse(req.responseText);
+    return api.call({'params': params, 'endpoint': endpoint.toString(), 'bucketName': settings.s3Bucket});
   }
 }
 
@@ -113,14 +88,11 @@ class _SearchPager extends Pager<Item> {
 
     final endpoint = await Country.endpoint;
     final params = {
-      'Service': 'AWSECommerceService',
-      'Version': '2013-08-01',
       'Operation': 'ItemSearch',
       'SearchIndex': 'All',
       'ResponseGroup': 'Images,ItemAttributes,OfferSummary',
       'Keywords': word,
-      'ItemPage': nextPageIndex,
-      'Timestamp': new DateTime.now().toUtc().toIso8601String()
+      'ItemPage': "${nextPageIndex}"
     };
 
     return PAA.RETRYER.loop((count) async {
