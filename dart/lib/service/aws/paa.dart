@@ -176,11 +176,15 @@ class Country {
     try {
       return await _code;
     } catch (ex) {
-      final locale = await _locale;
-      final regex = new RegExp(r"^[A-Z]{2}$");
-      final parts = locale.split('-').map(regex.stringMatch).where((x) => x != null);
-      if (parts.isEmpty) return null;
-      return parts.first;
+      try {
+        final locale = await _locale;
+        final regex = new RegExp(r"^[A-Z]{2}$");
+        final parts = locale.split('-').map(regex.stringMatch).where((x) => x != null);
+        if (parts.isEmpty) return null;
+        return parts.first;
+      } catch (ex) {
+        return null;
+      }
     }
   }
 
