@@ -41,7 +41,10 @@ class PAA {
     return PAA.RETRYER.loop((count) async {
       final xml = await api.call({'params': params, 'endpoint': endpoint.toString(), 'bucketName': settings.s3Bucket});
       final roots = xml.findElements('ItemSearchResponse');
-      if (roots.isEmpty) return null;
+      if (roots.isEmpty) {
+        _logger.warning(() => "Illegal response: ${xml}");
+        return null;
+      }
       return roots.first;
     });
   }
@@ -119,6 +122,7 @@ class _SearchPager extends Pager<Item> {
     final nextPageIndex = _pageIndex + 1;
 
     final xml = await PAA.itemSearch(word, nextPageIndex);
+    if (xml == null) return [];
 
     final itemsRc = xml.findElements('Items');
     if (itemsRc.isEmpty) return [];
