@@ -208,7 +208,7 @@ class _MoreMenu {
 
 class _Amazon {
   final pageSize = 20;
-  final imageSize = 100;
+  int get itemWidth => (window.innerWidth * 0.7).floor();
   final PagingList<Item> relations;
 
   final ShadowRoot _root;
