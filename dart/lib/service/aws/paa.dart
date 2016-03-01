@@ -8,6 +8,7 @@ import 'dart:js';
 import 'package:logging/logging.dart';
 import 'package:xml/xml.dart' as XML;
 
+import 'package:bacchus_diary/model/report.dart';
 import 'package:bacchus_diary/service/aws/api_gateway.dart';
 import 'package:bacchus_diary/util/pager.dart';
 import 'package:bacchus_diary/settings.dart';
@@ -18,11 +19,9 @@ class PAA {
   static final _api =
       Settings.then((x) => new ApiGateway<XML.XmlDocument>(x.server.paa, (text) => XML.parse(JSON.decode(text))));
 
-  static Pager<Item> findByWords(String text) {
-    final words = text.split("\n").where((x) => x.length > 2);
-    if (words.isEmpty) return null;
-
-    return new _SortingPager.from(words);
+  static Pager<Item> findByReport(Report report) {
+    if (report.leaves?.isEmpty ?? true) return null;
+    return new _SortingPager.from(report);
   }
 
   static Future<XML.XmlElement> itemSearch(String word, int nextPageIndex) async {
@@ -92,18 +91,41 @@ class Item {
 typedef List<Item> _SortItems(List<Item> items);
 
 class _SortingPager extends MergedPager<Item> {
-  factory _SortingPager.from(Iterable<String> words) {
-    final keywords = new List.from(words);
-    keywords.insert(0, words.first);
+  factory _SortingPager.from(Report report) {
+    Map<String, List<String>> divide(List<String> div(Leaf leaf)) {
+      final lists = report.leaves.map(div);
+      final list = lists.expand((x) => x).toList(growable: false);
+      final heads = lists.where((x) => x.isNotEmpty).map((x) => x.first).toList(growable: false);
+      return {'list': list, 'heads': heads};
+    }
+
+    final labels = divide((x) => x.labels ?? []);
+    final words = divide((x) => (x.description ?? '').split('\n').map((x) => x.trim()).where((String x) {
+          return x.length > 2 && !new RegExp(r"^[0-9]+$").hasMatch(x);
+        }));
+
+    _logger.info(() => "Using search labels: ${labels}");
+    _logger.info(() => "Using search words: ${words}");
+
+    int point(Item item) {
+      int cons(Iterable<String> iter) => iter.where(item.title.contains).length;
+      int consMap(Map<String, List<String>> map) => cons(map['list']) + cons(map['heads']) * 2;
+      return consMap(labels) + consMap(words);
+    }
 
     rank(List<Item> items) {
       items.sort((a, b) => b.priceValue - a.priceValue);
-      int point(Item item) => keywords.where(item.title.contains).length;
       items.sort((a, b) => point(b) - point(a));
       return items;
     }
 
-    final pagers = words.map((word) => new _SearchPager(word, rank));
+    final keywords = words['list'].map((word) {
+      final list = labels['heads'].map((x) => "${x} ${word}").toList();
+      list.add(word);
+      return list;
+    }).expand((x) => x);
+    _logger.fine(() => "Search keywords:\n${keywords.join('\n')}");
+    final pagers = keywords.map((word) => new _SearchPager(word, rank));
     return new _SortingPager(pagers, rank);
   }
 

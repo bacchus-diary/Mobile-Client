@@ -112,6 +112,9 @@ class CVision {
   Future<String> findLogo() async =>
       _singleRequest('LOGO_DETECTION', 'logoAnnotations', (list) => list.first['description']);
 
+  Future<List<String>> getLabels() async =>
+      (await resutsMap)['labelAnnotations'].map((x) => x['description']).toList(growable: false);
+
   Future<SafeSearch> safeLevel() async {
     final result = (await resutsMap)['safeSearchAnnotation'];
     return new SafeSearch(result);
