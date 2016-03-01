@@ -24,7 +24,9 @@ class SuggestionsElement implements ShadowRootAware {
   @NgOneWay('report') Report report;
 
   void onShadowRoot(ShadowRoot sr) {
-    pager = new PagingList(PAA.findByWords(report.leaves.map((x) => x.description).join("\n")));
+    final keywords = report.leaves.map((x) => x.description ?? '').join("\n");
+    final p = PAA.findByWords(keywords);
+    pager = p == null ? null : new PagingList(p);
   }
 
   int get itemWidth => (window.innerWidth * 0.7).floor();
