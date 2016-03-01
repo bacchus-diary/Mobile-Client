@@ -33,7 +33,12 @@ class ApiGateway<R> {
           method: 'POST', requestHeaders: {'X-Api-Key': apiKey, 'Content-Type': 'application/json'}, sendData: params);
 
       _logger.fine(() => "Response of ${url}: (Status:${req.status})");
-      return _loader(req.responseText);
+      try {
+        return _loader(req.responseText);
+      } catch (ex) {
+        _logger.warning(() => "Failed to process response: ${req.responseText}");
+        throw ex;
+      }
     });
   }
 }
