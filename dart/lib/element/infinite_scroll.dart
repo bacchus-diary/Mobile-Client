@@ -43,7 +43,7 @@ class InfiniteScrollElement extends ShadowRootAware {
   void onShadowRoot(ShadowRoot sr) {
     _root = sr;
     _scroller = _root.querySelector('div#scroller');
-    _scroller.style.height = _root.host.parent.style.height;
+    _scroller.style.height = _root.host.style.height;
     _scroller.style.flexDirection = direction ?? 'column';
 
     final content = _root.host.querySelector('div#content');
