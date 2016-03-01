@@ -14,42 +14,26 @@ final _logger = new Logger('ApiGateway');
 typedef T _LoadResult<T>(String responseText);
 
 class ApiGateway<R> {
-  static const RETRYER = const Retry<String>("ApiGateway", 3, const Duration(seconds: 3));
-
   final ApiInfo info;
   final _LoadResult<R> _loader;
+  final Retry<R> _RETRYER;
 
-  ApiGateway(this.info, this._loader);
+  ApiGateway(ApiInfo info, this._loader)
+      : this.info = info,
+        this._RETRYER = new Retry('ApiGateway', info.retryLimit, info.retryDur);
 
-  Future<R> call(Map<String, String> dataMap) async {
+  Future<R> call(Map<String, dynamic> dataMap) async {
     final url = info.url;
     final apiKey = info.key;
     final params = JSON.encode(dataMap);
 
-    final text = await RETRYER.loop((count) {
-      final result = new Completer<String>();
+    return _RETRYER.loop((count) async {
+      _logger.finest(() => "Posting to ${url}: ${params}");
+      final req = await HttpRequest.request(url,
+          method: 'POST', requestHeaders: {'X-Api-Key': apiKey, 'Content-Type': 'application/json'}, sendData: params);
 
-      _logger.finest(() => "Posting to ${url}");
-      final req = new HttpRequest()
-        ..open('POST', url)
-        ..setRequestHeader('x-api-key', apiKey)
-        ..setRequestHeader('Content-Type', 'application/json')
-        ..send(params);
-
-      req.onLoadEnd.listen((event) {
-        final text = JSON.decode(req.responseText);
-        _logger.fine(() => "Response of ${url}: (Status:${req.status}) ${text}");
-        result.complete(req.responseText);
-      });
-      req.onError.listen((event) {
-        result.complete(req.responseText);
-      });
-      req.onTimeout.listen((event) {
-        result.completeError("Timeout");
-      });
-
-      return result.future;
+      _logger.fine(() => "Response of ${url}: (Status:${req.status})");
+      return _loader(req.responseText);
     });
-    return _loader(text);
   }
 }
