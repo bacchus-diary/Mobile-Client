@@ -2,10 +2,15 @@
 
 div#scroller {
   overflow: auto;
+  @include display-flex();
+  
+  &>div {
+    @include flex-shrink(0);
+  }
   
   div#spinner {
     @include display-flex();
     @include justify-content(center);
-    margin-top: 30%;
+    margin: 30px;
   }
 }
