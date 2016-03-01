@@ -22,8 +22,9 @@ class PAA {
 
   static Pager<Item> findByWords(String text) {
     final words = text.split("\n").where((x) => x.length > 2);
-    final pagers = words.map((word) => new _SearchPager(word));
-    return new _RankedPager(pagers);
+    if (words.isEmpty) return null;
+
+    return new _SortingPager.from(words);
   }
 
   static Future<XML.XmlElement> itemSearch(String word, int nextPageIndex) async {
@@ -83,34 +84,47 @@ class Item {
   String get image => _fromCache('SmallImage/URL');
   String get title => _fromCache('ItemAttributes/Title');
   String get price => _fromCache('OfferSummary/LowestNewPrice/FormattedPrice');
+  int get priceValue => int.parse(_fromCache('OfferSummary/LowestNewPrice/Amount') ?? '0');
   String get url => _fromCache('DetailPageURL');
 }
 
-class _RankedPager extends MergedPager<Item> {
-  final List<_SearchPager> _pagers;
-  List<String> _keywords;
+typedef List<Item> _SortItems(List<Item> items);
 
-  _RankedPager(Iterable<_SearchPager> list)
-      : this._pagers = new List.unmodifiable(list),
-        super(list) {
-    _keywords = _pagers.map((x) => x.word).toList();
-    _keywords.add(_pagers.first.word);
+class _SortingPager extends MergedPager<Item> {
+  factory _SortingPager.from(Iterable<String> words) {
+    final keywords = new List.from(words);
+    keywords.insert(0, words.first);
+
+    rank(List<Item> items) {
+      items.sort((a, b) => b.priceValue - a.priceValue);
+      int point(Item item) => keywords.where(item.title.contains).length;
+      items.sort((a, b) => point(b) - point(a));
+      return items;
+    }
+
+    final pagers = words.map((word) => new _SearchPager(word, rank));
+    return new _SortingPager(pagers, rank);
   }
 
-  int point(Item item) => _keywords.where(item.title.contains).length;
+  final List<_SearchPager> _pagers;
+  final _SortItems sort;
+
+  _SortingPager(Iterable<_SearchPager> list, this.sort)
+      : this._pagers = new List.unmodifiable(list),
+        super(list);
 
   @override
   Future<List<Item>> more(int pageSize) async {
     final srcList = await super.more(pageSize);
-    srcList.sort((a, b) => point(b) - point(a));
-    return srcList;
+    return sort(srcList);
   }
 }
 
 class _SearchPager extends Pager<Item> {
   final String word;
+  final _SortItems sort;
 
-  _SearchPager(this.word);
+  _SearchPager(this.word, this.sort);
 
   final int _pageTotal = 5;
   int _pageIndex = 0;
@@ -164,7 +178,7 @@ class _SearchPager extends Pager<Item> {
 
     _pageIndex = nextPageIndex;
 
-    return items.findElements('Item').map((x) => new Item(x)).toList();
+    return sort(items.findElements('Item').map((x) => new Item(x)).toList());
   }
 }
 
