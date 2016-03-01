@@ -10,6 +10,7 @@ import 'package:paper_elements/paper_autogrow_textarea.dart';
 import 'package:paper_elements/paper_toast.dart';
 
 import 'package:bacchus_diary/element/showcase.dart';
+import 'package:bacchus_diary/element/suggestions.dart';
 import 'package:bacchus_diary/dialog/confirm.dart';
 import 'package:bacchus_diary/model/report.dart';
 import 'package:bacchus_diary/page/reports_list.dart';
@@ -36,6 +37,7 @@ class ReportDetailPage extends SubPage {
   ReportDetailPage(RouteProvider rp) : this._report = Reports.get(rp.parameters['reportId']);
 
   final Getter<ShowcaseElement> showcase = new PipeValue();
+  final Getter<SuggestionsElement> suggestions = new PipeValue();
   Report report;
   _MoreMenu moreMenu;
 
@@ -106,6 +108,7 @@ class ReportDetailPage extends SubPage {
     _logger.finest("Changed: Start timer to submit.");
     if (_submitTimer != null && _submitTimer.isActive) _submitTimer.cancel();
     _submitTimer = new Timer(submitDuration, _update);
+    suggestions.value?.refresh();
   }
 
   _update() async {
