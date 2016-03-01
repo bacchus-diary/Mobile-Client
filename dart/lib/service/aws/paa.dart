@@ -127,7 +127,7 @@ class _SearchPager extends Pager<Item> {
 
   _SearchPager(this.word, this.sort);
 
-  final int _pageTotal = 5;
+  int _pageTotal = 5;
   int _pageIndex = 0;
   List<Item> _stock = [];
 
@@ -177,6 +177,14 @@ class _SearchPager extends Pager<Item> {
     if (itemsRc.isEmpty) return [];
     final items = itemsRc.first;
 
+    final totalPages = items.findElements('TotalPages');
+    if (totalPages.isNotEmpty) {
+      final total = int.parse(totalPages.first.text);
+      if (total < _pageTotal) {
+        _logger.info(() => "Reducing totalPages: ${total}");
+        _pageTotal = total;
+      }
+    }
     _pageIndex = nextPageIndex;
 
     return sort(items.findElements('Item').map((x) => new Item(x)).toList());
