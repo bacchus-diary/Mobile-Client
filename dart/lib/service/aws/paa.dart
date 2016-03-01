@@ -51,6 +51,7 @@ class PAA {
   }
 
   static open(Item item) {
+    _logger.info(() => "Opening amazon: ${item}");
     if (context['cordova'] != null && context['cordova']['InAppBrowser'] != null) {
       context['cordova']['InAppBrowser'].callMethod('open', [item.url, '_system']);
     } else {
@@ -75,6 +76,9 @@ class Item {
     }
     return _cache[path];
   }
+
+  @override
+  String toString() => _src.toXmlString(pretty: true);
 
   String get image => _fromCache('SmallImage/URL');
   String get title => _fromCache('ItemAttributes/Title');

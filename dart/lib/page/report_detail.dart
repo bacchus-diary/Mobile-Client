@@ -221,7 +221,6 @@ class _Amazon {
   openItem(Event event, Item item) {
     event.target as Element..style.opacity = '1';
     afterRippling(() {
-      _logger.info(() => "Opening amazon item: ${item.url}");
       PAA.open(item);
     });
   }
