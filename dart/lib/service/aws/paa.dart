@@ -23,7 +23,7 @@ class PAA {
   static Pager<Item> findByWords(String text) {
     final words = text.split("\n").where((x) => x.length > 2);
     final pagers = words.map((word) => new _SearchPager(word));
-    return new MergedPager(pagers);
+    return new _RankedPager(pagers);
   }
 
   static Future<XML.XmlElement> itemSearch(String word, int nextPageIndex) async {
@@ -84,6 +84,27 @@ class Item {
   String get title => _fromCache('ItemAttributes/Title');
   String get price => _fromCache('OfferSummary/LowestNewPrice/FormattedPrice');
   String get url => _fromCache('DetailPageURL');
+}
+
+class _RankedPager extends MergedPager<Item> {
+  final List<_SearchPager> _pagers;
+  List<String> _keywords;
+
+  _RankedPager(Iterable<_SearchPager> list)
+      : this._pagers = new List.unmodifiable(list),
+        super(list) {
+    _keywords = _pagers.map((x) => x.word).toList();
+    _keywords.add(_pagers.first.word);
+  }
+
+  int point(Item item) => _keywords.where(item.title.contains).length;
+
+  @override
+  Future<List<Item>> more(int pageSize) async {
+    final srcList = await super.more(pageSize);
+    srcList.sort((a, b) => point(b) - point(a));
+    return srcList;
+  }
 }
 
 class _SearchPager extends Pager<Item> {
