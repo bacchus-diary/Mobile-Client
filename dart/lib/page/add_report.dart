@@ -9,6 +9,7 @@ import 'package:core_elements/core_dropdown.dart';
 import 'package:paper_elements/paper_toast.dart';
 
 import 'package:bacchus_diary/element/showcase.dart';
+import 'package:bacchus_diary/element/suggestions.dart';
 import 'package:bacchus_diary/dialog/alert.dart';
 import 'package:bacchus_diary/dialog/confirm.dart';
 import 'package:bacchus_diary/model/report.dart';
@@ -34,6 +35,7 @@ class AddReportPage extends SubPage {
   final Getter<ShowcaseElement> showcase = new PipeValue();
   final Getter<ConfirmDialog> confirmDialog = new PipeValue();
   final Getter<AlertDialog> alertDialog = new PipeValue();
+  final Getter<SuggestionsElement> suggestions = new PipeValue();
 
   @override
   void onShadowRoot(ShadowRoot sr) {
@@ -45,6 +47,8 @@ class AddReportPage extends SubPage {
 
   int get stars => report?.rating;
   set stars(int v) => report?.rating = v;
+
+  void onChanged() => suggestions.value?.refresh();
 
   //********************************
   // Submit
