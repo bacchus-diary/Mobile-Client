@@ -219,8 +219,10 @@ class _Amazon {
         this.relations = new PagingList(PAA.findByWords(report.leaves.map((x) => x.description).join("\n")));
 
   openItem(Event event, Item item) {
-    event.target as Element..style.opacity = '1';
+    final e = event.target as Element;
+    e.style.opacity = '1';
     afterRippling(() {
+      e.style.opacity = '0';
       PAA.open(item);
     });
   }
