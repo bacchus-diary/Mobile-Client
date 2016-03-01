@@ -44,6 +44,9 @@
 		    	</div>
                 
                 <div id="amazon">
+                    <div id="subject">
+                        <p>Suggestions for you</p>
+                    </div>
                     <infinite-scroll pager="amazon.relations" page-size="{{ amazon.pageSize }}" direction="row">
                         <div id="content">
                             <div class="item" style="width: {{ amazon.itemWidth }}px" ng-repeat="item in amazon.relations.list">
