@@ -86,6 +86,7 @@ abstract class Leaf implements DBRecord<Leaf> {
   String reportId;
   final Photo photo;
   final String id;
+  List<String> labels;
   String description;
 
   factory Leaf.fromMap(String reportId, Map data) => new _LeafImpl(data, DynamoDB.createRandomKey(), reportId);
@@ -108,6 +109,11 @@ class _LeafImpl implements Leaf {
   String reportId;
   final String id;
   final Photo photo;
+
+  List<String> get labels => _data['labels'];
+  set labels(List<String> v) {
+    _data['labels'] = v;
+  }
 
   String get description => _data['description'];
   set description(String v) {

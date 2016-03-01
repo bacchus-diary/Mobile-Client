@@ -8,23 +8,20 @@ import 'dart:js';
 import 'package:logging/logging.dart';
 import 'package:xml/xml.dart' as XML;
 
+import 'package:bacchus_diary/model/report.dart';
 import 'package:bacchus_diary/service/aws/api_gateway.dart';
 import 'package:bacchus_diary/util/pager.dart';
-import 'package:bacchus_diary/util/retry_routin.dart';
 import 'package:bacchus_diary/settings.dart';
 
 final _logger = new Logger('ProductAdvertisingAPI');
 
 class PAA {
-  static const RETRYER = const Retry<List<Item>>("ProductAdvertisingAPI", 3, const Duration(seconds: 3));
   static final _api =
       Settings.then((x) => new ApiGateway<XML.XmlDocument>(x.server.paa, (text) => XML.parse(JSON.decode(text))));
 
-  static Pager<Item> findByWords(String text) {
-    final words = text.split("\n").where((x) => x.length > 2);
-    if (words.isEmpty) return null;
-
-    return new _SortingPager.from(words);
+  static Pager<Item> findByReport(Report report) {
+    if (report.leaves?.isEmpty ?? true) return null;
+    return new _SortingPager.from(report);
   }
 
   static Future<XML.XmlElement> itemSearch(String word, int nextPageIndex) async {
@@ -40,7 +37,7 @@ class PAA {
       'ItemPage': "${nextPageIndex}"
     };
 
-    return PAA.RETRYER.loop((count) async {
+    try {
       final xml = await api.call({'params': params, 'endpoint': endpoint.toString(), 'bucketName': settings.s3Bucket});
       final roots = xml.findElements('ItemSearchResponse');
       if (roots.isEmpty) {
@@ -48,7 +45,10 @@ class PAA {
         return null;
       }
       return roots.first;
-    });
+    } catch (ex) {
+      _logger.warning(() => "Failed to ItemSearch: ${params}");
+      return null;
+    }
   }
 
   static open(Item item) {
@@ -91,18 +91,41 @@ class Item {
 typedef List<Item> _SortItems(List<Item> items);
 
 class _SortingPager extends MergedPager<Item> {
-  factory _SortingPager.from(Iterable<String> words) {
-    final keywords = new List.from(words);
-    keywords.insert(0, words.first);
+  factory _SortingPager.from(Report report) {
+    Map<String, List<String>> divide(List<String> div(Leaf leaf)) {
+      final lists = report.leaves.map(div);
+      final list = lists.expand((x) => x).toList(growable: false);
+      final heads = lists.where((x) => x.isNotEmpty).map((x) => x.first).toList(growable: false);
+      return {'list': list, 'heads': heads};
+    }
+
+    final labels = divide((x) => x.labels ?? []);
+    final words = divide((x) => (x.description ?? '').split('\n').map((x) => x.trim()).where((String x) {
+          return x.length > 2 && !new RegExp(r"^[0-9]+$").hasMatch(x);
+        }));
+
+    _logger.info(() => "Using search labels: ${labels}");
+    _logger.info(() => "Using search words: ${words}");
+
+    int point(Item item) {
+      int cons(Iterable<String> iter) => iter.where(item.title.contains).length;
+      int consMap(Map<String, List<String>> map) => cons(map['list']) + cons(map['heads']) * 2;
+      return consMap(labels) + consMap(words);
+    }
 
     rank(List<Item> items) {
       items.sort((a, b) => b.priceValue - a.priceValue);
-      int point(Item item) => keywords.where(item.title.contains).length;
       items.sort((a, b) => point(b) - point(a));
       return items;
     }
 
-    final pagers = words.map((word) => new _SearchPager(word, rank));
+    final keywords = words['list'].map((word) {
+      final list = labels['heads'].map((x) => "${x} ${word}").toList();
+      list.add(word);
+      return list;
+    }).expand((x) => x);
+    _logger.fine(() => "Search keywords:\n${keywords.join('\n')}");
+    final pagers = keywords.map((word) => new _SearchPager(word, rank));
     return new _SortingPager(pagers, rank);
   }
 
@@ -126,7 +149,7 @@ class _SearchPager extends Pager<Item> {
 
   _SearchPager(this.word, this.sort);
 
-  final int _pageTotal = 5;
+  int _pageTotal = 5;
   int _pageIndex = 0;
   List<Item> _stock = [];
 
@@ -176,6 +199,14 @@ class _SearchPager extends Pager<Item> {
     if (itemsRc.isEmpty) return [];
     final items = itemsRc.first;
 
+    final totalPages = items.findElements('TotalPages');
+    if (totalPages.isNotEmpty) {
+      final total = int.parse(totalPages.first.text);
+      if (total < _pageTotal) {
+        _logger.info(() => "Reducing totalPages: ${total}");
+        _pageTotal = total;
+      }
+    }
     _pageIndex = nextPageIndex;
 
     return sort(items.findElements('Item').map((x) => new Item(x)).toList());
