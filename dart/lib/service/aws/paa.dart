@@ -126,7 +126,7 @@ class _SearchPager extends Pager<Item> {
 
     _pageIndex = nextPageIndex;
 
-    return items.findElements('Item').map((x) => new Item(x));
+    return items.findElements('Item').map((x) => new Item(x)).toList();
   }
 }
 
