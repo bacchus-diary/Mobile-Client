@@ -217,4 +217,12 @@ class _Amazon {
   _Amazon(this._root, Report report)
       : this._report = report,
         this.relations = new PagingList(PAA.findByWords(report.leaves.map((x) => x.description).join("\n")));
+
+  openItem(Event event, Item item) {
+    event.target as Element..style.opacity = '1';
+    afterRippling(() {
+      _logger.info(() => "Opening amazon item: ${item.url}");
+      PAA.open(item);
+    });
+  }
 }

@@ -2,6 +2,7 @@ library bacchus_diary.service.aws.paa;
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:html';
 import 'dart:js';
 
 import 'package:logging/logging.dart';
@@ -47,6 +48,14 @@ class PAA {
       }
       return roots.first;
     });
+  }
+
+  static open(Item item) {
+    if (context['cordova'] != null && context['cordova']['InAppBrowser'] != null) {
+      context['cordova']['InAppBrowser'].callMethod('open', [item.url, '_system']);
+    } else {
+      window.open(item.url, '_blank');
+    }
   }
 }
 
