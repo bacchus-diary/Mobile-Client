@@ -4,6 +4,10 @@ div#scroller {
   overflow: auto;
   @include display-flex();
   
+  &::-webkit-scrollbar { 
+    display: none; 
+  }
+  
   &>div {
     @include flex-shrink(0);
   }
