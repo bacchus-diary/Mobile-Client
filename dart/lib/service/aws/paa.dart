@@ -1,6 +1,7 @@
 library bacchus_diary.service.aws.paa;
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:js';
 
 import 'package:logging/logging.dart';
@@ -15,19 +16,34 @@ final _logger = new Logger('ProductAdvertisingAPI');
 
 class PAA {
   static const RETRYER = const Retry<List<Item>>("ProductAdvertisingAPI", 3, const Duration(seconds: 3));
+  static final _api =
+      Settings.then((x) => new ApiGateway<XML.XmlDocument>(x.server.paa, (text) => XML.parse(JSON.decode(text))));
 
   static Pager<Item> findByWords(String text) {
-    final words = text.split("\n").where((x) => x.length > 2);
+    final words = text.split("\n").where((x) => x.length > 2).toList().sublist(0, 1);
     final pagers = words.map((word) => new _SearchPager(word));
     return new MergedPager(pagers);
   }
 
-  static Future<XML.XmlDocument> request(Uri endpoint, Map<String, String> params) async {
-    _logger.info(() => "Request to ${endpoint}: ${params}");
+  static Future<XML.XmlElement> itemSearch(String word, int nextPageIndex) async {
     final settings = await Settings;
-    final api = new ApiGateway(settings.server.paa, XML.parse);
+    final api = await _api;
+    final endpoint = await Country.endpoint;
 
-    return api.call({'params': params, 'endpoint': endpoint.toString(), 'bucketName': settings.s3Bucket});
+    final params = {
+      'Operation': 'ItemSearch',
+      'SearchIndex': 'All',
+      'ResponseGroup': 'Images,ItemAttributes,OfferSummary',
+      'Keywords': word,
+      'ItemPage': "${nextPageIndex}"
+    };
+
+    return PAA.RETRYER.loop((count) async {
+      final xml = await api.call({'params': params, 'endpoint': endpoint.toString(), 'bucketName': settings.s3Bucket});
+      final roots = xml.findElements('ItemSearchResponse');
+      if (roots.isEmpty) return null;
+      return roots.first;
+    });
   }
 }
 
@@ -59,14 +75,28 @@ class _SearchPager extends Pager<Item> {
 
   _SearchPager(this.word);
 
+  final int _pageTotal = 5;
   int _pageIndex = 0;
-  int _pageTotal = 1;
   List<Item> _stock = [];
 
   bool get hasMore => _pageIndex < _pageTotal || _stock.isNotEmpty;
 
+  Completer _seeking;
+  Future _seek(proc()) async {
+    try {
+      if (_seeking != null) await _seeking.future;
+      _seeking = new Completer();
+      return proc();
+    } finally {
+      _seeking.complete();
+    }
+  }
+
   void reset() {
-    _pageIndex = 0;
+    _seek(() {
+      _pageIndex = 0;
+      _stock = [];
+    });
   }
 
   Future<List<Item>> more(int pageSize) async {
@@ -75,37 +105,28 @@ class _SearchPager extends Pager<Item> {
 
       if (_stock.isEmpty) _stock = await _getNextPage();
 
-      result.addAll(_stock.take(pageSize - result.length));
-      _stock = _stock.length <= pageSize ? [] : _stock.sublist(pageSize);
+      final need = pageSize - result.length;
+      result.addAll(_stock.take(need));
+      _stock = _stock.length <= need ? [] : _stock.sublist(need);
 
       return load(result);
     }
-    return load([]);
+    return _seek(() => load([]));
   }
 
   Future<List<Item>> _getNextPage() async {
+    if (_pageTotal <= _pageIndex) return [];
     final nextPageIndex = _pageIndex + 1;
 
-    final endpoint = await Country.endpoint;
-    final params = {
-      'Operation': 'ItemSearch',
-      'SearchIndex': 'All',
-      'ResponseGroup': 'Images,ItemAttributes,OfferSummary',
-      'Keywords': word,
-      'ItemPage': "${nextPageIndex}"
-    };
+    final xml = await PAA.itemSearch(word, nextPageIndex);
 
-    return PAA.RETRYER.loop((count) async {
-      final xml = await PAA.request(endpoint, params);
-      final items = xml.findElements('Items');
-      if (items.isEmpty) return [];
+    final itemsRc = xml.findElements('Items');
+    if (itemsRc.isEmpty) return [];
+    final items = itemsRc.first;
 
-      final totalPages = xml.findElements('TotalPages').first;
-      _pageTotal = int.parse(totalPages.text);
-      _pageIndex = nextPageIndex;
+    _pageIndex = nextPageIndex;
 
-      return items.first.findElements('Item').map((x) => new Item(x));
-    });
+    return items.findElements('Item').map((x) => new Item(x));
   }
 }
 
