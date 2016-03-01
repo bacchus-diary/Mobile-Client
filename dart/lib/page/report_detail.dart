@@ -15,9 +15,11 @@ import 'package:bacchus_diary/model/report.dart';
 import 'package:bacchus_diary/page/reports_list.dart';
 import 'package:bacchus_diary/service/reports.dart';
 import 'package:bacchus_diary/service/facebook.dart';
+import 'package:bacchus_diary/service/aws/paa.dart';
 import 'package:bacchus_diary/util/fabric.dart';
 import 'package:bacchus_diary/util/getter_setter.dart';
 import 'package:bacchus_diary/util/main_frame.dart';
+import 'package:bacchus_diary/util/pager.dart';
 
 final Logger _logger = new Logger('ReportDetailPage');
 
@@ -38,6 +40,7 @@ class ReportDetailPage extends SubPage {
   final Getter<ShowcaseElement> showcase = new PipeValue();
   Report report;
   _MoreMenu moreMenu;
+  _Amazon amazon;
 
   Timer _submitTimer;
 
@@ -65,6 +68,7 @@ class ReportDetailPage extends SubPage {
       back();
     } else {
       moreMenu = new _MoreMenu(root, report, onChanged, _remove);
+      amazon = new _Amazon(root, report);
 
       new Future.delayed(_durUpdateTextarea, () {
         root.querySelectorAll('paper-autogrow-textarea').forEach((PaperAutogrowTextarea e) {
@@ -200,4 +204,17 @@ class _MoreMenu {
   delete() async {
     if (await confirm("Delete this report ?")) _remove();
   }
+}
+
+class _Amazon {
+  final pageSize = 20;
+  final imageSize = 100;
+  final PagingList<Item> relations;
+
+  final ShadowRoot _root;
+  final Report _report;
+
+  _Amazon(this._root, Report report)
+      : this._report = report,
+        this.relations = new PagingList(PAA.findByWords(report.leaves.map((x) => x.description).join("\n")));
 }
