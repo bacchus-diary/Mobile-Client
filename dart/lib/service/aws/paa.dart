@@ -20,7 +20,7 @@ class PAA {
       Settings.then((x) => new ApiGateway<XML.XmlDocument>(x.server.paa, (text) => XML.parse(JSON.decode(text))));
 
   static Pager<Item> findByWords(String text) {
-    final words = text.split("\n").where((x) => x.length > 2).toList().sublist(0, 1);
+    final words = text.split("\n").where((x) => x.length > 2);
     final pagers = words.map((word) => new _SearchPager(word));
     return new MergedPager(pagers);
   }
