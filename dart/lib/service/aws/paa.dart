@@ -10,13 +10,11 @@ import 'package:xml/xml.dart' as XML;
 
 import 'package:bacchus_diary/service/aws/api_gateway.dart';
 import 'package:bacchus_diary/util/pager.dart';
-import 'package:bacchus_diary/util/retry_routin.dart';
 import 'package:bacchus_diary/settings.dart';
 
 final _logger = new Logger('ProductAdvertisingAPI');
 
 class PAA {
-  static const RETRYER = const Retry<List<Item>>("ProductAdvertisingAPI", 3, const Duration(seconds: 3));
   static final _api =
       Settings.then((x) => new ApiGateway<XML.XmlDocument>(x.server.paa, (text) => XML.parse(JSON.decode(text))));
 
@@ -40,7 +38,7 @@ class PAA {
       'ItemPage': "${nextPageIndex}"
     };
 
-    return PAA.RETRYER.loop((count) async {
+    try {
       final xml = await api.call({'params': params, 'endpoint': endpoint.toString(), 'bucketName': settings.s3Bucket});
       final roots = xml.findElements('ItemSearchResponse');
       if (roots.isEmpty) {
@@ -48,7 +46,10 @@ class PAA {
         return null;
       }
       return roots.first;
-    });
+    } catch (ex) {
+      _logger.warning(() => "Failed to ItemSearch: ${params}");
+      return null;
+    }
   }
 
   static open(Item item) {
