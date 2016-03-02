@@ -66,7 +66,6 @@ class InfiniteScrollElement extends ShadowRootAware {
         ? _spinnerDiv.offsetTop - _scroller.offsetTop
         : _spinnerDiv.offsetLeft - _scroller.offsetLeft;
 
-    _logger.finer(() => "Check more: bottom=${bottom}, spinner pos=${spinnerPos}");
     if (spinnerPos <= bottom) {
       if (_moreTimer != null && _moreTimer.isActive) _moreTimer.cancel();
       _moreTimer = new Timer(moreDur, () async {

@@ -2,15 +2,12 @@ library bacchus_diary.service.aws.paa;
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:html';
 import 'dart:js';
 
 import 'package:logging/logging.dart';
 import 'package:xml/xml.dart' as XML;
 
-import 'package:bacchus_diary/model/report.dart';
 import 'package:bacchus_diary/service/aws/api_gateway.dart';
-import 'package:bacchus_diary/util/pager.dart';
 import 'package:bacchus_diary/settings.dart';
 
 final _logger = new Logger('ProductAdvertisingAPI');
@@ -19,54 +16,87 @@ class PAA {
   static final _api =
       Settings.then((x) => new ApiGateway<XML.XmlDocument>(x.server.paa, (text) => XML.parse(JSON.decode(text))));
 
-  static Pager<Item> findByReport(Report report) {
-    if (report.leaves?.isEmpty ?? true) return null;
-    return new _SortingPager.from(report);
+  static const durThrottled = const Duration(seconds: 1);
+  static Completer _throttled;
+  static Future throttled(Future proc()) async {
+    while (!(_throttled?.isCompleted ?? true)) await _throttled.future;
+    _throttled = new Completer();
+    try {
+      return await proc();
+    } finally {
+      new Future.delayed(durThrottled, () => _throttled.complete());
+    }
+  }
+
+  static Map<String, List<XML.XmlElement>> _cacheItemSearch = {};
+
+  static XML.XmlElement _getFromCache(String word, int nextPageIndex) {
+    if (nextPageIndex <= (_cacheItemSearch[word]?.length ?? 0)) {
+      return _cacheItemSearch[word][nextPageIndex - 1];
+    }
+    return null;
+  }
+
+  static XML.XmlElement _setToCache(String word, int nextPageIndex, XML.XmlElement value) {
+    final List cache = _cacheItemSearch[word] ?? [];
+    if (cache.length < nextPageIndex) {
+      cache.addAll(new List(nextPageIndex - cache.length));
+    }
+    cache[nextPageIndex - 1] = value;
+    _cacheItemSearch[word] = cache;
+    return value;
   }
 
   static Future<XML.XmlElement> itemSearch(String word, int nextPageIndex) async {
-    final settings = await Settings;
-    final api = await _api;
-    final endpoint = await Country.endpoint;
+    _logger.finest(() => "Getting ItemSearch (page: ${nextPageIndex}): ${word}");
 
-    final params = {
-      'Operation': 'ItemSearch',
-      'SearchIndex': 'All',
-      'ResponseGroup': 'Images,ItemAttributes,OfferSummary',
-      'Keywords': word,
-      'ItemPage': "${nextPageIndex}"
-    };
+    final result = _getFromCache(word, nextPageIndex);
+    if (result != null) return result;
 
-    try {
-      final xml = await api.call({'params': params, 'endpoint': endpoint.toString(), 'bucketName': settings.s3Bucket});
-      final roots = xml.findElements('ItemSearchResponse');
-      if (roots.isEmpty) {
-        _logger.warning(() => "Illegal response: ${xml}");
+    return throttled(() async {
+      final result = _getFromCache(word, nextPageIndex);
+      if (result != null) return result;
+
+      final settings = await Settings;
+      final api = await _api;
+      final endpoint = await Country.endpoint;
+
+      final params = {
+        'Operation': 'ItemSearch',
+        'SearchIndex': 'All',
+        'ResponseGroup': 'Images,ItemAttributes,OfferSummary',
+        'Keywords': word,
+        'Availability': 'Available',
+        'ItemPage': "${nextPageIndex}"
+      };
+
+      try {
+        final xml =
+            await api.call({'params': params, 'endpoint': endpoint.toString(), 'bucketName': settings.s3Bucket});
+        final roots = xml.findElements('ItemSearchResponse');
+        if (roots.isEmpty) {
+          _logger.warning(() => "Illegal response: ${xml}");
+          return null;
+        }
+        return _setToCache(word, nextPageIndex, roots.first);
+      } catch (ex) {
+        _logger.warning(() => "Failed to ItemSearch: ${params}");
         return null;
       }
-      return roots.first;
-    } catch (ex) {
-      _logger.warning(() => "Failed to ItemSearch: ${params}");
-      return null;
-    }
-  }
-
-  static open(Item item) {
-    _logger.info(() => "Opening amazon: ${item}");
-    if (context['cordova'] != null && context['cordova']['InAppBrowser'] != null) {
-      context['cordova']['InAppBrowser'].callMethod('open', [item.url, '_system']);
-    } else {
-      window.open(item.url, '_blank');
-    }
+    });
   }
 }
 
-class Item {
+class XmlItem {
   final XML.XmlElement _src;
-  Item(this._src);
+  XmlItem(this._src);
+
+  @override
+  String toString() => _src.toXmlString(pretty: true);
 
   Map<String, String> _cache = {};
-  String _fromCache(String path) {
+
+  String getProperty(String path) {
     if (!_cache.containsKey(path)) {
       String getElm(List<String> keys, XML.XmlElement parent) {
         if (keys.isEmpty) return parent.text;
@@ -77,140 +107,61 @@ class Item {
     }
     return _cache[path];
   }
-
-  @override
-  String toString() => _src.toXmlString(pretty: true);
-
-  String get image => _fromCache('SmallImage/URL');
-  String get title => _fromCache('ItemAttributes/Title');
-  String get price => _fromCache('OfferSummary/LowestNewPrice/FormattedPrice');
-  int get priceValue => int.parse(_fromCache('OfferSummary/LowestNewPrice/Amount') ?? '0');
-  String get url => _fromCache('DetailPageURL');
 }
 
-typedef List<Item> _SortItems(List<Item> items);
-
-class _SortingPager extends MergedPager<Item> {
-  factory _SortingPager.from(Report report) {
-    Map<String, List<String>> divide(List<String> div(Leaf leaf)) {
-      final lists = report.leaves.map(div);
-      final list = lists.expand((x) => x).toList(growable: false);
-      final heads = lists.where((x) => x.isNotEmpty).map((x) => x.first).toList(growable: false);
-      return {'list': list, 'heads': heads};
-    }
-
-    final labels = divide((x) => x.labels ?? []);
-    final words = divide((x) => (x.description ?? '').split('\n').map((x) => x.trim()).where((String x) {
-          return x.length > 2 && !new RegExp(r"^[0-9]+$").hasMatch(x);
-        }));
-
-    _logger.info(() => "Using search labels: ${labels}");
-    _logger.info(() => "Using search words: ${words}");
-
-    int point(Item item) {
-      int cons(Iterable<String> iter) => iter.where(item.title.contains).length;
-      int consMap(Map<String, List<String>> map) => cons(map['list']) + cons(map['heads']) * 2;
-      return consMap(labels) + consMap(words);
-    }
-
-    rank(List<Item> items) {
-      items.sort((a, b) => b.priceValue - a.priceValue);
-      items.sort((a, b) => point(b) - point(a));
-      return items;
-    }
-
-    final keywords = words['list'].map((word) {
-      final list = labels['heads'].map((x) => "${x} ${word}").toList();
-      list.add(word);
-      return list;
-    }).expand((x) => x);
-    _logger.fine(() => "Search keywords:\n${keywords.join('\n')}");
-    final pagers = keywords.map((word) => new _SearchPager(word, rank));
-    return new _SortingPager(pagers, rank);
-  }
-
-  final List<_SearchPager> _pagers;
-  final _SortItems sort;
-
-  _SortingPager(Iterable<_SearchPager> list, this.sort)
-      : this._pagers = new List.unmodifiable(list),
-        super(list);
-
-  @override
-  Future<List<Item>> more(int pageSize) async {
-    final srcList = await super.more(pageSize);
-    return sort(srcList);
-  }
-}
-
-class _SearchPager extends Pager<Item> {
+class ItemSearch {
   final String word;
-  final _SortItems sort;
 
-  _SearchPager(this.word, this.sort);
+  ItemSearch(this.word);
+
+  @override
+  String toString() => "ItemSearch[${word}](${_pageIndex}/${_pageTotal})";
 
   int _pageTotal = 5;
   int _pageIndex = 0;
-  List<Item> _stock = [];
 
-  bool get hasMore => _pageIndex < _pageTotal || _stock.isNotEmpty;
+  bool get hasMore => _pageIndex < _pageTotal;
 
   Completer _seeking;
-  Future _seek(proc()) async {
+  Future _seek(Future proc()) async {
+    while (!(_seeking?.isCompleted ?? true)) await _seeking.future;
+    _seeking = new Completer();
     try {
-      if (_seeking != null) await _seeking.future;
-      _seeking = new Completer();
-      return proc();
+      return await proc();
     } finally {
       _seeking.complete();
     }
   }
 
   void reset() {
-    _seek(() {
+    _seek(() async {
       _pageIndex = 0;
-      _stock = [];
     });
   }
 
-  Future<List<Item>> more(int pageSize) async {
-    Future<List<Item>> load(List<Item> result) async {
-      if (pageSize <= result.length || !hasMore) return result;
+  Future<List<XmlItem>> nextPage() => _seek(() async {
+        if (_pageTotal <= _pageIndex) return [];
+        final nextPageIndex = _pageIndex + 1;
 
-      if (_stock.isEmpty) _stock = await _getNextPage();
+        final xml = await PAA.itemSearch(word, nextPageIndex);
+        if (xml == null) return [];
 
-      final need = pageSize - result.length;
-      result.addAll(_stock.take(need));
-      _stock = _stock.length <= need ? [] : _stock.sublist(need);
+        final itemsRc = xml.findElements('Items');
+        if (itemsRc.isEmpty) return [];
+        final items = itemsRc.first;
 
-      return load(result);
-    }
-    return _seek(() => load([]));
-  }
+        final totalPages = items.findElements('TotalPages');
+        if (totalPages.isNotEmpty) {
+          final total = int.parse(totalPages.first.text);
+          if (total < _pageTotal) {
+            _logger.info(() => "Reducing totalPages: ${total}");
+            _pageTotal = total;
+          }
+        }
+        _pageIndex = nextPageIndex;
 
-  Future<List<Item>> _getNextPage() async {
-    if (_pageTotal <= _pageIndex) return [];
-    final nextPageIndex = _pageIndex + 1;
-
-    final xml = await PAA.itemSearch(word, nextPageIndex);
-    if (xml == null) return [];
-
-    final itemsRc = xml.findElements('Items');
-    if (itemsRc.isEmpty) return [];
-    final items = itemsRc.first;
-
-    final totalPages = items.findElements('TotalPages');
-    if (totalPages.isNotEmpty) {
-      final total = int.parse(totalPages.first.text);
-      if (total < _pageTotal) {
-        _logger.info(() => "Reducing totalPages: ${total}");
-        _pageTotal = total;
-      }
-    }
-    _pageIndex = nextPageIndex;
-
-    return sort(items.findElements('Item').map((x) => new Item(x)).toList());
-  }
+        return items.findElements('Item').map((x) => new XmlItem(x)).toList();
+      });
 }
 
 class Country {
