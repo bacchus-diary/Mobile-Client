@@ -49,15 +49,12 @@ class Suggestions implements PagingList<Item> {
 
   void reset() => _searchers.forEach((x) => x.reset());
 
-  static const interval = const Duration(seconds: 3);
   Completer _more;
   Future<List<Item>> more(int pageSize) async {
-    if (!(_more.isCompleted ?? false)) return [];
+    if (!(_more?.isCompleted ?? true)) return [];
     _more = new Completer();
 
-    Future.wait(_searchers.map(_addNext)).whenComplete(() {
-      new Future.delayed(interval, _more.complete);
-    });
+    Future.wait(_searchers.map(_addNext)).whenComplete(_more.complete);
     return [];
   }
 
