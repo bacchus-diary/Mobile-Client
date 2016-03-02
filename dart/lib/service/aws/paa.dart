@@ -113,51 +113,54 @@ class ItemSearch {
 
   ItemSearch(this.word);
 
+  @override
+  String toString() => "ItemSearch[${word}](${_pageIndex}/${_pageTotal})";
+
   int _pageTotal = 5;
   int _pageIndex = 0;
 
   bool get hasMore => _pageIndex < _pageTotal;
 
   Completer _seeking;
-  Future _seek(proc()) async {
+  Future _seek(Future proc()) async {
+    while (!(_seeking?.isCompleted ?? true)) await _seeking.future;
+    _seeking = new Completer();
     try {
-      if (_seeking != null) await _seeking.future;
-      _seeking = new Completer();
-      return proc();
+      return await proc();
     } finally {
       _seeking.complete();
     }
   }
 
   void reset() {
-    _seek(() {
+    _seek(() async {
       _pageIndex = 0;
     });
   }
 
-  Future<List<XmlItem>> nextPage() async {
-    if (_pageTotal <= _pageIndex) return [];
-    final nextPageIndex = _pageIndex + 1;
+  Future<List<XmlItem>> nextPage() => _seek(() async {
+        if (_pageTotal <= _pageIndex) return [];
+        final nextPageIndex = _pageIndex + 1;
 
-    final xml = await PAA.itemSearch(word, nextPageIndex);
-    if (xml == null) return [];
+        final xml = await PAA.itemSearch(word, nextPageIndex);
+        if (xml == null) return [];
 
-    final itemsRc = xml.findElements('Items');
-    if (itemsRc.isEmpty) return [];
-    final items = itemsRc.first;
+        final itemsRc = xml.findElements('Items');
+        if (itemsRc.isEmpty) return [];
+        final items = itemsRc.first;
 
-    final totalPages = items.findElements('TotalPages');
-    if (totalPages.isNotEmpty) {
-      final total = int.parse(totalPages.first.text);
-      if (total < _pageTotal) {
-        _logger.info(() => "Reducing totalPages: ${total}");
-        _pageTotal = total;
-      }
-    }
-    _pageIndex = nextPageIndex;
+        final totalPages = items.findElements('TotalPages');
+        if (totalPages.isNotEmpty) {
+          final total = int.parse(totalPages.first.text);
+          if (total < _pageTotal) {
+            _logger.info(() => "Reducing totalPages: ${total}");
+            _pageTotal = total;
+          }
+        }
+        _pageIndex = nextPageIndex;
 
-    return items.findElements('Item').map((x) => new XmlItem(x)).toList();
-  }
+        return items.findElements('Item').map((x) => new XmlItem(x)).toList();
+      });
 }
 
 class Country {
