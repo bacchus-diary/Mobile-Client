@@ -78,7 +78,7 @@ class ScoreKeeper {
   ScoreKeeper(List<List<String>> lists)
       : all = expand(lists),
         heads = pickHeads(lists),
-        headWords = expand(pickHeads(lists).map((x) => x.split(' +')));
+        headWords = expand(pickHeads(lists).map((x) => x.split(new RegExp(r'\s+'))));
 
   @override
   String toString() => {'all': all, 'heads': heads, 'headWords': headWords}.toString();
