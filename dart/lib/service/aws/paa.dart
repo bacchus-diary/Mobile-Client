@@ -2,15 +2,12 @@ library bacchus_diary.service.aws.paa;
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:html';
 import 'dart:js';
 
 import 'package:logging/logging.dart';
 import 'package:xml/xml.dart' as XML;
 
-import 'package:bacchus_diary/model/report.dart';
 import 'package:bacchus_diary/service/aws/api_gateway.dart';
-import 'package:bacchus_diary/util/pager.dart';
 import 'package:bacchus_diary/settings.dart';
 
 final _logger = new Logger('ProductAdvertisingAPI');
@@ -18,11 +15,6 @@ final _logger = new Logger('ProductAdvertisingAPI');
 class PAA {
   static final _api =
       Settings.then((x) => new ApiGateway<XML.XmlDocument>(x.server.paa, (text) => XML.parse(JSON.decode(text))));
-
-  static Pager<Item> findByReport(Report report) {
-    if (report.leaves?.isEmpty ?? true) return null;
-    return new _SortingPager.from(report);
-  }
 
   static Future<XML.XmlElement> itemSearch(String word, int nextPageIndex) async {
     final settings = await Settings;
@@ -50,23 +42,18 @@ class PAA {
       return null;
     }
   }
-
-  static open(Item item) {
-    _logger.info(() => "Opening amazon: ${item}");
-    if (context['cordova'] != null && context['cordova']['InAppBrowser'] != null) {
-      context['cordova']['InAppBrowser'].callMethod('open', [item.url, '_system']);
-    } else {
-      window.open(item.url, '_blank');
-    }
-  }
 }
 
-class Item {
+class XmlItem {
   final XML.XmlElement _src;
-  Item(this._src);
+  XmlItem(this._src);
+
+  @override
+  String toString() => _src.toXmlString(pretty: true);
 
   Map<String, String> _cache = {};
-  String _fromCache(String path) {
+
+  String getProperty(String path) {
     if (!_cache.containsKey(path)) {
       String getElm(List<String> keys, XML.XmlElement parent) {
         if (keys.isEmpty) return parent.text;
@@ -77,83 +64,17 @@ class Item {
     }
     return _cache[path];
   }
-
-  @override
-  String toString() => _src.toXmlString(pretty: true);
-
-  String get image => _fromCache('SmallImage/URL');
-  String get title => _fromCache('ItemAttributes/Title');
-  String get price => _fromCache('OfferSummary/LowestNewPrice/FormattedPrice');
-  int get priceValue => int.parse(_fromCache('OfferSummary/LowestNewPrice/Amount') ?? '0');
-  String get url => _fromCache('DetailPageURL');
 }
 
-typedef List<Item> _SortItems(List<Item> items);
-
-class _SortingPager extends MergedPager<Item> {
-  factory _SortingPager.from(Report report) {
-    Map<String, List<String>> divide(List<String> div(Leaf leaf)) {
-      final lists = report.leaves.map(div);
-      final list = lists.expand((x) => x).toList(growable: false);
-      final heads = lists.where((x) => x.isNotEmpty).map((x) => x.first).toList(growable: false);
-      return {'list': list, 'heads': heads};
-    }
-
-    final labels = divide((x) => x.labels ?? []);
-    final words = divide((x) => (x.description ?? '').split('\n').map((x) => x.trim()).where((String x) {
-          return x.length > 2 && !new RegExp(r"^[0-9]+$").hasMatch(x);
-        }));
-
-    _logger.info(() => "Using search labels: ${labels}");
-    _logger.info(() => "Using search words: ${words}");
-
-    int point(Item item) {
-      int cons(Iterable<String> iter) => iter.where(item.title.contains).length;
-      int consMap(Map<String, List<String>> map) => cons(map['list']) + cons(map['heads']) * 2;
-      return consMap(labels) + consMap(words);
-    }
-
-    rank(List<Item> items) {
-      items.sort((a, b) => b.priceValue - a.priceValue);
-      items.sort((a, b) => point(b) - point(a));
-      return items;
-    }
-
-    final keywords = words['list'].map((word) {
-      final list = labels['heads'].map((x) => "${x} ${word}").toList();
-      list.add(word);
-      return list;
-    }).expand((x) => x);
-    _logger.fine(() => "Search keywords:\n${keywords.join('\n')}");
-    final pagers = keywords.map((word) => new _SearchPager(word, rank));
-    return new _SortingPager(pagers, rank);
-  }
-
-  final List<_SearchPager> _pagers;
-  final _SortItems sort;
-
-  _SortingPager(Iterable<_SearchPager> list, this.sort)
-      : this._pagers = new List.unmodifiable(list),
-        super(list);
-
-  @override
-  Future<List<Item>> more(int pageSize) async {
-    final srcList = await super.more(pageSize);
-    return sort(srcList);
-  }
-}
-
-class _SearchPager extends Pager<Item> {
+class ItemSearch {
   final String word;
-  final _SortItems sort;
 
-  _SearchPager(this.word, this.sort);
+  ItemSearch(this.word);
 
   int _pageTotal = 5;
   int _pageIndex = 0;
-  List<Item> _stock = [];
 
-  bool get hasMore => _pageIndex < _pageTotal || _stock.isNotEmpty;
+  bool get hasMore => _pageIndex < _pageTotal;
 
   Completer _seeking;
   Future _seek(proc()) async {
@@ -169,26 +90,10 @@ class _SearchPager extends Pager<Item> {
   void reset() {
     _seek(() {
       _pageIndex = 0;
-      _stock = [];
     });
   }
 
-  Future<List<Item>> more(int pageSize) async {
-    Future<List<Item>> load(List<Item> result) async {
-      if (pageSize <= result.length || !hasMore) return result;
-
-      if (_stock.isEmpty) _stock = await _getNextPage();
-
-      final need = pageSize - result.length;
-      result.addAll(_stock.take(need));
-      _stock = _stock.length <= need ? [] : _stock.sublist(need);
-
-      return load(result);
-    }
-    return _seek(() => load([]));
-  }
-
-  Future<List<Item>> _getNextPage() async {
+  Future<List<XmlItem>> nextPage() async {
     if (_pageTotal <= _pageIndex) return [];
     final nextPageIndex = _pageIndex + 1;
 
@@ -209,7 +114,7 @@ class _SearchPager extends Pager<Item> {
     }
     _pageIndex = nextPageIndex;
 
-    return sort(items.findElements('Item').map((x) => new Item(x)).toList());
+    return items.findElements('Item').map((x) => new XmlItem(x)).toList();
   }
 }
 
