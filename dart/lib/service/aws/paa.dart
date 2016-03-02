@@ -66,6 +66,7 @@ class PAA {
         'SearchIndex': 'All',
         'ResponseGroup': 'Images,ItemAttributes,OfferSummary',
         'Keywords': word,
+        'Availability': 'Available',
         'ItemPage': "${nextPageIndex}"
       };
 
