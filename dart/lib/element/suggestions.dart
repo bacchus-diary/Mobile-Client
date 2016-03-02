@@ -17,13 +17,17 @@ final _logger = new Logger('SuggestionsElement');
     templateUrl: 'packages/bacchus_diary/element/suggestions.html',
     cssUrl: 'packages/bacchus_diary/element/suggestions.css',
     useShadowDom: true)
-class SuggestionsElement implements ShadowRootAware {
+class SuggestionsElement implements ShadowRootAware, DetachAware {
   @NgOneWayOneTime('setter') set setter(Setter<SuggestionsElement> v) => v?.value = this; // Optional
   @NgOneWay('pageSize') int pageSize;
   @NgOneWay('report') Report report;
 
   void onShadowRoot(ShadowRoot sr) {
     refresh();
+  }
+
+  void detach() {
+    pager?.cancel();
   }
 
   refresh() {
