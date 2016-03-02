@@ -16,31 +16,73 @@ class PAA {
   static final _api =
       Settings.then((x) => new ApiGateway<XML.XmlDocument>(x.server.paa, (text) => XML.parse(JSON.decode(text))));
 
-  static Future<XML.XmlElement> itemSearch(String word, int nextPageIndex) async {
-    final settings = await Settings;
-    final api = await _api;
-    final endpoint = await Country.endpoint;
-
-    final params = {
-      'Operation': 'ItemSearch',
-      'SearchIndex': 'All',
-      'ResponseGroup': 'Images,ItemAttributes,OfferSummary',
-      'Keywords': word,
-      'ItemPage': "${nextPageIndex}"
-    };
-
+  static const durThrottled = const Duration(seconds: 1);
+  static Completer _throttled;
+  static Future throttled(Future proc()) async {
+    while (!(_throttled?.isCompleted ?? true)) await _throttled.future;
+    _throttled = new Completer();
     try {
-      final xml = await api.call({'params': params, 'endpoint': endpoint.toString(), 'bucketName': settings.s3Bucket});
-      final roots = xml.findElements('ItemSearchResponse');
-      if (roots.isEmpty) {
-        _logger.warning(() => "Illegal response: ${xml}");
+      return await proc();
+    } finally {
+      new Future.delayed(durThrottled, () => _throttled.complete());
+    }
+  }
+
+  static Map<String, List<XML.XmlElement>> _cacheItemSearch = {};
+
+  static XML.XmlElement _getFromCache(String word, int nextPageIndex) {
+    if (nextPageIndex <= (_cacheItemSearch[word]?.length ?? 0)) {
+      return _cacheItemSearch[word][nextPageIndex - 1];
+    }
+    return null;
+  }
+
+  static XML.XmlElement _setToCache(String word, int nextPageIndex, XML.XmlElement value) {
+    final List cache = _cacheItemSearch[word] ?? [];
+    if (cache.length < nextPageIndex) {
+      cache.addAll(new List(nextPageIndex - cache.length));
+    }
+    cache[nextPageIndex - 1] = value;
+    _cacheItemSearch[word] = cache;
+    return value;
+  }
+
+  static Future<XML.XmlElement> itemSearch(String word, int nextPageIndex) async {
+    _logger.finest(() => "Getting ItemSearch (page: ${nextPageIndex}): ${word}");
+
+    final result = _getFromCache(word, nextPageIndex);
+    if (result != null) return result;
+
+    return throttled(() async {
+      final result = _getFromCache(word, nextPageIndex);
+      if (result != null) return result;
+
+      final settings = await Settings;
+      final api = await _api;
+      final endpoint = await Country.endpoint;
+
+      final params = {
+        'Operation': 'ItemSearch',
+        'SearchIndex': 'All',
+        'ResponseGroup': 'Images,ItemAttributes,OfferSummary',
+        'Keywords': word,
+        'ItemPage': "${nextPageIndex}"
+      };
+
+      try {
+        final xml =
+            await api.call({'params': params, 'endpoint': endpoint.toString(), 'bucketName': settings.s3Bucket});
+        final roots = xml.findElements('ItemSearchResponse');
+        if (roots.isEmpty) {
+          _logger.warning(() => "Illegal response: ${xml}");
+          return null;
+        }
+        return _setToCache(word, nextPageIndex, roots.first);
+      } catch (ex) {
+        _logger.warning(() => "Failed to ItemSearch: ${params}");
         return null;
       }
-      return roots.first;
-    } catch (ex) {
-      _logger.warning(() => "Failed to ItemSearch: ${params}");
-      return null;
-    }
+    });
   }
 }
 
