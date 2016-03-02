@@ -35,6 +35,8 @@ class Suggestions implements PagingList<Item> {
 
     _scores = new List.unmodifiable([labels, words]);
     _searchers = new List.unmodifiable(keywords.map((x) => new ItemSearch(x)));
+
+    _more();
   }
 
   int score(Item item) => _scores.map((x) => x.score(item)).fold(0, (a, b) => a + b);
@@ -49,20 +51,24 @@ class Suggestions implements PagingList<Item> {
 
   void reset() => _searchers.forEach((x) => x.reset());
 
-  Future<List<Item>> more(int pageSize) async {
-    final searchings = _searchers.map(_addNext);
-    return await Future.any(searchings);
+  Future<List<Item>> more(int pageSize) async => [];
+
+  static const interval = const Duration(seconds: 3);
+  _more() async {
+    while (hasMore) {
+      await Future.wait(_searchers.map(_addNext));
+      await new Future.delayed(interval);
+    }
   }
 
-  Future<List<Item>> _addNext(ItemSearch search) async {
+  Future _addNext(ItemSearch search) async {
     final items = (await search.nextPage()).map((x) => new Item(x));
-
-    items.forEach((item) {
-      if (list.every((x) => x.id != item.id)) list.add(item);
-    });
-    sort(list);
-
-    return items;
+    if (items.isNotEmpty) {
+      items.forEach((item) {
+        if (list.every((x) => x.id != item.id)) list.add(item);
+      });
+      sort(list);
+    }
   }
 }
 
