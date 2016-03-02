@@ -55,7 +55,8 @@ class Suggestions implements PagingList<Item> {
 
   static const interval = const Duration(seconds: 3);
   _more() async {
-    while (hasMore) {
+    while (!_isCanceled && hasMore) {
+      _logger.finest(() => "Getting more...");
       await Future.wait(_searchers.map(_addNext));
       await new Future.delayed(interval);
     }
@@ -69,6 +70,13 @@ class Suggestions implements PagingList<Item> {
       });
       sort(list);
     }
+  }
+
+  bool _isCanceled = false;
+
+  cancel() async {
+    _logger.finest(() => "Cancel getting more");
+    _isCanceled = true;
   }
 }
 
