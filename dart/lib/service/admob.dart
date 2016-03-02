@@ -70,21 +70,10 @@ class AdMob {
     if (isBarnnerAvailable) _invoke('hideBanner');
   }
 
-  Future<Null> _invoke(String name, [Map params = const {}]) {
-    final result = new Completer();
+  void _invoke(String name, [Map params]) {
     _logger.info(() => "Invoking ${name}: ${params}");
-    plugin?.callMethod(name, [
-      new JsObject.jsify(params),
-      (success) {
-        _logger.info(() => "Result of ${name}: ${success}");
-        result.complete();
-      },
-      (error) {
-        _logger.warning(() => "Error on ${name}: ${error}");
-        result.completeError(error);
-      }
-    ]);
-    return result.future;
+    final args = params == null ? [] : [new JsObject.jsify(params)];
+    plugin?.callMethod(name, args);
   }
 
   Map<String, String> get _banner => _src['banner'];
