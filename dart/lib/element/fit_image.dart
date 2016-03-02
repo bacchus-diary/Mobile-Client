@@ -36,7 +36,6 @@ class FitImageElement {
       _loaded = true;
     }
 
-    _logger.fine("Image loaded: ${event.target}");
     final ImageElement target = event.target;
 
     if (loading != null) loading.value = target;
@@ -44,7 +43,6 @@ class FitImageElement {
     final real = new Size.fromRect(target.client);
     final base = new Size(width.toDouble(), height.toDouble());
     final fit = real.putInto(base);
-    _logger.fine("Real:${real} -> Base:${base} => Fit:${fit}");
     if (real.width == 0 && real.height == 0) {
       _logger.warning(() => "No size: ${real}");
       return;
