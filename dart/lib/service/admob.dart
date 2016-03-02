@@ -17,7 +17,7 @@ class AdMob {
   static Future<Null> initialize() async {
     if (_initialized == null) {
       _initialized = new Completer();
-      final map = (await Settings).advertisement.admod;
+      final map = (await Settings).advertisement.admob;
       _initialized.complete(new AdMob(map));
     }
     await _initialized.future;
