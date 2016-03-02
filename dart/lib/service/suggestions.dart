@@ -56,8 +56,12 @@ class Suggestions implements PagingList<Item> {
 
   Future<List<Item>> _addNext(ItemSearch search) async {
     final items = (await search.nextPage()).map((x) => new Item(x));
-    list.addAll(items);
+
+    items.forEach((item) {
+      if (list.every((x) => x.id != item.id)) list.add(item);
+    });
     sort(list);
+
     return items;
   }
 }
@@ -105,6 +109,7 @@ class Item {
   @override
   String toString() => _src.toString();
 
+  String get id => _src.getProperty('ASIN');
   String get image => _src.getProperty('SmallImage/URL');
   String get title => _src.getProperty('ItemAttributes/Title');
   String get price => _src.getProperty('OfferSummary/LowestNewPrice/FormattedPrice');
