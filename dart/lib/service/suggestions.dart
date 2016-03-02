@@ -35,8 +35,6 @@ class Suggestions implements PagingList<Item> {
 
     _scores = new List.unmodifiable([labels, words]);
     _searchers = new List.unmodifiable(keywords.map((x) => new ItemSearch(x)));
-
-    _more();
   }
 
   int score(Item item) => _scores.map((x) => x.score(item)).fold(0, (a, b) => a + b);
@@ -51,15 +49,16 @@ class Suggestions implements PagingList<Item> {
 
   void reset() => _searchers.forEach((x) => x.reset());
 
-  Future<List<Item>> more(int pageSize) async => [];
-
   static const interval = const Duration(seconds: 3);
-  _more() async {
-    while (!_isCanceled && hasMore) {
-      _logger.finest(() => "Getting more...");
-      await Future.wait(_searchers.map(_addNext));
-      await new Future.delayed(interval);
-    }
+  Completer _more;
+  Future<List<Item>> more(int pageSize) async {
+    if (!(_more.isCompleted ?? false)) return [];
+    _more = new Completer();
+
+    Future.wait(_searchers.map(_addNext)).whenComplete(() {
+      new Future.delayed(interval, _more.complete);
+    });
+    return [];
   }
 
   Future _addNext(ItemSearch search) async {
@@ -70,13 +69,6 @@ class Suggestions implements PagingList<Item> {
       });
       sort(list);
     }
-  }
-
-  bool _isCanceled = false;
-
-  cancel() async {
-    _logger.finest(() => "Cancel getting more");
-    _isCanceled = true;
   }
 }
 
