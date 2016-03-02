@@ -33,9 +33,13 @@ class AdMob {
 
   final Map<String, Map<String, dynamic>> _src;
   AdMob(this._src) {
-    _invoke('setOptions', {'adSize': 'SMART_BANNER', 'position': position(bannerPos), 'overlap': false});
-    _invoke('createBanner', {'adId': bannerId, 'autoShow': true});
-    _invoke('prepareInterstitial', {'adId': interstitialId, 'autoShow': false});
+    if (isBarnnerAvailable) {
+      _invoke('setOptions', {'adSize': 'SMART_BANNER', 'position': position(bannerPos), 'overlap': false});
+      _invoke('createBanner', {'adId': bannerId, 'autoShow': true});
+    }
+    if (isInterstitialAvailable) {
+      _invoke('prepareInterstitial', {'adId': interstitialId, 'autoShow': false});
+    }
 
     document.addEventListener('onAdDismiss', (event) {
       _logger.fine(() => "Advertisement Closed");
@@ -49,15 +53,22 @@ class AdMob {
   bool _isInterstitialShown = false;
 
   _showInterstitial(String timing) async {
-    _logger.finest(() => "Checking interstitial: ${timing}");
-    if (interstitialTimings.contains(timing)) {
-      await _invoke('showInterstitial');
-      _isInterstitialShown = true;
+    if (isInterstitialAvailable) {
+      _logger.finest(() => "Checking interstitial: ${timing}");
+      if (interstitialTimings.contains(timing)) {
+        await _invoke('showInterstitial');
+        _isInterstitialShown = true;
+      }
     }
   }
 
-  _showBanner() => _invoke('showBanner');
-  _hideBanner() => _invoke('hideBanner');
+  _showBanner() {
+    if (isBarnnerAvailable) _invoke('showBanner');
+  }
+
+  _hideBanner() {
+    if (isBarnnerAvailable) _invoke('hideBanner');
+  }
 
   Future<Null> _invoke(String name, [Map params = const {}]) {
     final result = new Completer();
@@ -79,8 +90,10 @@ class AdMob {
   Map<String, String> get _banner => _src['banner'];
   String get bannerId => _banner['id'];
   String get bannerPos => _banner['position'];
+  bool get isBarnnerAvailable => bannerId != null && bannerPos != null;
 
   Map<String, dynamic> get _interstitial => _src['interstitial'];
   String get interstitialId => _interstitial['id'];
   List<String> get interstitialTimings => _interstitial['timings'];
+  bool get isInterstitialAvailable => interstitialId != null && interstitialTimings != null;
 }
