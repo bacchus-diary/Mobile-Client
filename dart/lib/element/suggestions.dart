@@ -28,6 +28,7 @@ class SuggestionsElement implements ShadowRootAware {
 
   refresh() {
     pager = new Suggestions(report);
+    pager.more(0);
   }
 
   int get itemWidth => (window.innerWidth * 0.7).floor();
