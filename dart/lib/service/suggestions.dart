@@ -26,17 +26,17 @@ class Suggestions implements PagingList<Item> {
     _logger.info(() => "Using search labels: ${labels}");
     _logger.info(() => "Using search words: ${words}");
 
-    final keywords = words.all.map((word) {
-      final list = labels.heads.map((x) => "${x} ${word}").toList();
-      list.add(word);
-      return list;
-    }).expand((x) => x);
+    final keywords = words.all.isEmpty
+        ? labels.heads
+        : words.all.map((word) {
+            final list = labels.heads.map((x) => "${x} ${word}").toList();
+            list.add(word);
+            return list;
+          }).expand((x) => x);
     _logger.fine(() => "Search keywords:\n${keywords.join('\n')}");
 
     _scores = new List.unmodifiable([labels, words]);
     _searchers = new List.unmodifiable(keywords.map((x) => new ItemSearch(x)));
-
-    _more();
   }
 
   int score(Item item) => _scores.map((x) => x.score(item)).fold(0, (a, b) => a + b);
@@ -51,15 +51,13 @@ class Suggestions implements PagingList<Item> {
 
   void reset() => _searchers.forEach((x) => x.reset());
 
-  Future<List<Item>> more(int pageSize) async => [];
+  Completer _more;
+  Future<List<Item>> more(int pageSize) async {
+    if (!(_more?.isCompleted ?? true)) return [];
+    _more = new Completer();
 
-  static const interval = const Duration(seconds: 3);
-  _more() async {
-    while (!_isCanceled && hasMore) {
-      _logger.finest(() => "Getting more...");
-      await Future.wait(_searchers.map(_addNext));
-      await new Future.delayed(interval);
-    }
+    Future.wait(_searchers.map(_addNext)).whenComplete(_more.complete);
+    return [];
   }
 
   Future _addNext(ItemSearch search) async {
@@ -71,32 +69,29 @@ class Suggestions implements PagingList<Item> {
       sort(list);
     }
   }
-
-  bool _isCanceled = false;
-
-  cancel() async {
-    _logger.finest(() => "Cancel getting more");
-    _isCanceled = true;
-  }
 }
 
 class ScoreKeeper {
-  static List<String> expand(List<List<String>> lists) => new List.unmodifiable(lists.expand((x) => x));
+  static final _regexNum = new RegExp(r"[0-9]+");
+  static final _regexSpace = new RegExp(r"\s+");
 
-  static List<String> pickHeads(List<List<String>> lists) =>
+  static List<String> expand(Iterable<Iterable<String>> lists) => new List.unmodifiable(lists.expand((x) => x));
+
+  static List<String> pickHeads(Iterable<Iterable<String>> lists) =>
       new List.unmodifiable(lists.where((x) => x.isNotEmpty).map((x) => x.first));
 
   int score(Item item) =>
       [all, heads, headWords].map((x) => x.where(item.title.contains).length).fold(0, (a, b) => a + b);
 
-  final List<String> all;
-  final List<String> heads;
-  final List<String> headWords;
+  List<String> all;
+  List<String> heads;
+  List<String> headWords;
 
-  ScoreKeeper(List<List<String>> lists)
-      : all = expand(lists),
-        heads = pickHeads(lists),
-        headWords = expand(pickHeads(lists).map((x) => x.split(new RegExp(r'\s+'))));
+  ScoreKeeper(Iterable<Iterable<String>> lists) {
+    all = expand(lists);
+    heads = pickHeads(lists);
+    headWords = expand(heads.map((x) => x.split(_regexSpace)));
+  }
 
   @override
   String toString() => {'all': all, 'heads': heads, 'headWords': headWords}.toString();
@@ -108,9 +103,11 @@ class ScoreKeeper {
   }
 
   factory ScoreKeeper.fromDescriptions(Report report) {
-    final lists = report.leaves.map((x) => (x.description ?? '').split('\n').map((x) => x.trim()).where((String x) {
-          return x.length > 2 && !new RegExp(r"^[0-9]+$").hasMatch(x);
-        }));
+    final lists = report.leaves.map((x) => (x.description ?? '')
+        .split('\n')
+        .map((x) => x.trim())
+        .where((String x) => x.replaceAll(_regexNum, '').trim().length > 2)
+        .take(5));
 
     return new ScoreKeeper(lists);
   }
