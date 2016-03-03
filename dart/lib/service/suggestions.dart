@@ -26,11 +26,13 @@ class Suggestions implements PagingList<Item> {
     _logger.info(() => "Using search labels: ${labels}");
     _logger.info(() => "Using search words: ${words}");
 
-    final keywords = words.all.map((word) {
-      final list = labels.heads.map((x) => "${x} ${word}").toList();
-      list.add(word);
-      return list;
-    }).expand((x) => x);
+    final keywords = words.all.isEmpty
+        ? labels.heads
+        : words.all.map((word) {
+            final list = labels.heads.map((x) => "${x} ${word}").toList();
+            list.add(word);
+            return list;
+          }).expand((x) => x);
     _logger.fine(() => "Search keywords:\n${keywords.join('\n')}");
 
     _scores = new List.unmodifiable([labels, words]);
