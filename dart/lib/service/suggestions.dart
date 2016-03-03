@@ -104,8 +104,8 @@ class ScoreKeeper {
     final lists = report.leaves.map((x) => (x.description ?? '')
         .split('\n')
         .map((x) => x.trim())
-        .where((String x) => x.replaceAll(_regexNum, '').trim().length > 2 && _regexSpace.hasMatch(x))
-        .take(3));
+        .where((String x) => x.replaceAll(_regexNum, '').trim().length > 2)
+        .take(5));
 
     return new ScoreKeeper(lists);
   }
