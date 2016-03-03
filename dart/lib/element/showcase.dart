@@ -205,11 +205,11 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
       final currentIndex = current.value;
       slideRight((current, other) {
         list.removeAt(currentIndex).photo.delete();
-        onChange();
         if (other.value != null) {
           other.value = other.value - 1;
         }
         _scopeApply();
+        onChange();
       });
     });
   }
@@ -270,12 +270,14 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
     _isAnalyzing = true;
     analyze() async {
       try {
-        final cv = new CVision(data, list: ['TEXT_DETECTION', 'LOGO_DETECTION', 'SAFE_SEARCH_DETECTION']);
+        final cv =
+            new CVision(data, list: ['TEXT_DETECTION', 'LOGO_DETECTION', 'LABEL_DETECTION', 'SAFE_SEARCH_DETECTION']);
         final safe = await cv.safeLevel();
 
         if (safe.isAllUnder(4)) {
           final descs = [await cv.findLogo(), await cv.readText()].where((String x) => x != null && x.isNotEmpty);
           leaf.description = descs.join('\n\n');
+          leaf.labels = await cv.getLabels();
           onChange();
           _updateDescription();
         } else {

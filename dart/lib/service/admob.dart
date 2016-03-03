@@ -17,7 +17,7 @@ class AdMob {
   static Future<Null> initialize() async {
     if (_initialized == null) {
       _initialized = new Completer();
-      final map = (await Settings).advertisement.admod;
+      final map = (await Settings).advertisement.admob;
       _initialized.complete(new AdMob(map));
     }
     await _initialized.future;
@@ -33,9 +33,13 @@ class AdMob {
 
   final Map<String, Map<String, dynamic>> _src;
   AdMob(this._src) {
-    _invoke('setOptions', {'adSize': 'SMART_BANNER', 'position': position(bannerPos), 'overlap': false});
-    _invoke('createBanner', {'adId': bannerId, 'autoShow': true});
-    _invoke('prepareInterstitial', {'adId': interstitialId, 'autoShow': false});
+    if (isBarnnerAvailable) {
+      _invoke('setOptions', {'adSize': 'SMART_BANNER', 'position': position(bannerPos), 'overlap': false});
+      _invoke('createBanner', {'adId': bannerId, 'autoShow': true});
+    }
+    if (isInterstitialAvailable) {
+      _invoke('prepareInterstitial', {'adId': interstitialId, 'autoShow': false});
+    }
 
     document.addEventListener('onAdDismiss', (event) {
       _logger.fine(() => "Advertisement Closed");
@@ -49,38 +53,36 @@ class AdMob {
   bool _isInterstitialShown = false;
 
   _showInterstitial(String timing) async {
-    _logger.finest(() => "Checking interstitial: ${timing}");
-    if (interstitialTimings.contains(timing)) {
-      await _invoke('showInterstitial');
-      _isInterstitialShown = true;
+    if (isInterstitialAvailable) {
+      _logger.finest(() => "Checking interstitial: ${timing}");
+      if (interstitialTimings.contains(timing)) {
+        await _invoke('showInterstitial');
+        _isInterstitialShown = true;
+      }
     }
   }
 
-  _showBanner() => _invoke('showBanner');
-  _hideBanner() => _invoke('hideBanner');
+  _showBanner() {
+    if (isBarnnerAvailable) _invoke('showBanner');
+  }
 
-  Future<Null> _invoke(String name, [Map params = const {}]) {
-    final result = new Completer();
+  _hideBanner() {
+    if (isBarnnerAvailable) _invoke('hideBanner');
+  }
+
+  void _invoke(String name, [Map params]) {
     _logger.info(() => "Invoking ${name}: ${params}");
-    plugin?.callMethod(name, [
-      new JsObject.jsify(params),
-      (success) {
-        _logger.info(() => "Result of ${name}: ${success}");
-        result.complete();
-      },
-      (error) {
-        _logger.warning(() => "Error on ${name}: ${error}");
-        result.completeError(error);
-      }
-    ]);
-    return result.future;
+    final args = params == null ? [] : [new JsObject.jsify(params)];
+    plugin?.callMethod(name, args);
   }
 
   Map<String, String> get _banner => _src['banner'];
   String get bannerId => _banner['id'];
   String get bannerPos => _banner['position'];
+  bool get isBarnnerAvailable => bannerId != null && bannerPos != null;
 
   Map<String, dynamic> get _interstitial => _src['interstitial'];
   String get interstitialId => _interstitial['id'];
   List<String> get interstitialTimings => _interstitial['timings'];
+  bool get isInterstitialAvailable => interstitialId != null && interstitialTimings != null;
 }

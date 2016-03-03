@@ -29,6 +29,8 @@ class InfiniteScrollElement extends ShadowRootAware {
     _onReady.future.then((_) => _checkMore());
   }
 
+  @NgAttr('direction') String direction;
+
   Completer<Null> _onReady = new Completer();
 
   int get pageSizeValue => (pageSize == null || pageSize.isEmpty) ? 10 : int.parse(pageSize);
@@ -42,6 +44,7 @@ class InfiniteScrollElement extends ShadowRootAware {
     _root = sr;
     _scroller = _root.querySelector('div#scroller');
     _scroller.style.height = _root.host.style.height;
+    _scroller.style.flexDirection = direction ?? 'column';
 
     final content = _root.host.querySelector('div#content');
     assert(content != null);
@@ -54,19 +57,21 @@ class InfiniteScrollElement extends ShadowRootAware {
   }
 
   void _checkMore() {
-    if (pager == null) return;
+    if (pager == null || !pager.hasMore) return;
 
-    final bottom = _scroller.scrollTop + _scroller.clientHeight;
-    final spinnerPos = _spinnerDiv.offsetTop - _scroller.offsetTop;
+    final bottom = direction != 'row'
+        ? _scroller.scrollTop + _scroller.clientHeight
+        : _scroller.scrollLeft + _scroller.clientWidth;
+    final spinnerPos = direction != 'row'
+        ? _spinnerDiv.offsetTop - _scroller.offsetTop
+        : _spinnerDiv.offsetLeft - _scroller.offsetLeft;
 
-    _logger.finer(() => "Check more: ${pager.hasMore}, bottom=${bottom}, spinner pos=${spinnerPos}");
-    if (spinnerPos <= bottom && pager.hasMore) {
+    if (spinnerPos <= bottom) {
       if (_moreTimer != null && _moreTimer.isActive) _moreTimer.cancel();
-      _moreTimer = new Timer(moreDur, () {
-        pager.more(pageSizeValue).then((list) {
-          // spinner がスクロールの外に見えなくなるまで続ける
-          _checkMore();
-        });
+      _moreTimer = new Timer(moreDur, () async {
+        await pager.more(pageSizeValue);
+        // spinner がスクロールの外に見えなくなるまで続ける
+        _checkMore();
       });
     }
   }

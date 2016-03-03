@@ -32,7 +32,7 @@
 		    		<p>{{ report.dateAt | date:"EEE, MMM d, yyyy, 'about' h a" }}</p>
 		    	</div>
                 <div id="rating">
-                    <rating stars="stars" space="0.5">
+                    <rating stars="stars" space="0.5"></rating>
                 </div>
 		    	
 		    	<div id="comment">
@@ -42,6 +42,10 @@
                         </paper-autogrow-textarea>
                     </paper-input-decorator>
 		    	</div>
+                
+                <div id="amazon">
+                    <suggestions setter="suggestions" report="report"></suggestions>
+                </div>
                 
                 <div id="photo">
                     <showcase setter="showcase" list="report.leaves" reportId="report.id" on-changed="onChanged"></showcase>

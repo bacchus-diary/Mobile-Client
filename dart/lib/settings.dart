@@ -88,6 +88,12 @@ class _Settings {
     if (_advertisement == null) _advertisement = new _Advertisement(_map['advertisement']);
     return _advertisement;
   }
+
+  _ServerApiMap _server;
+  _ServerApiMap get server {
+    if (_server == null) _server = new _ServerApiMap(_map['api']);
+    return _server;
+  }
 }
 
 class _Photo {
@@ -101,5 +107,23 @@ class _Advertisement {
   final Map _map;
   _Advertisement(Map map) : this._map = new Map.unmodifiable(map);
 
-  Map get admod => _map['AdMod'];
+  Map get admob => _map['AdMob'] ?? _map['AdMod'];
+}
+
+class _ServerApiMap {
+  static _api(Map config, String name) => new ApiInfo("${config['base_url']}/${config['gateways'][name]}",
+      config['key'], config['retry_limit'], config['retry_duration']);
+
+  final ApiInfo paa;
+
+  _ServerApiMap(Map map) : paa = _api(map, 'paa');
+}
+
+class ApiInfo {
+  final String url;
+  final String key;
+  final int retryLimit;
+  final Duration retryDur;
+
+  ApiInfo(this.url, this.key, this.retryLimit, int dur) : retryDur = new Duration(milliseconds: dur);
 }

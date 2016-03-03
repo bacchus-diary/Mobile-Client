@@ -53,15 +53,12 @@ div#rating {
 }
 
 #dateAt {
-  position: relative;
+  @include display-flex();
+  @include justify-content(flex-end);
   
-  width: 100%;
-  margin-top: 4px;
-  
-  text-align: right;
   @include font-bold();
-  
   p {
+    margin-top: 4px;
     margin-right: $edit-button-size + $edit-button-padding;
   }
 }

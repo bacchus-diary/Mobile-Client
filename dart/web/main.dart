@@ -11,6 +11,7 @@ import 'package:bacchus_diary/dialog/photo_way.dart';
 import 'package:bacchus_diary/element/fit_image.dart';
 import 'package:bacchus_diary/element/rating.dart';
 import 'package:bacchus_diary/element/showcase.dart';
+import 'package:bacchus_diary/element/suggestions.dart';
 import 'package:bacchus_diary/element/infinite_scroll.dart';
 import 'package:bacchus_diary/page/acceptance.dart';
 import 'package:bacchus_diary/page/add_report.dart';
@@ -81,6 +82,7 @@ class AppModule extends Module {
     bind(FitImageElement);
     bind(RatingElement);
     bind(ShowcaseElement);
+    bind(SuggestionsElement);
     bind(InfiniteScrollElement);
 
     bind(AcceptancePage);
