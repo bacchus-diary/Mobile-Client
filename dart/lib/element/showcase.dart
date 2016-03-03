@@ -30,7 +30,7 @@ typedef OnChanged();
     templateUrl: 'packages/bacchus_diary/element/showcase.html',
     cssUrl: 'packages/bacchus_diary/element/showcase.css',
     useShadowDom: true)
-class ShowcaseElement implements ShadowRootAware {
+class ShowcaseElement implements ShadowRootAware, ScopeAware {
   @NgOneWayOneTime('setter') set setter(Setter<ShowcaseElement> v) => v?.value = this; // Optional
   @NgOneWay('list') List<Leaf> list;
   @NgOneWay('reportId') String reportId;
@@ -95,6 +95,19 @@ class ShowcaseElement implements ShadowRootAware {
 
     if (list.isNotEmpty) _indexA.value = 0;
     _updateDescription();
+  }
+
+  Scope _scope;
+  void set scope(Scope scope) {
+    _scope = scope;
+  }
+
+  _scopeApply() {
+    try {
+      _scope.apply();
+    } catch (ex) {
+      _logger.warning(() => "${ex}");
+    }
   }
 
   static const _durUpdateTextarea = const Duration(milliseconds: 200);
@@ -192,10 +205,11 @@ class ShowcaseElement implements ShadowRootAware {
       final currentIndex = current.value;
       slideRight((current, other) {
         list.removeAt(currentIndex).photo.delete();
-        onChange();
         if (other.value != null) {
           other.value = other.value - 1;
         }
+        _scopeApply();
+        onChange();
       });
     });
   }

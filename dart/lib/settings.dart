@@ -107,7 +107,7 @@ class _Advertisement {
   final Map _map;
   _Advertisement(Map map) : this._map = new Map.unmodifiable(map);
 
-  Map get admob => _map['AdMob'];
+  Map get admob => _map['AdMob'] ?? _map['AdMod'];
 }
 
 class _ServerApiMap {
