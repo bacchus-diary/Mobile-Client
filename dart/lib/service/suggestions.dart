@@ -78,14 +78,15 @@ class ScoreKeeper {
   int score(Item item) =>
       [all, heads, headWords].map((x) => x.where(item.title.contains).length).fold(0, (a, b) => a + b);
 
-  final List<String> all;
-  final List<String> heads;
-  final List<String> headWords;
+  List<String> all;
+  List<String> heads;
+  List<String> headWords;
 
-  ScoreKeeper(List<List<String>> lists)
-      : all = expand(lists),
-        heads = pickHeads(lists),
-        headWords = expand(pickHeads(lists).map((x) => x.split(new RegExp(r'\s+'))));
+  ScoreKeeper(List<List<String>> lists) {
+    all = expand(lists);
+    heads = pickHeads(lists);
+    headWords = expand(heads.map((x) => x.split(new RegExp(r'\s+'))));
+  }
 
   @override
   String toString() => {'all': all, 'heads': heads, 'headWords': headWords}.toString();
