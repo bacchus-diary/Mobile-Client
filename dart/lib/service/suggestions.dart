@@ -70,9 +70,12 @@ class Suggestions implements PagingList<Item> {
 }
 
 class ScoreKeeper {
-  static List<String> expand(List<List<String>> lists) => new List.unmodifiable(lists.expand((x) => x));
+  static final _regexNum = new RegExp(r"[0-9]+");
+  static final _regexSpace = new RegExp(r"\s+");
 
-  static List<String> pickHeads(List<List<String>> lists) =>
+  static List<String> expand(Iterable<Iterable<String>> lists) => new List.unmodifiable(lists.expand((x) => x));
+
+  static List<String> pickHeads(Iterable<Iterable<String>> lists) =>
       new List.unmodifiable(lists.where((x) => x.isNotEmpty).map((x) => x.first));
 
   int score(Item item) =>
@@ -82,10 +85,10 @@ class ScoreKeeper {
   List<String> heads;
   List<String> headWords;
 
-  ScoreKeeper(List<List<String>> lists) {
+  ScoreKeeper(Iterable<Iterable<String>> lists) {
     all = expand(lists);
     heads = pickHeads(lists);
-    headWords = expand(heads.map((x) => x.split(new RegExp(r'\s+'))));
+    headWords = expand(heads.map((x) => x.split(_regexSpace)));
   }
 
   @override
@@ -98,9 +101,11 @@ class ScoreKeeper {
   }
 
   factory ScoreKeeper.fromDescriptions(Report report) {
-    final lists = report.leaves.map((x) => (x.description ?? '').split('\n').map((x) => x.trim()).where((String x) {
-          return x.length > 2 && !new RegExp(r"^[0-9]+$").hasMatch(x);
-        }));
+    final lists = report.leaves.map((x) => (x.description ?? '')
+        .split('\n')
+        .map((x) => x.trim())
+        .where((String x) => x.replaceAll(_regexNum, '').trim().length > 2 && _regexSpace.hasMatch(x))
+        .take(3));
 
     return new ScoreKeeper(lists);
   }
