@@ -5,6 +5,7 @@ import 'dart:html';
 import 'dart:js';
 
 import 'package:logging/logging.dart';
+import 'package:xml/xml.dart' as XML;
 
 import 'package:bacchus_diary/model/report.dart';
 import 'package:bacchus_diary/service/aws/paa.dart';
@@ -61,7 +62,7 @@ class Suggestions implements PagingList<Item> {
   }
 
   Future _addNext(ItemSearch search) async {
-    final items = (await search.nextPage()).map((x) => new Item(x));
+    final items = (await search.nextPage()).map((x) => new Item.fromXml(x));
     if (items.isNotEmpty) {
       items.forEach((item) {
         if (list.every((x) => x.id != item.id)) list.add(item);
@@ -114,18 +115,36 @@ class ScoreKeeper {
 }
 
 class Item {
-  final XmlItem _src;
-  Item(this._src);
+  factory Item.fromXml(XML.XmlElement _src) {
+    String getProperty(String path) {
+      String getElm(List<String> keys, XML.XmlElement parent) {
+        if (keys.isEmpty) return parent.text;
+        final el = parent.findAllElements(keys.first);
+        return el.isEmpty ? null : getElm(keys.sublist(1), el.first);
+      }
+      return getElm(path.split('/'), _src);
+    }
+
+    return new Item(
+        getProperty('ASIN'),
+        getProperty('SmallImage/URL'),
+        getProperty('ItemAttributes/Title'),
+        getProperty('OfferSummary/LowestNewPrice/FormattedPrice'),
+        int.parse(getProperty('OfferSummary/LowestNewPrice/Amount') ?? '0'),
+        getProperty('DetailPageURL'));
+  }
+
+  final String id;
+  final String image;
+  final String title;
+  final String price;
+  final int priceValue;
+  final String url;
+
+  Item(this.id, this.image, this.title, this.price, this.priceValue, this.url);
 
   @override
-  String toString() => _src.toString();
-
-  String get id => _src.getProperty('ASIN');
-  String get image => _src.getProperty('SmallImage/URL');
-  String get title => _src.getProperty('ItemAttributes/Title');
-  String get price => _src.getProperty('OfferSummary/LowestNewPrice/FormattedPrice');
-  int get priceValue => int.parse(_src.getProperty('OfferSummary/LowestNewPrice/Amount') ?? '0');
-  String get url => _src.getProperty('DetailPageURL');
+  String toString() => {'id': id, 'title': title, 'price': price}.toString();
 
   open() {
     _logger.info(() => "Opening amazon: ${url}");

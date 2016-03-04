@@ -140,28 +140,6 @@ class _CachedItemSearch {
   }
 }
 
-class XmlItem {
-  final XML.XmlElement _src;
-  XmlItem(this._src);
-
-  @override
-  String toString() => _src.toXmlString(pretty: true);
-
-  Map<String, String> _cache = {};
-
-  String getProperty(String path) {
-    if (!_cache.containsKey(path)) {
-      String getElm(List<String> keys, XML.XmlElement parent) {
-        if (keys.isEmpty) return parent.text;
-        final el = parent.findAllElements(keys.first);
-        return el.isEmpty ? null : getElm(keys.sublist(1), el.first);
-      }
-      _cache[path] = getElm(path.split('/'), _src);
-    }
-    return _cache[path];
-  }
-}
-
 class ItemSearch {
   final String word;
 
@@ -192,7 +170,7 @@ class ItemSearch {
     });
   }
 
-  Future<List<XmlItem>> nextPage() => _seek(() async {
+  Future<List<XML.XmlElement>> nextPage() => _seek(() async {
         if (_pageTotal <= _pageIndex) return [];
         final nextPageIndex = _pageIndex + 1;
 
@@ -213,7 +191,7 @@ class ItemSearch {
         }
         _pageIndex = nextPageIndex;
 
-        return items.findElements('Item').map((x) => new XmlItem(x)).toList();
+        return items.findElements('Item').toList();
       });
 }
 
