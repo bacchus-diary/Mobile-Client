@@ -15,6 +15,10 @@ import 'package:bacchus_diary/settings.dart';
 final _logger = new Logger('ProductAdvertisingAPI');
 
 class PAA {
+  static void initialize() {
+    _CachedItemSearch.removeOlds();
+  }
+
   static final _api =
       Settings.then((x) => new ApiGateway<XML.XmlDocument>(x.server.paa, (text) => XML.parse(JSON.decode(text))));
 
