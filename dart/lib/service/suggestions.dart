@@ -116,7 +116,7 @@ class ScoreKeeper {
 
 class Item {
   factory Item.fromXml(XML.XmlElement _src) {
-    String getProperty(String path) {
+    String text(String path) {
       String getElm(List<String> keys, XML.XmlElement parent) {
         if (keys.isEmpty) return parent.text;
         final el = parent.findAllElements(keys.first);
@@ -126,12 +126,12 @@ class Item {
     }
 
     return new Item(
-        getProperty('ASIN'),
-        getProperty('SmallImage/URL'),
-        getProperty('ItemAttributes/Title'),
-        getProperty('OfferSummary/LowestNewPrice/FormattedPrice'),
-        int.parse(getProperty('OfferSummary/LowestNewPrice/Amount') ?? '0'),
-        getProperty('DetailPageURL'));
+        text('ASIN'),
+        text('SmallImage/URL'),
+        text('ItemAttributes/Title'),
+        text('OfferSummary/LowestNewPrice/FormattedPrice'),
+        int.parse(text('OfferSummary/LowestNewPrice/Amount') ?? '0'),
+        text('DetailPageURL'));
   }
 
   final String id;
