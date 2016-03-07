@@ -47,6 +47,7 @@ before_all do
   
   if ENV["FASTLANE_PLATFORM_NAME"] == 'ios' then
     system("cordova plugin rm cordova-plugin-admobpro")
+    system("cordova plugin rm cordova-plugin-admob-facebook")
   end
 end
 
