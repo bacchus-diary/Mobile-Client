@@ -11,6 +11,7 @@ import 'package:core_elements/core_animation.dart';
 import 'package:paper_elements/paper_autogrow_textarea.dart';
 
 import 'package:bacchus_diary/dialog/alert.dart';
+import 'package:bacchus_diary/dialog/confirm.dart';
 import 'package:bacchus_diary/dialog/photo_way.dart';
 import 'package:bacchus_diary/model/report.dart';
 import 'package:bacchus_diary/model/photo.dart';
@@ -35,6 +36,8 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
   @NgOneWay('list') List<Leaf> list;
   @NgOneWay('reportId') String reportId;
   @NgOneWay('on-changed') OnChanged onChanged;
+  @NgAttr('confirm-delete') set confirmDelete(String v) => isConfirmDelete = v?.toLowerCase() == 'true';
+  bool isConfirmDelete = false;
 
   onChange() => onChanged == null ? null : onChanged();
 
@@ -42,6 +45,7 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
 
   final FuturedValue<PhotoWayDialog> photoWayDialog = new FuturedValue();
   final FuturedValue<AlertDialog> alertDialog = new FuturedValue();
+  final Getter<ConfirmDialog> confirmDialog = new PipeValue();
   final PipeValue<ImageElement> imageLoading = new PipeValue();
 
   final GetterSetter<int> _indexA = new PipeValue();
@@ -188,7 +192,11 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
     }, 1, post);
   }
 
-  delete() {
+  delete() async {
+    if (isConfirmDelete) {
+      if (!await confirmDialog.value.start('Delete this photo ?')) return;
+    }
+
     _slide((sections, pageNo, current, other) {
       if (current.value == null) return null;
 
