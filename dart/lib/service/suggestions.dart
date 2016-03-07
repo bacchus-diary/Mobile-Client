@@ -81,8 +81,10 @@ class ScoreKeeper {
   static List<String> pickHeads(Iterable<Iterable<String>> lists) =>
       new List.unmodifiable(lists.where((x) => x.isNotEmpty).map((x) => x.first));
 
-  int score(Item item) =>
-      [all, heads, headWords].map((x) => x.where(item.title.contains).length).fold(0, (a, b) => a + b);
+  int score(Item item) {
+    count(List<String> list) => list.where(item.title.contains).length;
+    return count(all) + count(headWords) + count(heads) * 2;
+  }
 
   List<String> all;
   List<String> heads;
