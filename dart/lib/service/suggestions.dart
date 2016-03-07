@@ -128,6 +128,8 @@ class Item {
     return new Item(
         text('ASIN'),
         text('SmallImage/URL'),
+        int.parse(text('SmallImage/Width') ?? '0'),
+        int.parse(text('SmallImage/Height') ?? '0'),
         text('ItemAttributes/Title'),
         text('OfferSummary/LowestNewPrice/FormattedPrice'),
         int.parse(text('OfferSummary/LowestNewPrice/Amount') ?? '0'),
@@ -135,13 +137,15 @@ class Item {
   }
 
   final String id;
-  final String image;
+  final String imageUrl;
+  final int imageWidth;
+  final int imageHeight;
   final String title;
   final String price;
   final int priceValue;
   final String url;
 
-  Item(this.id, this.image, this.title, this.price, this.priceValue, this.url);
+  Item(this.id, this.imageUrl, this.imageWidth, this.imageHeight, this.title, this.price, this.priceValue, this.url);
 
   @override
   String toString() => {'id': id, 'title': title, 'price': price}.toString();
