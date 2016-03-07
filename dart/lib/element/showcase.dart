@@ -36,7 +36,8 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
   @NgOneWay('list') List<Leaf> list;
   @NgOneWay('reportId') String reportId;
   @NgOneWay('on-changed') OnChanged onChanged;
-  @NgAttr('confirm-delete') bool confirmDelete;
+  @NgAttr('confirm-delete') set confirmDelete(String v) => isConfirmDelete = v?.toLowerCase() == 'true';
+  bool isConfirmDelete = false;
 
   onChange() => onChanged == null ? null : onChanged();
 
@@ -192,7 +193,7 @@ class ShowcaseElement implements ShadowRootAware, ScopeAware {
   }
 
   delete() async {
-    if (confirmDelete ?? false) {
+    if (isConfirmDelete) {
       if (!await confirmDialog.value.start('Delete this photo ?')) return;
     }
 
