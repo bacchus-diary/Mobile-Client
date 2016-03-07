@@ -5,6 +5,7 @@ import 'dart:html';
 import 'dart:js';
 
 import 'package:logging/logging.dart';
+import 'package:xml/xml.dart' as XML;
 
 import 'package:bacchus_diary/model/report.dart';
 import 'package:bacchus_diary/service/aws/paa.dart';
@@ -61,7 +62,7 @@ class Suggestions implements PagingList<Item> {
   }
 
   Future _addNext(ItemSearch search) async {
-    final items = (await search.nextPage()).map((x) => new Item(x));
+    final items = (await search.nextPage()).map((x) => new Item.fromXml(x));
     if (items.isNotEmpty) {
       items.forEach((item) {
         if (list.every((x) => x.id != item.id)) list.add(item);
@@ -80,8 +81,10 @@ class ScoreKeeper {
   static List<String> pickHeads(Iterable<Iterable<String>> lists) =>
       new List.unmodifiable(lists.where((x) => x.isNotEmpty).map((x) => x.first));
 
-  int score(Item item) =>
-      [all, heads, headWords].map((x) => x.where(item.title.contains).length).fold(0, (a, b) => a + b);
+  int score(Item item) {
+    count(List<String> list) => list.where(item.title.contains).length;
+    return count(all) + count(headWords) + count(heads) * 2;
+  }
 
   List<String> all;
   List<String> heads;
@@ -114,18 +117,40 @@ class ScoreKeeper {
 }
 
 class Item {
-  final XmlItem _src;
-  Item(this._src);
+  factory Item.fromXml(XML.XmlElement _src) {
+    String text(String path) {
+      String getElm(List<String> keys, XML.XmlElement parent) {
+        if (keys.isEmpty) return parent.text;
+        final el = parent.findAllElements(keys.first);
+        return el.isEmpty ? null : getElm(keys.sublist(1), el.first);
+      }
+      return getElm(path.split('/'), _src);
+    }
+
+    return new Item(
+        text('ASIN'),
+        text('SmallImage/URL'),
+        int.parse(text('SmallImage/Width') ?? '0'),
+        int.parse(text('SmallImage/Height') ?? '0'),
+        text('ItemAttributes/Title'),
+        text('OfferSummary/LowestNewPrice/FormattedPrice'),
+        int.parse(text('OfferSummary/LowestNewPrice/Amount') ?? '0'),
+        text('DetailPageURL'));
+  }
+
+  final String id;
+  final String imageUrl;
+  final int imageWidth;
+  final int imageHeight;
+  final String title;
+  final String price;
+  final int priceValue;
+  final String url;
+
+  Item(this.id, this.imageUrl, this.imageWidth, this.imageHeight, this.title, this.price, this.priceValue, this.url);
 
   @override
-  String toString() => _src.toString();
-
-  String get id => _src.getProperty('ASIN');
-  String get image => _src.getProperty('SmallImage/URL');
-  String get title => _src.getProperty('ItemAttributes/Title');
-  String get price => _src.getProperty('OfferSummary/LowestNewPrice/FormattedPrice');
-  int get priceValue => int.parse(_src.getProperty('OfferSummary/LowestNewPrice/Amount') ?? '0');
-  String get url => _src.getProperty('DetailPageURL');
+  String toString() => {'id': id, 'title': title, 'price': price}.toString();
 
   open() {
     _logger.info(() => "Opening amazon: ${url}");
