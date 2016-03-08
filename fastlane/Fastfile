@@ -46,8 +46,8 @@ before_all do
   ])
   
   if ENV["FASTLANE_PLATFORM_NAME"] == 'ios' then
-    system("cordova plugin rm cordova-plugin-admobpro")
     system("cordova plugin rm cordova-plugin-admob-facebook")
+    system("cordova plugin rm cordova-plugin-admobpro")
   end
 end
 
@@ -58,15 +58,6 @@ platform :ios do
 
   lane :build do
     sh('cordova prepare ios')
-
-    into_platform do
-      puts "Printing Fabric/run from: #{Dir.pwd}"
-      File.open('../Pods/Fabric/run') do |f|
-        f.each_line do |line|
-          print line
-        end
-      end
-    end
 
     if is_ci?
       keychainName = sh("security default-keychain").match(/.*\/([^\/]+)\"/)[1]
