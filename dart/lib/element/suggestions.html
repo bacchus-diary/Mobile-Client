@@ -7,7 +7,7 @@
             <div class="item" style="width: {{ itemWidth }}px" ng-repeat="item in pager.list">
                 <div class="row">
                     <div class="image">
-                        <fit-image width="100" height="100" shrink="true" url="item.image"></fit-image>
+                        <img width="{{ item.imageWidth }}" height="{{ item.imageHeight }}" src="{{ item.imageUrl }}"></img>
                     </div>
                     <div class="column wide">
                         <div class="title">

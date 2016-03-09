@@ -9,6 +9,7 @@ import 'package:yaml/yaml.dart';
 import 'package:bacchus_diary/service/aws/cognito.dart';
 import 'package:bacchus_diary/service/aws/s3file.dart';
 import 'package:bacchus_diary/service/aws/sns.dart';
+import 'package:bacchus_diary/service/aws/paa.dart';
 import 'package:bacchus_diary/service/admob.dart';
 import 'package:bacchus_diary/util/cordova.dart';
 
@@ -49,6 +50,7 @@ Future<_Settings> _initialize() async {
       // Start background services
       SNS.init();
       AdMob.initialize();
+      PAA.initialize();
     }
     getting();
   }

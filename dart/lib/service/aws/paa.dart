@@ -2,6 +2,8 @@ library bacchus_diary.service.aws.paa;
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:html';
+import 'dart:indexed_db';
 import 'dart:js';
 
 import 'package:logging/logging.dart';
@@ -13,6 +15,10 @@ import 'package:bacchus_diary/settings.dart';
 final _logger = new Logger('ProductAdvertisingAPI');
 
 class PAA {
+  static void initialize() {
+    _CachedItemSearch.removeOlds();
+  }
+
   static final _api =
       Settings.then((x) => new ApiGateway<XML.XmlDocument>(x.server.paa, (text) => XML.parse(JSON.decode(text))));
 
@@ -28,33 +34,14 @@ class PAA {
     }
   }
 
-  static Map<String, List<XML.XmlElement>> _cacheItemSearch = {};
-
-  static XML.XmlElement _getFromCache(String word, int nextPageIndex) {
-    if (nextPageIndex <= (_cacheItemSearch[word]?.length ?? 0)) {
-      return _cacheItemSearch[word][nextPageIndex - 1];
-    }
-    return null;
-  }
-
-  static XML.XmlElement _setToCache(String word, int nextPageIndex, XML.XmlElement value) {
-    final List cache = _cacheItemSearch[word] ?? [];
-    if (cache.length < nextPageIndex) {
-      cache.addAll(new List(nextPageIndex - cache.length));
-    }
-    cache[nextPageIndex - 1] = value;
-    _cacheItemSearch[word] = cache;
-    return value;
-  }
-
   static Future<XML.XmlElement> itemSearch(String word, int nextPageIndex) async {
     _logger.finest(() => "Getting ItemSearch (page: ${nextPageIndex}): ${word}");
 
-    final result = _getFromCache(word, nextPageIndex);
+    final result = await _CachedItemSearch.get(word, nextPageIndex);
     if (result != null) return result;
 
     return throttled(() async {
-      final result = _getFromCache(word, nextPageIndex);
+      final result = await _CachedItemSearch.get(word, nextPageIndex);
       if (result != null) return result;
 
       final settings = await Settings;
@@ -78,7 +65,7 @@ class PAA {
           _logger.warning(() => "Illegal response: ${xml}");
           return null;
         }
-        return _setToCache(word, nextPageIndex, roots.first);
+        return await _CachedItemSearch.set(word, nextPageIndex, roots.first);
       } catch (ex) {
         _logger.warning(() => "Failed to ItemSearch: ${params}");
         return null;
@@ -87,25 +74,69 @@ class PAA {
   }
 }
 
-class XmlItem {
-  final XML.XmlElement _src;
-  XmlItem(this._src);
+class _CachedItemSearch {
+  static final _logger = new Logger('PAA_Cache');
 
-  @override
-  String toString() => _src.toXmlString(pretty: true);
+  static const DB_NAME = 'paaa_cache';
+  static const STORE_NAME = 'itemSearch';
+  static const VERSION = 1;
 
-  Map<String, String> _cache = {};
-
-  String getProperty(String path) {
-    if (!_cache.containsKey(path)) {
-      String getElm(List<String> keys, XML.XmlElement parent) {
-        if (keys.isEmpty) return parent.text;
-        final el = parent.findAllElements(keys.first);
-        return el.isEmpty ? null : getElm(keys.sublist(1), el.first);
+  static Future<ObjectStore> _getStore() async {
+    final db = await window.indexedDB.open(DB_NAME, version: VERSION, onUpgradeNeeded: (VersionChangeEvent event) {
+      final db = (event.target as OpenDBRequest).result as Database;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, keyPath: 'word');
       }
-      _cache[path] = getElm(path.split('/'), _src);
-    }
-    return _cache[path];
+    });
+    final trans = db.transaction(STORE_NAME, 'readwrite');
+    return trans.objectStore(STORE_NAME);
+  }
+
+  static Future<XML.XmlElement> get(String word, int nextPageIndex) async {
+    final store = await _getStore();
+
+    final Map<String, String> record = await store.getObject(word);
+    _logger.finest(() => "Cached Values for '${word}': ${record == null ? null : record['timestamp']}");
+    if (record == null || isOld(record)) return null;
+
+    final Map<String, String> data = JSON.decode(record['data']);
+
+    final xml = data[nextPageIndex.toString()];
+    return xml == null ? null : XML.parse(xml).firstChild;
+  }
+
+  static Future<XML.XmlElement> set(String word, int nextPageIndex, XML.XmlElement value) async {
+    final store = await _getStore();
+
+    final Map<String, String> record = await store.getObject(word) ?? {'word': word};
+
+    final Map<String, String> data = JSON.decode(record['data'] ?? '{}');
+    data[nextPageIndex.toString()] = value.toXmlString();
+
+    record['data'] = JSON.encode(data);
+    record['timestamp'] = new DateTime.now().millisecondsSinceEpoch.toString();
+    await store.put(record);
+
+    return value;
+  }
+
+  static const maxAge = const Duration(days: 1);
+  static bool isOld(Map<String, String> record) {
+    final timestamp = new DateTime.fromMillisecondsSinceEpoch(int.parse(record['timestamp']));
+    final diff = new DateTime.now().difference(timestamp);
+    return maxAge < diff;
+  }
+
+  static Future removeOlds() async {
+    final store = await _getStore();
+
+    store.openCursor(autoAdvance: true).listen((cursor) {
+      final Map<String, String> record = cursor.value;
+      if (isOld(record)) {
+        _logger.finest(() => "Deleting cache: ${record['word']}");
+        cursor.delete();
+      }
+    });
   }
 }
 
@@ -139,7 +170,7 @@ class ItemSearch {
     });
   }
 
-  Future<List<XmlItem>> nextPage() => _seek(() async {
+  Future<List<XML.XmlElement>> nextPage() => _seek(() async {
         if (_pageTotal <= _pageIndex) return [];
         final nextPageIndex = _pageIndex + 1;
 
@@ -160,7 +191,7 @@ class ItemSearch {
         }
         _pageIndex = nextPageIndex;
 
-        return items.findElements('Item').map((x) => new XmlItem(x)).toList();
+        return items.findElements('Item').toList();
       });
 }
 

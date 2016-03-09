@@ -1,5 +1,6 @@
 library bacchus_diary.dialog.confirm;
 
+import 'dart:async';
 import 'dart:html';
 
 import 'package:angular/angular.dart';
@@ -30,5 +31,13 @@ class ConfirmDialog extends AbstractDialog implements ShadowRootAware {
   done(bool v) {
     result = v;
     close();
+  }
+
+  Future<bool> start(String msg) async {
+    message = msg;
+    final answer = new Completer();
+    onClosed(() => answer.complete(result));
+    open();
+    return answer.future;
   }
 }
