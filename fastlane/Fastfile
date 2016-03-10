@@ -42,11 +42,6 @@ before_all do
     "https://github.com/fathens/Cordova-Plugin-FBConnect.git --variable APP_ID=#{ENV['FACEBOOK_APP_ID']} --variable APP_NAME=#{ENV['APPLICATION_NAME']}",
     "https://github.com/fathens/Cordova-Plugin-Crashlytics.git --variable API_KEY=#{ENV['FABRIC_API_KEY']}"
   ])
-  
-  if ENV["FASTLANE_PLATFORM_NAME"] == 'android' then
-    system("cordova plugin add cordova-plugin-admobpro")
-    system("cordova plugin add cordova-plugin-admob-facebook")
-  end
 end
 
 platform :ios do
@@ -140,6 +135,9 @@ platform :android do
     def is_multi?
       ["release"].include? ENV['BUILD_MODE']
     end
+    
+    sh("cordova plugin add cordova-plugin-admobpro")
+    sh("cordova plugin add cordova-plugin-admob-facebook")
 
     android_build(
     keystore: persistent('android', 'keystore'),
