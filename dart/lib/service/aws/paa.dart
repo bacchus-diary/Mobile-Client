@@ -83,7 +83,7 @@ class _CachedItemSearch {
 
   static Future<ObjectStore> _getStore() async {
     if (window.indexedDB == null) return null;
-    
+
     final db = await window.indexedDB.open(DB_NAME, version: VERSION, onUpgradeNeeded: (VersionChangeEvent event) {
       final db = (event.target as OpenDBRequest).result as Database;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
