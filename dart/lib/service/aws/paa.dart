@@ -110,7 +110,7 @@ class _CachedItemSearch {
 
   static Future<XML.XmlElement> set(String word, int nextPageIndex, XML.XmlElement value) async {
     final store = await _getStore();
-    if (store == null) return null;
+    if (store == null) return value;
 
     final Map<String, String> record = await store.getObject(word) ?? {'word': word};
 
