@@ -253,7 +253,7 @@ class Country {
 
   static Future<String> get _code {
     final result = new Completer();
-    final plugin = context['plugins']['country'];
+    final plugin = context['Country'];
     if (plugin != null) {
       plugin.callMethod('get', [
         (code) {
