@@ -35,7 +35,9 @@ module Fastlane
         with_cache('node_modules') do
           system('npm install')
         end
+        puts "Checking Cordova ..."
         system('cordova -v')
+        puts "Checking ionic ..."
         system('ionic -v')
       end
 
