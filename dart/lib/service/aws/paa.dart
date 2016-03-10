@@ -82,6 +82,8 @@ class _CachedItemSearch {
   static const VERSION = 1;
 
   static Future<ObjectStore> _getStore() async {
+    if (window.indexedDB == null) return null;
+    
     final db = await window.indexedDB.open(DB_NAME, version: VERSION, onUpgradeNeeded: (VersionChangeEvent event) {
       final db = (event.target as OpenDBRequest).result as Database;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
@@ -94,6 +96,7 @@ class _CachedItemSearch {
 
   static Future<XML.XmlElement> get(String word, int nextPageIndex) async {
     final store = await _getStore();
+    if (store == null) return null;
 
     final Map<String, String> record = await store.getObject(word);
     _logger.finest(() => "Cached Values for '${word}': ${record == null ? null : record['timestamp']}");
@@ -107,6 +110,7 @@ class _CachedItemSearch {
 
   static Future<XML.XmlElement> set(String word, int nextPageIndex, XML.XmlElement value) async {
     final store = await _getStore();
+    if (store == null) return null;
 
     final Map<String, String> record = await store.getObject(word) ?? {'word': word};
 
@@ -129,6 +133,7 @@ class _CachedItemSearch {
 
   static Future removeOlds() async {
     final store = await _getStore();
+    if (store == null) return;
 
     store.openCursor(autoAdvance: true).listen((cursor) {
       final Map<String, String> record = cursor.value;
