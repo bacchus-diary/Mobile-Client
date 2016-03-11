@@ -14,15 +14,18 @@ module Fastlane
       end
 
       def self.update_sdk(names)
-        content = sh('android list sdk --extended')
+        content = sh('android list sdk --extended -all')
 
         availables = content.split("\n").map { |line|
           /^id: +\d+ or "(.*)"$/.match line
-        }.compact.map { |m| m[1] }
+        }.compact.map { |m| m[1] }.reject { |x| x.end_with?('preview') }.sort
+
+        puts "Availables of android list: \n#{availables}"
 
         names.each do |name|
           puts "Checking SDK: #{name}"
-          availables.select { |x| x.start_with?(name) }.each do |key|
+          key = availables.select { |x| x.start_with?(name) }.last
+          if key != nil then
             puts "Installing SDK #{key}"
             system("echo y | android update sdk --no-ui --all --filter #{key} | grep Installed")
           end
