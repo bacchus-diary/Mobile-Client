@@ -14,8 +14,6 @@ class AdMob {
   static Completer<_AdMob> _initialized;
   static Future<_AdMob> get _singleton => _initialized?.future;
 
-  static bool get isFacebook => true;
-
   static Future<Null> initialize() async {
     if (_initialized == null) {
       _initialized = new Completer();
