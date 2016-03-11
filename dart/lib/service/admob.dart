@@ -8,33 +8,32 @@ import 'package:logging/logging.dart';
 
 import 'package:bacchus_diary/settings.dart';
 
-final Logger _logger = new Logger('AdMob');
+final _logger = new Logger('AdMob');
 
 class AdMob {
-  static Completer<AdMob> _initialized;
-  static Future<AdMob> get _singleton => _initialized?.future;
+  static Completer<_AdMob> _initialized;
+  static Future<_AdMob> get _singleton => _initialized?.future;
 
   static Future<Null> initialize() async {
     if (_initialized == null) {
       _initialized = new Completer();
       final map = (await Settings).advertisement.admob;
-      _initialized.complete(new AdMob(map));
+      _initialized.complete(new _AdMob(map));
     }
     await _initialized.future;
   }
 
-  static get plugin => context['AdMob'];
+  static showInterstitial(String timing) async => (await _singleton)?.showInterstitial(timing);
+  static showBanner() async => (await _singleton)?.showBanner();
+  static hideBanner() async => (await _singleton)?.hideBanner();
+}
 
-  static position(String name) => plugin == null ? null : plugin['AD_POSITION'][name];
-
-  static showInterstitial(String timing) async => (await _singleton)?._showInterstitial(timing);
-  static showBanner() async => (await _singleton)?._showBanner();
-  static hideBanner() async => (await _singleton)?._hideBanner();
-
+class _AdMob {
   final Map<String, Map<String, dynamic>> _src;
-  AdMob(this._src) {
+
+  _AdMob(this._src) {
     if (isBarnnerAvailable) {
-      _invoke('setOptions', {'adSize': 'SMART_BANNER', 'position': position(bannerPos), 'overlap': false});
+      _invoke('setOptions', {'adSize': 'SMART_BANNER', 'position': plugin['AD_POSITION'][bannerPos], 'overlap': false});
       _invoke('createBanner', {'adId': bannerId, 'autoShow': true});
     }
     if (isInterstitialAvailable) {
@@ -52,7 +51,7 @@ class AdMob {
 
   bool _isInterstitialShown = false;
 
-  _showInterstitial(String timing) async {
+  showInterstitial(String timing) async {
     if (isInterstitialAvailable) {
       _logger.finest(() => "Checking interstitial: ${timing}");
       if (interstitialTimings.contains(timing)) {
@@ -62,11 +61,11 @@ class AdMob {
     }
   }
 
-  _showBanner() {
+  showBanner() {
     if (isBarnnerAvailable) _invoke('showBanner');
   }
 
-  _hideBanner() {
+  hideBanner() {
     if (isBarnnerAvailable) _invoke('hideBanner');
   }
 
@@ -76,13 +75,15 @@ class AdMob {
     plugin?.callMethod(name, args);
   }
 
+  JsObject get plugin => context[_src['pluginName']];
+
   Map<String, String> get _banner => _src['banner'];
   String get bannerId => _banner['id'];
   String get bannerPos => _banner['position'];
-  bool get isBarnnerAvailable => bannerId != null && bannerPos != null;
+  bool get isBarnnerAvailable => plugin != null && bannerId != null && bannerPos != null;
 
   Map<String, dynamic> get _interstitial => _src['interstitial'];
   String get interstitialId => _interstitial['id'];
   List<String> get interstitialTimings => _interstitial['timings'];
-  bool get isInterstitialAvailable => interstitialId != null && interstitialTimings != null;
+  bool get isInterstitialAvailable => plugin != null && interstitialId != null && interstitialTimings != null;
 }

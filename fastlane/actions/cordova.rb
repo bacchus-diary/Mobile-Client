@@ -30,13 +30,15 @@ module Fastlane
 
       def self.node_modules
         if !ENV['PATH'].include?('node_modules/.bin') then
-          ENV['PATH'] = "#{ENV['PATH']}:#{Dir.pwd}/node_modules/.bin"
+          ENV['PATH'] = "#{Dir.pwd}/node_modules/.bin:#{ENV['PATH']}"
         end
-        if !(system('cordova -v') && system('ionic -v')) then
-          with_cache('node_modules') do
-            system('npm install')
-          end
+        with_cache('node_modules') do
+          system('npm install')
         end
+        puts "Checking Cordova ..."
+        system('cordova -v')
+        puts "Checking ionic ..."
+        system('ionic -v')
       end
 
       def self.with_cache(name, &block)
