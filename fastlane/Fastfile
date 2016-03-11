@@ -149,7 +149,7 @@ platform :android do
     sdks: [
       'platform-tools',
       'tools',
-      'android-24',
+      'android-23',
       'extra-google-m2repository',
       'extra-android-support',
       'extra-android-m2repository',
