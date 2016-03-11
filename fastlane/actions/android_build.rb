@@ -14,7 +14,7 @@ module Fastlane
       end
 
       def self.update_sdk(names)
-        content = sh('android list sdk --extended -all')
+        content = sh('android list sdk --extended --all')
 
         availables = content.split("\n").map { |line|
           /^id: +\d+ or "(.*)"$/.match line
