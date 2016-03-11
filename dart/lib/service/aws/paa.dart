@@ -10,6 +10,7 @@ import 'package:logging/logging.dart';
 import 'package:xml/xml.dart' as XML;
 
 import 'package:bacchus_diary/service/aws/api_gateway.dart';
+import 'package:bacchus_diary/util/withjs.dart';
 import 'package:bacchus_diary/settings.dart';
 
 final _logger = new Logger('ProductAdvertisingAPI');
@@ -82,6 +83,8 @@ class _CachedItemSearch {
   static const VERSION = 1;
 
   static Future<ObjectStore> _getStore() async {
+    if (window.indexedDB == null) return null;
+
     final db = await window.indexedDB.open(DB_NAME, version: VERSION, onUpgradeNeeded: (VersionChangeEvent event) {
       final db = (event.target as OpenDBRequest).result as Database;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
@@ -94,6 +97,7 @@ class _CachedItemSearch {
 
   static Future<XML.XmlElement> get(String word, int nextPageIndex) async {
     final store = await _getStore();
+    if (store == null) return null;
 
     final Map<String, String> record = await store.getObject(word);
     _logger.finest(() => "Cached Values for '${word}': ${record == null ? null : record['timestamp']}");
@@ -107,6 +111,7 @@ class _CachedItemSearch {
 
   static Future<XML.XmlElement> set(String word, int nextPageIndex, XML.XmlElement value) async {
     final store = await _getStore();
+    if (store == null) return value;
 
     final Map<String, String> record = await store.getObject(word) ?? {'word': word};
 
@@ -129,6 +134,7 @@ class _CachedItemSearch {
 
   static Future removeOlds() async {
     final store = await _getStore();
+    if (store == null) return;
 
     store.openCursor(autoAdvance: true).listen((cursor) {
       final Map<String, String> record = cursor.value;
@@ -248,7 +254,7 @@ class Country {
 
   static Future<String> get _code {
     final result = new Completer();
-    final plugin = context['plugins']['country'];
+    final plugin = context['Country'];
     if (plugin != null) {
       plugin.callMethod('get', [
         (code) {
@@ -272,8 +278,8 @@ class Country {
     if (plugin != null) {
       plugin.callMethod('getLocaleName', [
         (code) {
-          _logger.finest(() => "Get locale: ${code}");
-          result.complete(code);
+          _logger.finest(() => "Get locale: ${stringify(code)}");
+          result.complete(code['value']);
         },
         (error) {
           _logger.warning(() => "Failed to get locale: ${error}");
