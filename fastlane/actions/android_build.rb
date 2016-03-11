@@ -20,7 +20,7 @@ module Fastlane
           /^id: +\d+ or "(.*)"$/.match line
         }.compact.map { |m| m[1] }.reject { |x| x.end_with?('preview') }.sort
 
-        puts "Availables of android list: \n#{availables}"
+        puts "Availables of android list: \n#{availables.join('\n')}"
 
         names.each do |name|
           puts "Checking SDK: #{name}"
