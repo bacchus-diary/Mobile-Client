@@ -10,6 +10,7 @@ import 'package:logging/logging.dart';
 import 'package:xml/xml.dart' as XML;
 
 import 'package:bacchus_diary/service/aws/api_gateway.dart';
+import 'package:bacchus_diary/util/withjs.dart';
 import 'package:bacchus_diary/settings.dart';
 
 final _logger = new Logger('ProductAdvertisingAPI');
@@ -277,8 +278,8 @@ class Country {
     if (plugin != null) {
       plugin.callMethod('getLocaleName', [
         (code) {
-          _logger.finest(() => "Get locale: ${code}");
-          result.complete(code);
+          _logger.finest(() => "Get locale: ${stringify(code)}");
+          result.complete(code['value']);
         },
         (error) {
           _logger.warning(() => "Failed to get locale: ${error}");
